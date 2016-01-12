@@ -37,7 +37,7 @@ if( (vcols.count(None) == 0) and (euler.count(None) == 0) ):
   rotationOn = True
   eulerAngles = np.array(euler)*(np.pi/180.)
 
-# Check wheather vector rotations will be carried out.
+# Assemble Tcols -- target columns -- for vector rotation.
 if( rotationOn ):
   Tcols = np.zeros( 3 , int )
   for i in xrange(3):
@@ -84,7 +84,7 @@ for fn in fileNos:
   
   fileout = prefix+fileList[fn]
   print(' Writing out file: {} '.format( fileout ) )
-  np.savetxt(fileout, dat[:,Icols], fmt='%2.5e')
+  np.savetxt(fileout, dat[:,Icols], fmt='%3.6e')
   dat = None
 
 
