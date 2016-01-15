@@ -17,8 +17,6 @@ about the expected ensemple mean, and \sigma^{2}_{\alpha}, the ensemble variance
 #==========================================================#
 parser = argparse.ArgumentParser()
 parser.add_argument("fileKey", help="Search string for collecting files.", default=None)
-parser.add_argument("-T", "--DeltaT", help="Length of period to be analyzed in seconds [s].",\
-  type=float)
 parser.add_argument("-iv", "--icolv", help="Column number for analyzed signal. First is 0.",\
   nargs='?', type=int, default=1)
 parser.add_argument("-nb", "--nbins", help="Number of frequency bins.", type=int, default=76)
@@ -62,8 +60,9 @@ nterms  = np.shape(v) # Number of variables in the file, number of entries in th
 print(' Number of terms in the data series, Nv = {}'.format(nterms))
 
 # Determine the sampling frequency.
-samplingFreq   = samplingFrequency( time, samplingFreqUser )
-vw             = applyTapering( v , DeltaT , samplingFreq  )
+samplingFreq = samplingFrequency( time, samplingFreqUser )
+DeltaT       = timeInterval( time, v, samplingFreq )
+vw           = applyTapering( v , DeltaT , samplingFreq  )
 
 # Evaluate, Power (P), power spectral energy (E), and power spectral density (S).
 P, E, S, freqs = evalSpectra( vw, samplingFreq, normalize )

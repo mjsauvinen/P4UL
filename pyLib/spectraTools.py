@@ -58,6 +58,16 @@ def samplingFrequency(time, sfreqUser ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def timeInterval( time, v, sfreq ):
+  if( time != None ):
+    deltaT = (time[-1]-time[0])
+  else:
+    deltaT = float( len(v) )/ sfreq
+    
+  return deltaT
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
 def applyTapering( v , dtime , sfreq ):
   
   # m = 2^k    
