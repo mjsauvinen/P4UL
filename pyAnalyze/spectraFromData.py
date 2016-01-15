@@ -17,8 +17,16 @@ about the expected ensemple mean, and \sigma^{2}_{\alpha}, the ensemble variance
 #==========================================================#
 parser = argparse.ArgumentParser()
 parser.add_argument("fileKey", help="Search string for collecting files.", default=None)
-parser.add_argument("-iv", "--icolv", help="Column number for analyzed signal. First is 0.",\
+parser.add_argument("-iv", "--icolv", help="Column index for analyzed signal (first = 0).",\
   nargs='?', type=int, default=1)
+
+# -- group for mutually exclusive entries -- #
+group = parser.add_mutually_exclusive_group(required=True)
+group.add_argument("-it", "--icolt", type=int,\
+  help="Opt 1: Column index for time in file (first = 0).")
+group.add_argument("-fs", "--samplingFreq", help="Opt 2: Sampling frequency in [Hz].", type=float)
+# ---    end group              ------------ #
+
 parser.add_argument("-nb", "--nbins", help="Number of frequency bins.", type=int, default=76)
 parser.add_argument("-n", "--normalize", help="Compute f*S/sigma^2.", action="store_true", \
   default=False) 
@@ -26,18 +34,10 @@ parser.add_argument("-p", "--printOn", help="Print the numpy array data.",\
   action="store_true", default=False) 
 parser.add_argument("-pp", "--printOnly", help="Only print the numpy array data. Don't save.",\
   action="store_true", default=False)
-
-# -- group for mutually exclusive entries -- #
-group = parser.add_mutually_exclusive_group(required=True)
-group.add_argument("-it", "--icolt", type=int,\
-  help="Column number in file for time (first column is 0).")
-group.add_argument("-fs", "--samplingFreq", help="Sampling frequency in [Hz].", type=float)
-# ---    end group              ------------ #
 args = parser.parse_args()    
 #==========================================================# 
 # Rename ...
 fileKey   = args.fileKey
-DeltaT    = args.DeltaT
 jcolV     = args.icolv
 jcolT     = args.icolt
 normalize = args.normalize
