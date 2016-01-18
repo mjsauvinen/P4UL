@@ -33,7 +33,7 @@ Now the scripts can be run everywhere in your system.
 
 0) Make sure you have the required libraries on your computer:
 >> sudo apt-get install libblas-dev liblapack-dev python-scipy libhdf5-dev netcdf-bin 
->> sudo apt-get install libnetcdf-dev  libjpeg8-dev libfreetype6-dev libpng-dev
+$$ sudo apt-get install libnetcdf-dev  libjpeg8-dev libfreetype6-dev libpng-dev
 
 
 1) Install virtualenv-burrito. (Note: If you're behind a proxy, make sure your shell has the proper http_proxy and https_proxy variables set. E.g. export http_proxy=www_your_proxy_address.)
