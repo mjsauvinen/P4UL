@@ -7,7 +7,6 @@ from plotTools import addToPlot
 from spectraTools import *
 from utilities import filesFromList
 
-
 '''
 Kaimal & Finnigan:
 The requirements for averaging time T with T >> Tau_{\alpha} can then be expressed
