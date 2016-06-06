@@ -16,24 +16,30 @@ Author: Mikko Auvinen
         Finnish Meteorological Institute
 '''
 
-
 #==========================================================#
 parser = argparse.ArgumentParser(prog='plotRasterData.py')
 parser.add_argument("rfile", type=str, nargs='?', default=None,\
   help="Name of the comp domain data file.")
 parser.add_argument("-s", "--size", type=float, default=13.,\
   help="Size of the figure (length of the longer side). Default=13.")
+parser.add_argument("--lims", help="User specified limits.", action="store_true",\
+  default=False)
+parser.add_argument("--grid", help="Turn on grid.", action="store_true",\
+  default=False)
 parser.add_argument("--labels", help="User specified labels.", action="store_true",\
-    default=False)
+  default=False)
 args = parser.parse_args() 
 #writeLog( parser, args )
 #==========================================================#
 
 # Renaming ... that's all.
-size   = args.size
-labels = args.labels
+rasterfile = args.rfile
+size       = args.size
+limsOn     = args.lims
+gridOn     = args.grid
+labels     = args.labels
 
-R, Rdims, ROrig, dPx = readNumpyZTile(args.rfile)
+R, Rdims, ROrig, dPx = readNumpyZTile(rasterfile)
 
 info = ''' Info:
 Dimensions [rows, cols] = {}
@@ -45,8 +51,9 @@ print(info)
 
 figDims = size*(Rdims[::-1].astype(float)/np.max(Rdims))
 fig = plt.figure(num=1, figsize=figDims)
-fig = addImagePlot( fig, R , args.rfile )
+fig = addImagePlot( fig, R , rasterfile, gridOn, limsOn)
 R = None
+
 if(labels):
   fig = userLabels( fig )
 

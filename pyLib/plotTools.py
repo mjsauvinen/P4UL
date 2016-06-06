@@ -5,6 +5,8 @@ import numpy as np
 import pylab as pl
 import matplotlib.pyplot as plt
 
+# 08.04.2016:  Mona added an option for colorbar bounds to addImagePlot
+
 iCg = 0  # Global integer for color
 iMg = 0  # Global integer for markers
 gxI = -1     # Global x-index for csv animations
@@ -54,12 +56,16 @@ def plotBar(fig, xb, yb, labelStr, plotStr=["","",""], wb=0.6, errb=0):
   return fig
   
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-def addImagePlot( fig, X, labelStr, gridOn=False ):
+def addImagePlot( fig, X, labelStr, gridOn=False, limsOn=False ):
   ax = fig.add_axes( [0.1, 0.075 , 0.875 , 0.81] ) #[left, up, width, height]
   im = ax.imshow(X)
   im.set_cmap('rainbow')
   ax.set_title(labelStr)
   ax.grid(gridOn)
+  
+  if(limsOn): # bounds for a colorbar
+    lMin, lMax = raw_input('Enter limits for the colorbar: <min> <max> = ').split()
+    im.set_clim([lMin,lMax])
   cbar = fig.colorbar(im)
   
   return fig
@@ -79,7 +85,7 @@ def addToPlot(fig, x,y,labelStr, plotStr=["","",""], logOn=False):
     else:
       yt = y[:,i]; labelStr+='['+str(i)+']'
     if(logOn):
-      lines=ax.loglog(x,yt,'o', linewidth=1.3, label=labelStr)
+      lines=ax.loglog(x,yt,'-', linewidth=1.3, label=labelStr)
     else:
       lines=ax.plot(x,yt,'-', linewidth=1.6, label=labelStr)
   ax.set_title( plotStr[0], fontsize=22)
@@ -453,9 +459,9 @@ def userLabels( pFig ):
   fontstyle: [ 'normal' | 'italic' | 'oblique']
   """
  
-  ax.set_title(titleStr, fontsize=20, fontstyle='italic', fontweight='heavy', fontname='serif')
-  ax.set_ylabel(yLbl, fontsize=22, fontstyle='italic', fontweight='bold', fontname='monospace')
-  ax.set_xlabel(xLbl, fontsize=20, fontstyle='italic', fontweight='bold', fontname='monospace')
+  ax.set_title(titleStr, fontsize=20, fontstyle='normal', fontweight='demibold', fontname='serif')
+  ax.set_ylabel(yLbl, fontsize=16, fontstyle='normal', fontweight='book', fontname='serif')
+  ax.set_xlabel(xLbl, fontsize=16, fontstyle='normal', fontweight='book', fontname='serif')
 
   return pFig
 
@@ -490,3 +496,29 @@ def maxValues( fileStr ):
   return mv
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+# ADDED MY MONA KURPPA, 2016:
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+def addToPlot_marker(fig, x,y,labelStr, plotStr=["","",""], logOn=False, marker='-'):
+  '''
+  Add variables x,y to a given plot.
+  Test whether y has multiple columns --> Require different treatment.
+  
+  e.g. marker = '-' or '--' or 'v-'
+  '''
+  ax = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height]
+  d = np.size(np.shape(y)) # Test if y has multiple columns
+
+  for i in xrange(d):
+    if(d==1):
+      yt = y
+    else:
+      yt = y[:,i]; labelStr+='['+str(i)+']'
+    if(logOn):
+      lines=ax.loglog(x,yt,marker, linewidth=1.3, label=labelStr)
+    else:
+      lines=ax.plot(x,yt,marker, linewidth=1.6, label=labelStr)
+  ax.set_title( plotStr[0], fontsize=22)
+  ax.set_xlabel(plotStr[1], fontsize=22)
+  ax.set_ylabel(plotStr[2], fontsize=22); ax.grid(True)  
+  return fig
+

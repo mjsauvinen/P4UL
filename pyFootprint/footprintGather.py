@@ -115,6 +115,7 @@ if( not printOnly ):
   IDict = {}
   IDict[50] = id50; IDict[75] = id75; IDict[90] = id90
   writeNumpyZFootprint(fileout, Ft, Xt, Yt, Zt, Ct, IDict )
+  writeNumpyZFootprint('Fp_KormanMeixner', F_km, Xt, Yt, Zt, Ct )
 
   # Footprint to VTK-format together with the complete topography. 
   R, Rdims, ROrig, dPx = readNumpyZTile( filetopo )
