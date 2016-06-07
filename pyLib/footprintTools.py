@@ -104,7 +104,7 @@ def fp2mshIJ(pxO, pyO, pzO, xG, yG, dx, dy ):  # IJ as in indecies.
 
 
 def fp2mshBM( pxO, pyO, pzO, xG, yG, dx, dy ):  # BM as in boolean matrix. 
-  # Elegant routine, but awfully slow. BM=boolean matrix. Don't use this!
+  # Elegant routine, but awfully slow. Don't use this!
   # pxO: particle x-origin, xG: x-grid coordinates.
   # First, Create meshgrid from the grid coords.
   X, Y = np.meshgrid( xG, yG )

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from utilities import filesFromList, vtkWriteDataStructured2d, vtkWriteHeaderAndGridStructured2d
 from utilities import vtkWritePointDataHeader, vtkWritePointDataStructured2D
+from utilities import writeLog
 from plotTools import addContourf, extractFromCSV
 from footprintTools import *
 from mapTools import readNumpyZTile
@@ -125,12 +126,14 @@ parser.add_argument("-i", "--ijk", help="Files contain ijk info.",\
   action="store_true", default=False) 
 parser.add_argument("-cw", "--coefwm", type=float, default=1.,\
   help="Coefficient for scaling <w> for mean correction.")
+parser.add_argument("-px","--pxzero", type=float, default=15.,\
+  help="Percentage of first x-koords where fp=0. Default=15%")
 parser.add_argument("-p", "--printOn", help="Print the extracted tile.",\
   action="store_true", default=False) 
 parser.add_argument("-pp", "--printOnly", help="Only print the extracted tile. Don't save.",\
   action="store_true", default=False) 
 args = parser.parse_args() 
-#writeLog( parser, args )
+writeLog( parser, args )
 #========================================================== #
 
 # Rename ... that's all.
@@ -142,6 +145,7 @@ filemean = args.filemean
 NxG = args.NxG
 dxG = args.dxG
 cw_init  = args.coefwm
+pxz      = args.pxzero
 
 ijkOn     = args.ijk
 vtkOn     = args.vtk
@@ -204,7 +208,7 @@ for fn in fileNos:
   # Store the mean values just for printing.
   xim = int(np.mean(xt)); yim = int(np.mean(yt)); zim = int(np.mean(zt))
   
-  idx   = farFieldIds( xO, 10. )  # Consider the first 20% of the x-range.
+  idx   = farFieldIds( xO, pxz )  # Consider the first 15% (=default) of the x-range.
   cw    = cw_init
   count = 0; ro    = None
   dr    = -1000.

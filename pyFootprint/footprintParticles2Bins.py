@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from footprintTools import *
+from utilities import writeLog
 from mapTools import readNumpyZTile, entry2Int
 import sys
 import argparse
@@ -63,7 +64,7 @@ parser.add_argument("-fm", "--filemask",type=str, help="Name of the mask (.npz) 
 parser.add_argument("-N","--Nxyz", help="Number of dividing partitions [Nx, Ny, Nz] of the target volume.",\
   type=int, nargs=3, default=[2,2,2] )
 args = parser.parse_args() 
-#writeLog( parser, args )
+writeLog( parser, args )
 #========================================================== #
 
 # Rename ... that's all.
