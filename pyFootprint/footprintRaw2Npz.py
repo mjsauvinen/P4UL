@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from utilities import filesFromList
+from utilities import filesFromList, writeLog
 from footprintTools import writeNumpyZFootprintRaw
 import sys
 import argparse
@@ -20,12 +20,12 @@ Author: Mikko Auvinen
 
 #========================================================== #
 parser = argparse.ArgumentParser(prog='footprintRaw2Npz.py')
-parser.add_argument("-f", "--fileKey",type=str, default='TARGET*', \
-  help="Search string for raw footprint input files. Default=TARGET* ")
+parser.add_argument("fileKey",type=str, default='TARGET', \
+  help="Search string for raw footprint input files. Default=TARGET ")
 parser.add_argument("-fo", "--fileout",type=str, default='FP', \
   help="Name of the .npz footprint output file. Default=FP")
 args = parser.parse_args() 
-#writeLog( parser, args )
+writeLog( parser, args )
 #========================================================== #
 
 # Rename ... that's all.
@@ -34,16 +34,16 @@ fileout = args.fileout
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = =   #
 
-fileNos, fileList = filesFromList( fileKey )
+fileNos, fileList = filesFromList( fileKey+'*' )
 
 a = None # Open a storage list which will contain N np.arrays.
 
 print(' Read the raw footprint data files ... \n ... and this may take awhile ... ')
-for fn in fileList:
+for fn in fileNos:
   if( a == None ):
-    a = np.loadtxt( fn )
+    a = np.loadtxt( fileList[fn] )
   else:
-    a = np.concatenate( (a , np.loadtxt(fn)) )
+    a = np.concatenate( (a , np.loadtxt(fileList[fn])) )
   print ' ... array dimensions = {} '.format(a.shape)
 print(' ... done !\n')
 

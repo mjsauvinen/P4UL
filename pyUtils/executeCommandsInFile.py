@@ -1,21 +1,24 @@
 #!/usr/bin/env python
 
 import os, sys
+import argparse
 import subprocess
 from txtTools import openIOFile
 
-# = = = = = = = = = Function definitions = = = = = = = = = #
-
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
+parser = argparse.ArgumentParser(prog='executeCommandsInFile.py')
+parser.add_argument("-f", "--filename", help="Name of file containing commands to be run.", type=str)
+args = parser.parse_args() 
 # = = = = = = = = = Main Program = = = = = = = = = = = = = #
+filename = args.filename
+
 
 try:
-	fileName =  sys.argv[1]
+  inFile = openIOFile( filename, 'r' )
 except:
-	print "Usage:", sys.argv[0], " [ file which contains executable commands ] "
-	sys.exit(1)
+  sys.exit("Cannot open file {}. Exiting ...".format(filename))
 
-inFile = openIOFile( fileName, 'r' )
 
 for line in inFile:
-	print " Executing: "+line
-	subprocess.call( line , shell=True )
+  print " Executing: "+line
+  subprocess.call( line , shell=True )

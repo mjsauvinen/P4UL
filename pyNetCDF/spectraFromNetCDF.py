@@ -25,7 +25,11 @@ parser.add_argument("-v", "--varname",  type=str, help="Name of the variable in 
 parser.add_argument("-nb", "--nbins", help="Number of frequency bins.", type=int, default=76)
 parser.add_argument("-n", "--normalize", help="Compute f*S/sigma^2.", action="store_true", \
   default=False)
-parser.add_argument("-zn", "--zname",type=str, help="Specify the z coordinate. e.g. zu_3d, zw_3d",\
+parser.add_argument("-xn", "--xname",type=str, help="Specify the x coordinate. e.g. xu or x",\
+  default='x')
+parser.add_argument("-yn", "--yname",type=str, help="Specify the y coordinate. e.g. yv or y",\
+  default='y')
+parser.add_argument("-zn", "--zname",type=str, help="Specify the z coordinate. e.g. zu_3d or zw_3d",\
   default='zu_3d')
 parser.add_argument("-p", "--printOn", help="Print the numpy array data.",\
   action="store_true", default=False) 
@@ -37,11 +41,12 @@ args = parser.parse_args()
 #==========================================================# 
 # Rename ...
 filename  = args.filename
-DeltaT    = args.DeltaT
 varName   = args.varname
 normalize = args.normalize
 Nbins     = args.nbins
 cl        = abs(args.coarse)
+xname     = args.xname
+yname     = args.yname
 zname     = args.zname
 #==========================================================# 
 
@@ -60,8 +65,8 @@ Read cell center coordinates and time.
 Create the output independent variables right away and empty memory.
 '''
 time, time_dims = read1DVariableFromDataset('time', ds, paramList, 0, 0, 1 ) # All values.
-x, x_dims = read1DVariableFromDataset( 'x',ds, paramList, 0, 0, cl )
-y, y_dims = read1DVariableFromDataset( 'y',ds, paramList, 0, 0, cl ); print(' y_dims = {} '.format(y_dims))
+x, x_dims = read1DVariableFromDataset( xname,ds, paramList, 0, 0, cl )
+y, y_dims = read1DVariableFromDataset( yname,ds, paramList, 0, 0, cl ); print(' y_dims = {} '.format(y_dims))
 y[np.isnan(y)] = 0.  # Special treatment.
 z, z_dims = read1DVariableFromDataset( zname ,ds, paramList, 0, 0, cl ) # Exclude the first value.
 
@@ -103,7 +108,7 @@ samplingFreq   = samplingFrequency( time, None )
 print(' sampling frequency = {}'.format(samplingFreq))
 
 DeltaT = (time[-1]-time[0])
-vw             = applyTapering( v , DeltaT , samplingFreq  )
+vw     = applyTapering( v , DeltaT , samplingFreq  )
 
 # Evaluate, Power (P), power spectral energy (E), and power spectral density (S).
 P, E, S, freqs = evalSpectra( vw, samplingFreq, normalize )

@@ -20,6 +20,8 @@ parser.add_argument("-f", "--filename",type=str, help="Name of the input NETCDF 
 parser.add_argument("-fo", "--fileOut",type=str, help="Name of the output NETCDF file.", default="Scalar.nc")
 parser.add_argument("-s", "--scalars",type=str, nargs='+', required=True,\
   help="Name of the NETCDF scalar in the file. e.g. e, p, pt")
+parser.add_argument("-d", "--decomp", help="Decomposed into mean (V_m) and fluctuating (V^prime) components.",\
+  action="store_true", default=False) 
 parser.add_argument("-zn", "--zname",type=str, help="Specify the z coordinate. e.g. zu_3d, zw_3d",\
   default='zu_3d')
 parser.add_argument("-nt", "--ntimeskip", type=int, help="Skip <nt> number of time steps.",\
@@ -35,6 +37,7 @@ cl       = abs(int(args.coarse))
 nt       = args.ntimeskip
 scalarNames = args.scalars
 zname    = args.zname
+decompOn = args.decomp
 
 '''
 Establish two boolean variables which indicate whether the created variable is an
@@ -81,11 +84,23 @@ for sname in scalarNames:
   print(' Ref: z.shape = {}, y.shape = {}, x.shape = {} '.format(z_dims,y_dims,x_dims) )
   print(' Orig: s0.shape = {} '.format(s0.shape) )
 
-  # Take the portion that matches the coords.
-  s = s0[:,1:,:-1,:-1].copy(); s0 = None
+  if( True ):
+    st_dims  = np.array( s0_dims )  # Change to numpy array for manipulation
+    st_dims[1:] -= 1   # Reduce the coord. dimensions by one. Note: time = uc_dims[0].
+    s = np.zeros( st_dims )
+    s, sm = interpolatePalmVectors( s0, s0_dims, 'k' , decompOn ); #s0 = None
+    sp = vectorPrimeComponent( s, sm )
+    sv.append(createNetcdfVariable( dso, sp, sname+'p', st_dims[0], '', 'f4',('time','z','y','x',) , variable ) )
+    
+  else:
+    # Take the portion that matches the coords.
+    s = s0[:,1:,:-1,:-1].copy(); s0 = None
+    
   s_dims = np.shape(s)
   print(' New: s.shape = {} '.format(s_dims) )
   sv.append( createNetcdfVariable(dso, s, sname, s_dims[0],'[]','f4',('time','z','y','x',), variable) )
+    
+
 
 netcdfWriteAndClose( dso )
 
