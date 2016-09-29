@@ -126,8 +126,9 @@ parser.add_argument("-i", "--ijk", help="Files contain ijk info.",\
   action="store_true", default=False) 
 parser.add_argument("-cw", "--coefwm", type=float, default=1.,\
   help="Coefficient for scaling <w> for mean correction.")
-parser.add_argument("-px","--pxzero", type=float, default=15.,\
-  help="Percentage of first x-koords where fp=0. Default=15%")
+help_px ='''Percentage of first x-koords where the footprint is set to zero (fp=0).
+If not specified, (Default=None) the farfield correction is not performed.''' 
+parser.add_argument("-px","--pxzero", type=float, default=None, help=help_px)
 parser.add_argument("-p", "--printOn", help="Print the extracted tile.",\
   action="store_true", default=False) 
 parser.add_argument("-pp", "--printOnly", help="Only print the extracted tile. Don't save.",\
@@ -188,89 +189,94 @@ for fn in fileNos:
   wtm_1 = np.mean(wt)
   wtm_2, km, jm, im = meanFromExternal( wm, xm, ym, zm, xt, yt, zt )
   
-  #wtm_3 = centralValue( wt, 1.e-6, 50 ) # Approximation for mean value.
-  #wtm_4 = polarPercentileAvg( wt, 5, 95 )
-  #wtm_5 = farFieldMean( wt, xO, 25. )   # Exclude the first 25%.
-  '''
-  - - - - - - - - - - - - -
-  Location: x={0}, y={1}, z={2}\n
-  Directly from particle data:  w_mean = {3:5.2f}
-  Central (skimmed) value:      w_mean = {4:5.2f}
-  Polar percentile (5,95):      w_mean = {5:5.2f}
-  Far field mean (25% exluded): w_mean = {6:5.2f}
-  Mean from external:           w_mean = {7:5.2f} 
-  
-  Selected:  w_mean = {8:6.3f}
-
-  - - - - - - - - - - - - -
-  '''
-  
-  # Store the mean values just for printing.
-  xim = int(np.mean(xt)); yim = int(np.mean(yt)); zim = int(np.mean(zt))
-  
-  idx   = farFieldIds( xO, pxz )  # Consider the first 15% (=default) of the x-range.
-  cw    = cw_init
-  count = 0; ro    = None
-  dr    = -1000.
-  dc    = 0.005
-  count_max = 100
-  r_lim = 100
-  infoStr = '''
-  #- # - # - # - # - # - # - # - # - #
-  Location: x={0}, y={1}, z={2}
-  Directly from particle data:  wtm_1 = {3:5.2f}
-  Mean from external:           wtm_2 = {4:5.2f}
-  - - - - - - - - - - - - -
-  '''.format(xim,yim,zim, wtm_1, wtm_2)
-  print(infoStr)
- 
+  # Choose the reference vertical velocity.
   if( np.sum(km)>1 and np.sum(jm)>1 and np.sum(im)>1 ):
     wtm_ref =  wtm_2
   else:
     wtm_ref = wtm_1
   
-  while( 1 ):
-
-    if( count == 50 ):
-      dc *= 2.
-
-    wt_mean = cw * wtm_ref
-    
-    ipos  = ( (wt-wt_mean) > 0.)   # Boolean array for positive values. 
-    ineg  = ~ipos                  # Boolean array for negative values. 
-  
-    # Form a loop that aims to equalize sum(ipos) and sum(ineg) when x < x_lim. 
-
-    # Function evaluation
-    r = abs( np.sum(ipos[idx]) - np.sum(ineg[idx]) )
-    
-    if( ro ):
-      dr = (r - ro )
-    
-    if( dr > 0 ):
-      dc *= -1.         # Bad direction, must change.
-      cw += 1.5*dc      # Do not return to cwo
-    else:
-      cw += dc
-  
-    ro  = r
-    count += 1
-    
-    if( (r < r_lim) or (count > count_max)):
-      break
-
-  
-  infoItr = '''
-  Iteration = {0}
-  w_mean = {1:6.3f}\t vs. w_mean_orig = {2:6.3f}
-  cw = {3}
-  r  = {4}\t dr = {5}
+  #wtm_3 = centralValue( wt, 1.e-6, 50 ) # Approximation for mean value.
+  #wtm_4 = polarPercentileAvg( wt, 5, 95 )
+  #wtm_5 = farFieldMean( wt, xO, 25. )   # Exclude the first 25%.
+  '''
   - - - - - - - - - - - - -
-  '''.format(count, wt_mean, wtm_ref, cw, r, dr)
-  print(infoItr)
+    Location: x={0}, y={1}, z={2}\n
+    Directly from particle data:  w_mean = {3:5.2f}
+    Central (skimmed) value:      w_mean = {4:5.2f}
+    Polar percentile (5,95):      w_mean = {5:5.2f}
+    Far field mean (25% exluded): w_mean = {6:5.2f}
+    Mean from external:           w_mean = {7:5.2f} 
+    Selected:  w_mean = {8:6.3f}
+  - - - - - - - - - - - - -
+  '''
   
+  if( pxz ): 
+  
+    # Store the mean values just for printing.
+    xim = int(np.mean(xt)); yim = int(np.mean(yt)); zim = int(np.mean(zt))
+  
+    idx   = farFieldIds( xO, pxz )  # Consider the first 15% (=default) of the x-range.
+    cw    = cw_init
+    count = 0; ro    = None
+    dr    = -1000.
+    dc    = 0.005
+    count_max = 100
+    r_lim = 100
+    infoStr = '''
+    #- # - # - # - # - # - # - # - # - #
+    Location: x={0}, y={1}, z={2}
+    Directly from particle data:  wtm_1 = {3:5.2f}
+    Mean from external:           wtm_2 = {4:5.2f}
+    - - - - - - - - - - - - -
+    '''.format(xim,yim,zim, wtm_1, wtm_2)
+    print(infoStr)
+  
+    while( 1 ):
+
+      if( count == 50 ):
+        dc *= 2.
+
+      wt_mean = cw * wtm_ref
+    
+      ipos  = ( (wt-wt_mean) > 0.)   # Boolean array for positive values. 
+      ineg  = ~ipos                  # Boolean array for negative values. 
+  
+      # Form a loop that aims to equalize sum(ipos) and sum(ineg) when x < x_lim. 
+
+      # Function evaluation
+      r = abs( np.sum(ipos[idx]) - np.sum(ineg[idx]) )
+    
+      if( ro ):
+        dr = (r - ro )
+    
+      if( dr > 0 ):
+        dc *= -1.         # Bad direction, must change.
+        cw += 1.5*dc      # Do not return to cwo
+      else:
+        cw += dc
+  
+      ro  = r
+      count += 1
+    
+      if( (r < r_lim) or (count > count_max)):
+        break
 
   
+    infoItr = '''
+    Iteration = {0}
+    w_mean = {1:6.3f}\t vs. w_mean_orig = {2:6.3f}
+    cw = {3}
+    r  = {4}\t dr = {5}
+    - - - - - - - - - - - - -
+    '''.format(count, wt_mean, wtm_ref, cw, r, dr)
+    print(infoItr)
+  
+  else: # no farfield correction
+    ipos  = ( (wt-wtm_ref) > 0.)   # Boolean array for positive values. 
+    ineg  = ~ipos                  # Boolean array for negative values.
+  
+
+  # Clear memory
   xt = None; yt = None; zt = None
   ut = None; vt = None; wt = None
 

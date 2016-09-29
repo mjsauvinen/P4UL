@@ -29,13 +29,15 @@ parser.add_argument("fileKey", help="Search string for collecting (.npz) files."
 parser.add_argument("-fo", "--fileout", type=str, default='fp_gather',\
   help="Footprint output file. (npz format)")
 parser.add_argument("-ft", "--filetopo", type=str,\
-  help="File containing the topography data. (npz format)")
+  help="File containing the topography data. (npz format)", default='')
 helpFlt = ''' Filter type and its associated number. Available filters:
  median, percentile, rank, gaussian, local, max. 
  Entering \"user num\" allows the user to specify <num> different filters consecutively.
  Example entry: median 5'''
 parser.add_argument("-fl","--filter",type=str,nargs=2,default=[None,None], help=helpFlt)
 parser.add_argument("-n1", "--norm2one", help="Normalize by making global sum = 1.",\
+  action="store_true", default=False)
+parser.add_argument("-v","--vtk", help="Write the results in VTK format with topography.",\
   action="store_true", default=False) 
 parser.add_argument("-p", "--printOn", help="Print the contour of the footprint.",\
   action="store_true", default=False) 
@@ -53,6 +55,11 @@ flt       = args.filter
 norm2one  = args.norm2one
 printOn   = args.printOn or args.printOnly
 printOnly = args.printOnly
+vtkOn     = args.vtk
+
+if( vtkOn and (filetopo == '')):
+  sys.exit(' Error! VTK results require -ft/--filetopo. Exiting ...')
+
 
 # Gather footprint data files: 
 fileNos, fileList = filesFromList( "*"+fileKey+"*" )
@@ -77,19 +84,15 @@ for fn in fileNos:
     Ft += Fi  # Accumulate the footprint data.
     Ct += Ci  # Accumulate the coefficient for normalization.
     Zt = np.maximum( Zt, Z )
-    
+
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = =   #
+# Resolution:
+dPx = np.array([ (Xt[0,1]-Xt[0,0]) , (Yt[1,0]-Yt[0,0]) ])
+
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = =   #
 # Compute the final footprint: 
 Fi = X = Y = Z = Ci = None
 Ft /= Ct
-
-# Resolution:
-dPx = np.array([ (Xt[0,1]-Xt[0,0]) , (Yt[1,0]-Yt[0,0]) ])
-# = = = = = = = = = = = = = = = = = = = = = = = = = = = =   #
-# Extract indecies for partial (%) footprints
-
-id50 = percentileFootprintIds( Ft, 50. )
-id75 = percentileFootprintIds( Ft, 75. )
-id90 = percentileFootprintIds( Ft, 90. )
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = =   #
 # Apply filter if desired.
@@ -100,9 +103,10 @@ if( flt.count(None) == 0):
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = =   #
 # Kormann et. Meixner Analytical footprint.
-L =2000.; z_m = (74.-20.); z_0 = 1.; sigma_v = 0.48; u=9.5
+L =10000.; z_m = (74.-14.); z_0 = 2.4; sigma_v = 0.48; u=4.86
 x_off =  2.*228.; y_off = 2.*508.
-F_km  = kormann_and_meixner_fpr(z_0, z_m, u, sigma_v, L, Xt, Yt, x_off, y_off)
+F_km    = kormann_and_meixner_fpr(z_0, z_m, u, sigma_v, L, Xt, Yt, x_off, y_off)
+
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = =   #
 # Make the analytical and LES footprints comparable
@@ -114,66 +118,84 @@ if( norm2one ):
   print('... done! C_les = {} and C_ana = {}'.format(Cn, Ca))
 
 
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = =   #
+# Extract indecies for partial (%) footprints
 
-# Compute the cross wind mean of the footprint.
-Ftm   = writeCrossWindSum( Ft, Xt, fileout )
-Ftm50 = writeCrossWindSum( Ft, Xt, fileout+'-50' , id50 )
-Ftm75 = writeCrossWindSum( Ft, Xt, fileout+'-75' , id75 )
-Ftm90 = writeCrossWindSum( Ft, Xt, fileout+'-90' , id90 )
+id50 = percentileFootprintIds( Ft, 50. )
+id75 = percentileFootprintIds( Ft, 75. )
+id90 = percentileFootprintIds( Ft, 90. )
 
-Fm_km = writeCrossWindSum( F_km, Xt, fileout+'-ana' ) 
-
-
+id90_km = percentileFootprintIds( F_km, 90. ) # 90% 
+id75_km = percentileFootprintIds( F_km, 75. ) # 75% 
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = =   #
 # Output to npz and vtk formats.
-Ftmp = np.zeros( np.shape(Ft), float )
 
 if( not printOnly ):
+  
+  # Compute the cross wind mean of the footprint.
+  Ftm   = writeCrossWindSum( Ft, Xt, fileout )
+  Ftm50 = writeCrossWindSum( Ft, Xt, fileout+'-50' , id50 )
+  Ftm75 = writeCrossWindSum( Ft, Xt, fileout+'-75' , id75 )
+  Ftm90 = writeCrossWindSum( Ft, Xt, fileout+'-90' , id90 )
+
+  Fm_km   = writeCrossWindSum( F_km, Xt, fileout+'_km' )
+  Fm90_km = writeCrossWindSum( F_km, Xt, fileout+'-90_km', id90_km )
+  
+  
+  # Write the footprint in npz format.
   IDict = {}
-  IDict[50] = id50; IDict[75] = id75; IDict[90] = id90
-  writeNumpyZFootprint(fileout, Ft, Xt, Yt, Zt, Ct, IDict )
-  writeNumpyZFootprint('Fp_KormanMeixner', F_km, Xt, Yt, Zt, Ct )
+  IDict[50] = id50[::-1,:]; IDict[75] = id75[::-1,:]; IDict[90] = id90[::-1,:]
+  writeNumpyZFootprint(fileout, Ft[::-1,:], Xt, Yt, Zt, Ct, IDict )
+  
+  # Write also the Kormann-Meixner footprint
+  IDict = {}
+  IDict[75] = id75_km[::-1,:]; IDict[90] = id90_km[::-1,:]
+  writeNumpyZFootprint(fileout+'_KormannMeixner', F_km[::-1,:], Xt, Yt, Zt, Ct, IDict )
+  
+  
+  if( vtkOn ):
+    
+    # Footprint to VTK-format together with the complete topography. 
+    Ftmp = np.zeros( np.shape(Ft), float )
+    R, Rdims, ROrig, dPx = readNumpyZTile( filetopo )
+    if( all(Rdims != np.shape(Xt)) ):
+      sys.exit(' Error! Mismatch Topo_dims={} vs. Fp_dims={}'.format(Rdims,np.shape(Xt)))
+  
 
-  # Footprint to VTK-format together with the complete topography. 
-  R, Rdims, ROrig, dPx = readNumpyZTile( filetopo )
-  if( all(Rdims != np.shape(Xt)) ):
-    sys.exit(' Error! Mismatch Topo_dims={} vs. fp_dims={}'.format(Rdims,np.shape(XM)))
+    f_vtk = vtkWriteHeaderAndGridStructured2d( Xt, Yt, R[::-1,:], fileout, 'Footprint'); R=None 
+    f_vtk = vtkWritePointDataHeader( f_vtk, Ft, 5 )
   
-  # Dnorm = np.percentile(Ft[Ft!=0], 80)
-  #- Dnorm = np.max(Ft)
-  #- Ft /= Dnorm
+    # ======= Write 100% Ft ================
+    f_vtk = vtkWritePointDataStructured2D( f_vtk, Ft , Xt, 'fp' )
   
-  f_vtk = vtkWriteHeaderAndGridStructured2d( Xt, Yt, R[::-1,:], fileout, 'Footprint'); R=None 
-  f_vtk = vtkWritePointDataHeader( f_vtk, Ft, 5 )
-  f_vtk = vtkWritePointDataStructured2D( f_vtk, Ft , Xt, 'fp' )
+    # ======= Write 75% Ft ================
+    Ftmp[:,:] = 0.; Ftmp += Ft*id75
+    f_vtk = vtkWritePointDataStructured2D( f_vtk, Ftmp , Xt, 'fp75' )
   
-  Ftmp += Ft*id50
-  f_vtk = vtkWritePointDataStructured2D( f_vtk, Ftmp , Xt, 'fp50' )
+    # ======= Write 90% Ft ================
+    Ftmp[:,:] = 0.; Ftmp += Ft*id90
+    f_vtk = vtkWritePointDataStructured2D( f_vtk, Ftmp , Xt, 'fp90' )
   
-  Ftmp = 0.; Ftmp += Ft*id75
-  f_vtk = vtkWritePointDataStructured2D( f_vtk, Ftmp , Xt, 'fp75' )
+    # ======= Write 100% F_km ================
+    f_vtk = vtkWritePointDataStructured2D( f_vtk, F_km, Xt, 'fp_km' )
   
-  Ftmp = 0.; Ftmp += Ft*id90
-  f_vtk = vtkWritePointDataStructured2D( f_vtk, Ftmp , Xt, 'fp90' )
-  
-  # Dnorm = np.percentile(F_km[F_km!=0], 80)
-  #- Dnorm = np.max(F_km)
-  #- F_km /= Dnorm
-  
-  f_vtk = vtkWritePointDataStructured2D( f_vtk, F_km, Xt, 'fp_km' )
+    # ======= Write 00% F_km ================
+    Ftmp[:,:] = 0.; Ftmp += F_km*id90_km
+    f_vtk = vtkWritePointDataStructured2D( f_vtk, Ftmp , Xt, 'fp90_km' )
 
-  # Close the file at the end.
-  f_vtk.close(); Ftmp = None
+    # Close the file at the end.
+    f_vtk.close(); Ftmp = None
 
 if( printOn ):
   Cfp = addContourf( Xt, Yt, Ft  , 'F(x,y)'        , fileout )
-  Cfa = addContourf( Xt, Yt, F_km, 'F_km(x,y), Ana', fileout+'-ana' )
+  Cfa = addContourf( Xt, Yt, F_km, 'F_km(x,y), Ana', fileout+'_km' )
   
+  Fym = writeCrossWindSum( Ft, Xt, None, None )
   pfig = plt.figure(num=3, figsize=(12.,9.))
-  varLabel = 'fp_y(x) = sum_y fp(x,y)'
+  varLabel = '$fp_y(x) = \sum_y fp(x,y)$'
   axLabels = ['Cross Wind Integrated Footprint', 'x', 'sum_y fp(x,y) ']
-  pfig = addToPlot(pfig, Xt[0,:], Ftm, varLabel, axLabels, False )
+  pfig = addToPlot(pfig, Xt[0,:], Fym, varLabel, axLabels, False )
 
 
 Ft = Zt = Xt = Yt = None

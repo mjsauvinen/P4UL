@@ -30,7 +30,7 @@ def writeNumpyZFootprintRaw( filename, arr ):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def writeNumpyZFootprintIJK(fn, xO, yO, zO, xt, yt, zt, ut, vt, wt, dxyz):
-  fstr = fn.strip('.npz')
+  fstr = fn.split('.npz')[0]
   np.savez_compressed( fstr, \
     xO=xO, yO=yO, zO=zO, xt=xt, yt=yt, zt=zt, ut=ut, vt=vt, wt=wt, dxyz=dxyz )
   print(' {}.npz saved successfully!'.format(fstr) )
@@ -57,7 +57,7 @@ def readNumpyZFootprintRaw( filename ):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def writeNumpyZFootprint(filename, F, X, Y, Z, C, Ids=None ):
-  fstr = filename.strip('.npz')
+  fstr = filename.split('.npz')[0]
   if( Ids != None ):
     np.savez_compressed( fstr , F=F, X=X, Y=Y, Z=Z, C=C, Ids=Ids )
   else:
@@ -67,15 +67,23 @@ def writeNumpyZFootprint(filename, F, X, Y, Z, C, Ids=None ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def readNumpyZFootprint( filename ):
+def readNumpyZFootprint( filename, IdsOn=False ):
   print ' Read footprint file {} ...'.format(filename)
   try: dat = np.load(filename)
   except: sys.exit(' Cannot read file {}. Exiting ...'.format(filename))
   
   F = dat['F']; X = dat['X']; Y = dat['Y']; Z = dat['Z']; C = dat['C']
+  
+  if( IdsOn ):
+    try:    Ids = dat['Ids'].item()  # .item() returns the dict inside 0-array.
+    except: Ids = None
+    
   dat.close()
   
-  return F, X, Y, Z, C
+  if( IdsOn ):
+    return F, X, Y, Z, C, Ids
+  else:
+    return F, X, Y, Z, C
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
@@ -186,7 +194,7 @@ def percentileFootprintIds( F , p ):
   
   fmax = np.max(F)  # maximum value.
   fv   = 0.5*fmax
-  df   = fmax/300.  # values to increment.
+  df   = fmax/350.  # values to increment.
   tol  = Fsum/2000.
   
   ic = 0

@@ -84,7 +84,7 @@ for sname in scalarNames:
   print(' Ref: z.shape = {}, y.shape = {}, x.shape = {} '.format(z_dims,y_dims,x_dims) )
   print(' Orig: s0.shape = {} '.format(s0.shape) )
 
-  if( True ):
+  if( decompOn ):
     st_dims  = np.array( s0_dims )  # Change to numpy array for manipulation
     st_dims[1:] -= 1   # Reduce the coord. dimensions by one. Note: time = uc_dims[0].
     s = np.zeros( st_dims )

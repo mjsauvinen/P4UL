@@ -35,14 +35,14 @@ if( not args.strKey ):
   args.strKey = raw_input(" Enter search string: ")
   if( not args.strKey ): sys.exit(1)
 
-plt.rc('xtick', labelsize=16); #plt.rc('ytick.major', size=10)
-plt.rc('ytick', labelsize=20); #plt.rc('ytick.minor', size=6)
+plt.rc('xtick', labelsize=24); #plt.rc('ytick.major', size=10)
+plt.rc('ytick', labelsize=24); #plt.rc('ytick.minor', size=6)
 
 while 1:
 
   fileNos, fileList = filesFromList( "*"+args.strKey+"*" )
 
-  pfig = plt.figure(num=1, figsize=(9.,9.));
+  pfig = plt.figure(num=1, figsize=(12.,9.5));
   for fn in fileNos:
     pfig = plotXX( pfig, fileList[fn], args.log, args.factorX, args.factorY )
 

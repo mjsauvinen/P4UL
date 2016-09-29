@@ -3,6 +3,7 @@ import sys
 import argparse
 import numpy as np
 from mapTools import *
+from footprintTools import readNumpyZFootprint
 from utilities import filesFromList
 from plotTools import addImagePlot, userLabels
 import matplotlib.pyplot as plt
@@ -28,18 +29,35 @@ parser.add_argument("--grid", help="Turn on grid.", action="store_true",\
   default=False)
 parser.add_argument("--labels", help="User specified labels.", action="store_true",\
   default=False)
+parser.add_argument("--footprint", help="Plot footprint data.", action="store_true",\
+  default=False)
+parser.add_argument("--save", help="Save the figure right away.", action="store_true",\
+  default=False)
 args = parser.parse_args() 
 #writeLog( parser, args )
 #==========================================================#
-
 # Renaming ... that's all.
-rasterfile = args.rfile
-size       = args.size
-limsOn     = args.lims
-gridOn     = args.grid
-labels     = args.labels
+rasterfile  = args.rfile
+size        = args.size
+limsOn      = args.lims
+gridOn      = args.grid
+labels      = args.labels
+footprintOn = args.footprint
+saveOn      = args.save
 
-R, Rdims, ROrig, dPx = readNumpyZTile(rasterfile)
+plt.rc('xtick', labelsize=18); #plt.rc('ytick.major', size=10)
+plt.rc('ytick', labelsize=18); #plt.rc('ytick.minor', size=6)
+plt.rc('axes', titlesize=20)
+
+if( not footprintOn ):
+  R, Rdims, ROrig, dPx = readNumpyZTile(rasterfile)
+else:
+  R, X, Y, Z, C = readNumpyZFootprint(rasterfile)
+  Rdims = np.array(np.shape(R))
+  ROrig = np.zeros(2)
+  dPx   = np.array([ (X[0,1]-X[0,0]) , (Y[1,0]-Y[0,0]) ])
+  X = None; Y = None; Z = None; C = None  # Clear memory
+  
 
 info = ''' Info:
 Dimensions [rows, cols] = {}
@@ -57,5 +75,8 @@ R = None
 if(labels):
   fig = userLabels( fig )
 
+if(saveOn):
+  fig.savefig( rasterfile.strip('.npz')+'.jpg' )
+  
 plt.show()
 

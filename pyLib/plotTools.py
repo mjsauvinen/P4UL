@@ -4,6 +4,7 @@ import glob
 import numpy as np
 import pylab as pl
 import matplotlib.pyplot as plt
+from  matplotlib.ticker import FormatStrFormatter
 
 # 08.04.2016:  Mona added an option for colorbar bounds to addImagePlot
 
@@ -59,14 +60,32 @@ def plotBar(fig, xb, yb, labelStr, plotStr=["","",""], wb=0.6, errb=0):
 def addImagePlot( fig, X, labelStr, gridOn=False, limsOn=False ):
   ax = fig.add_axes( [0.1, 0.075 , 0.875 , 0.81] ) #[left, up, width, height]
   im = ax.imshow(X)
-  im.set_cmap('rainbow')
+  cmaps = {1:'rainbow',  2:'jet',          3:'hot',      4:'gist_earth', 5:'nipy_spectral',\
+           6:'coolwarm', 7:'gist_rainbow', 8:'Spectral', 9:'CMRmap',    10:'cubehelix',\
+          11:'seismic', 12:'bwr',         13:'terrain', 14:'gist_ncar', 15:'gnuplot2', \
+          16:'BuPu',    17:'GnBu',        18:'RdPu',    19:'YlGnBu',    20:'YlOrRd',\
+          21:'Oranges', 22:'Reds',        23:'Purples', 24:'Blues'}        
+
   ax.set_title(labelStr)
   ax.grid(gridOn)
   
+  uticks =None # User-defined ticks. <None> leads to default setting.
+  eformat=None
   if(limsOn): # bounds for a colorbar
-    lMin, lMax = raw_input('Enter limits for the colorbar: <min> <max> = ').split()
-    im.set_clim([lMin,lMax])
-  cbar = fig.colorbar(im)
+    try:
+      lMin, lMax = raw_input('Enter limits for the colorbar: <min> <max> = ').split()
+      im.set_clim([lMin,lMax])
+    except:
+      pass
+    #im.set_cmap(cmaps[5])  # Specify the colormap
+    im.set_cmap(cmaps[14])
+    #im.set_cmap(cmaps[12])
+    try:
+      uticks=input('Enter ticks separated by comma (empty=default): ')
+    except:
+      uticks=None
+  if(np.max(X)<1.e-3): eformat='%.2e'
+  cbar = fig.colorbar(im, ticks=uticks, format=eformat)
   
   return fig
 
@@ -103,6 +122,7 @@ def plotXX( fig, fileStr, logOn, Cx=1., Cy=1. ):
   labelStr = fileStr.split(".")[0]
 
   # Print each column separately
+  amax = 0.
   Ny = (x.shape[1]-1)
   for i in xrange(Ny):
     if( Ny == 1 ):
@@ -114,8 +134,13 @@ def plotXX( fig, fileStr, logOn, Cx=1., Cy=1. ):
       #lines=ax.loglog(x[:,0],np.abs(x[:,i+1]),'o-', linewidth=1.3 , label=labelXX)
       lines=ax.semilogy(Cx*x[:,0], Cy*np.abs(x[:,i+1]),'-', linewidth=1.1 , label=labelXX)
     else:
-      lines=ax.plot(Cx*x[:,0], Cy*x[:,i+1],'-', linewidth=1.1, label=labelXX)
-
+      lines=ax.plot(Cx*x[:,0], Cy*x[:,i+1],'-', linewidth=2.1, label=labelXX)
+    
+    lmax = np.abs(np.max(x[:,i+1]))  # Local maximum
+    if( lmax > amax ): amax = lmax
+    
+  if(amax <1.e-3): ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
+    
   ax.set_xlabel(" X ")
   ax.set_ylabel(" Y ")
   return fig
