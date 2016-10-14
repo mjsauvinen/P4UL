@@ -56,12 +56,13 @@ else:                 fltStr  = flt[0]+'-filtered: '
 
 # Read the raster tile to be processed.
 R, Rdims, ROrig, dPx = readNumpyZTile(args.filename)
-print ' Rdims = {} '.format(Rdims)
+print(' Rdims = {} '.format(Rdims))
+print(' ROrig = {} '.format(ROrig))
 
 
 # Set the zero level according to the given pixel value.
 if(i0.count(None) == 0):
-  print ' Zero Level: {} '.format(R[i0[0],i0[1]])
+  print(' Zero Level: {} '.format(R[i0[0],i0[1]]))
   R0 = R[i0[0],i0[1]]
   R -= R0
   R[R<0.] = 0.

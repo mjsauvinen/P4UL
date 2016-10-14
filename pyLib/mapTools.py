@@ -96,7 +96,7 @@ def compileTileGrid( dictList, ijList, Mrows, Mcols, fileTypes ):
             a = b = c = None   # Throw the rest away.
           M.append(r); r = None
   
-  print ' np.shape(M) = {}'.format(np.shape(M))
+  print(' M.shape = {}'.format(np.shape(M)))
 
   T = None
   for i in xrange(Mrows):
@@ -107,7 +107,7 @@ def compileTileGrid( dictList, ijList, Mrows, Mcols, fileTypes ):
     else:
       T = np.vstack( (T,np.hstack(M[c1:c2])) )
   
-    print ' np.shape(T) = {}'.format(np.shape(T))
+    print(' np.shape(T) = {}'.format(np.shape(T)))
 
   M = None
   dims = np.shape(T)
@@ -128,7 +128,7 @@ def readAsciiGridHeader( filename, idx=0 ):
       s = fl.readline().split()
       hdict[s[0]] = float( s[1] )
     except: 
-      print 'Unexpected ascii grid header format. Exiting.'
+      print('Unexpected ascii grid header format. Exiting.')
       sys.exit(1)
   
   idx += 1
@@ -165,9 +165,9 @@ def resolutionFromDicts( dictList ):
 def readAsciiGrid( filename ):
   try:
     rx = np.loadtxt( filename, skiprows=6 ) # Note! skiprows=6.
-    print ' File {} read successfully.'.format(filename)
+    print(' File {} read successfully.'.format(filename))
   except:
-    print 'Could not read ascii grid file: {}. Exiting.'.format(filename)
+    print(' Could not read ascii grid file: {}. Exiting.'.format(filename))
     sys.exit(1)
 
   return rx
@@ -179,15 +179,15 @@ def saveTileAsNumpyZ( filename, Rx, Rxdims, RxOrig, dPx):
   The saved .npz file contains R,dims,dpx and XOrig
   '''
   try:
-    np.savez(filename, R=Rx, dims=Rxdims, dpx=dPx, XOrig=RxOrig)
-    print ' {}.npz saved successfully!'.format(filename)
+    np.savez_compressed(filename, R=Rx, dims=Rxdims, dpx=dPx, XOrig=RxOrig)
+    print(' {}.npz saved successfully!'.format(filename))
   except:
-    print ' Error in saving {}.npz in saveTileAsNumpyZ().'.format(filename)
+    print(' Error in saving {}.npz in saveTileAsNumpyZ().'.format(filename))
     
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def readNumpyZTile( filename, dataOnly=False ):
-  print ' Read filename {} '.format(filename)
+  print(' Read filename {} '.format(filename))
   dat = np.load(filename)
   if(dataOnly):
     Rx = []
@@ -318,7 +318,7 @@ def filterAndScale(Rxo, Rx, filterInfo, sx=1.0, ix=None, jx=None):
     if( 'user' in filterInfo[0] ):
       nI = int(filterInfo[1])
       for i in xrange(nI):
-        ftmp = raw_input('Enter <method>, <num> = ').split(',')
+        ftmp = raw_input(' Enter <method>, <num> = ').split(',')
         if( i == 0 and inxOn ):  Rxf = applyFilter(Rx[ix,jx], ftmp)
         else:                    Rxf = applyFilter(Rx, ftmp)       
         Rx = Rxf.copy()
@@ -347,35 +347,35 @@ def applyFilter(Rx, filterInfo ):
     try: 
       Nf = float(filterInfo[1])
     except: 
-      print ' Failed to obtain <sigma> for the Gaussian filter. Exiting.'
+      print(' Failed to obtain <sigma> for the Gaussian filter. Exiting.')
       sys.exit(1)
   else:
     try: 
       Nf = int(filterInfo[1])
     except: 
-      print ' Failed to obtain <size> for the filters. Exiting.'
+      print(' Failed to obtain <size> for the filters. Exiting.')
       sys.exit(1)
   
   if( 'median' in filterInfo[0] ):
-    print ' Median {0}x{0} filter applied. '.format(Nf)
+    print(' Median {0}x{0} filter applied. '.format(Nf))
     Rf = sn.median_filter(Rx, size=Nf) 
   elif( 'perc' in filterInfo[0] ):
-    print ' Percentile 60 {0}x{0} filter applied. '.format(Nf) 
+    print(' Percentile 60 {0}x{0} filter applied. '.format(Nf))
     Rf = sn.percentile_filter(Rx, 60, size=Nf)
   elif( 'rank' in filterInfo[0] ):
-    print ' Rank 5 {0}x{0} filter applied. '.format(Nf)
+    print(' Rank 5 {0}x{0} filter applied. '.format(Nf))
     Rf = sn.rank_filter(Rx, 5, size=Nf)
   elif( 'gauss' in filterInfo[0] ):
-    print ' Gaussian sigma={} filter applied. '.format(Nf)
+    print(' Gaussian sigma={} filter applied. '.format(Nf))
     Rf = sn.gaussian_filter(Rx, sigma=Nf)
   elif( 'local' in filterInfo[0] ):
-    print ' Local mean {0}x{0} filter applied. '.format(Nf)
+    print(' Local mean {0}x{0} filter applied. '.format(Nf))
     Rf = sn.uniform_filter(Rx, size=Nf)
   elif( 'max' in filterInfo[0] ):
-    print 'Max {0}x{0} filter applied. '.format(Nf)
+    print('Max {0}x{0} filter applied. '.format(Nf))
     Rf = sn.maximum_filter(Rx, size=Nf)
   else:
-    print ' No filter applied. '
+    print(' No filter applied. ')
     Rf = Rx
     
   return Rf

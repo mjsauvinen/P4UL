@@ -56,13 +56,16 @@ dPx = entry2Int( dPx )
 
 # Pivot coordinates
 pY = nY[iPv[0]]; pX = eX[iPv[1]] 
-print ' Origo in the Topography data: [XO,YO] = [{}, {}]'.format(ROrig[1],ROrig[0])
-print ' Pivot Coords in Topography data: [pX,pY] = [{}, {}]'.format(pX,pY)
+print(' Origo in the Topography data: [XO,YO] = [{}, {}]'.format(ROrig[1],ROrig[0]))
+print(' Pivot Coords in Topography data: [pX,pY] = [{}, {}]'.format(pX,pY))
 #NY, EX = np.meshgrid(nY,eX)
 
 '''
 Create Palm grid which obeys the X,Y-coordinate layout. This might cause confusion
 so let's proceed carefully.
+
+NOTE: 
+Even though the data is saved as raster array, the data points are now cell centers.
 '''
 xbegin = dxG[0]/2. # First cell-centers.
 ybegin = dxG[1]/2. 
@@ -102,7 +105,7 @@ theta = 270. - windDir
 if( theta != 0. ):
   XTRM,YTRM = rotateGridAroundPivot(XTM,YTM, pX, pY,theta, deg=True)
 else:
-  print ' No rotation! '
+  print(' No rotation! ')
   XTRM = XTM.copy(); YTRM = YTM.copy()
 
 '''
@@ -111,6 +114,15 @@ Top Left     :  XTRM[-1,0], YTRM[-1,0]
 Bottom Right :  XTRM[0,-1], YTRM[0,-1]
 Top Right    :  XTRM[-1,-1], YTRM[-1,-1])
 '''
+
+
+'''
+ Reset the top left origo utilizing the NON-rotated coordinates. This 
+ allows the relative position of different raster maps (with identical 
+ coord. rotation) to be determined easily.
+'''
+PROrig = np.array([ XTM[-1,0], YTM[-1,0] ])  # Reset top left origo
+print(' Top left origo coords. (cell centers!): [X,Y] = {}'.format(PROrig))
 
 XT  = None; YT  = None
 XTM = None; YTM = None
@@ -124,8 +136,8 @@ Irow = (np.abs(YTRM-ROrig[0])/dPx ).astype(int)
 Jcol = (np.abs(XTRM-ROrig[1])/dPx ).astype(int) 
 
 # Make sure the indecies don't run beyond the allowable bounds.
-Irow = np.minimum(Irow, Rdims[0]-1)
-Jcol = np.minimum(Jcol, Rdims[1]-1)
+Irow = np.maximum(Irow, 0);          Jcol = np.maximum(Jcol, 0)
+Irow = np.minimum(Irow, Rdims[0]-1); Jcol = np.minimum(Jcol, Rdims[1]-1)
 
 #print " np.shape(Irow) = {},  Irow = {} ".format(np.shape(Irow) ,Irow[::4,::4])
 #print " Jcol = {} ".format(Jcol[::4,::4] )
@@ -134,13 +146,9 @@ PR = np.zeros( Xdims  , float)
 PR[::-1,:] = R[Irow,Jcol]    # The row order must be reversed. 
 R = None 
 
-'''
-NOTE: 
-Even though the data is saved as raster array, the data points are now cell centers.
-'''
+
 if( not args.printOnly ):
-  PROrig = np.zeros(2)   # Reset origo. Now we're off the map. 
-  saveTileAsNumpyZ( args.fileOut, PR, Xdims, PROrig, np.array([dPx,dPx]) )
+  saveTileAsNumpyZ( args.fileOut, PR, Xdims, PROrig, np.array([dxG[0],dxG[1]]) )
 
 
 # I'm not fully sure why the row indecies have to be fed in reverse order ...

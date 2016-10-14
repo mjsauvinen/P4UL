@@ -26,19 +26,19 @@ Author: Mikko Auvinen
 parser = argparse.ArgumentParser(prog='footprintMaskOutput.py')
 parser.add_argument("-f", "--filename", type=str,help="Footprint file. (npz format)")
 parser.add_argument("-fm", "--filemask", type=str, help="Mask file. (npz format)")
-parser.add_argument("-p", "--printOn", help="Print the contour of the footprint.",\
-  action="store_true", default=False) 
 parser.add_argument("-pp", "--printOnly", help="Only print the contour. Don't save.",\
-  action="store_true", default=False) 
+  action="store_true", default=False)
+parser.add_argument("--save", help="Save the figure right away.", action="store_true",\
+  default=False)
 args = parser.parse_args() 
-writeLog( parser, args )
+writeLog( parser, args, args.printOnly )
 #========================================================== #
 
 # Rename ... that's all.
 filename  = args.filename
 filemask  = args.filemask
-printOn   = args.printOn or args.printOnly
 printOnly = args.printOnly
+saveOn    = args.save            #  save the fig
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = =   #
 # xO := origin coords. # xt := target coords. # ut := target speed
@@ -89,8 +89,8 @@ for key in IDict.keys():
     print(pStr)
   print('----------')
 
-mpl.rcParams['font.size'] = 16.0
-plt.figure(num=1, figsize=(6.,6.));
+mpl.rcParams['font.size'] = 18.0
+plt.figure(num=1, figsize=(9.,6.));
 lbl = np.array(['Buildings','Impervious','Grass',\
   'Low Vegitation','High Vegitation', 'Water', '','Road'])
 dat = FpM/Fptot*100.
@@ -107,6 +107,9 @@ plt.pie(dat[ix],explode=expl[ix],labels=lbl[ix],colors=cs[ix],\
 #plt.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%', shadow=True, startangle=90)
 # Set aspect ratio to be equal so that pie is drawn as a circle.
 plt.axis('equal')
+
+if(saveOn):
+  plt.savefig( filename.strip('.npz')+'.jpg' )
 plt.show()
 
 #print(' Footprint: {} '.format(np.shape(Fp)))
