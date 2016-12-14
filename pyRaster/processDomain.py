@@ -35,6 +35,7 @@ helpFlt = ''' Filter type and its associated number. Available filters:
  to specify <num> different filters consecutively.
  Example entry: median 5'''
 parser.add_argument("-ft","--filter",type=str,nargs=2,default=[None,None], help=helpFlt)
+parser.add_argument("-hx","--hmax", help="Maximum allowable height.",type=float,default=None)
 parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
   action="store_true", default=False) 
 parser.add_argument("-pp", "--printOnly", help="Only print the resulting data. Don't save.",\
@@ -48,6 +49,7 @@ mw      = args.mrgnW
 mr      = args.mrgnR
 mh      = args.mrgnH
 flt     = args.filter
+hmax    = args.hmax
 fileOut = args.fileOut
 
 if( flt[0] == None):  fltStr  = ' '
@@ -72,6 +74,9 @@ R = applyMargins( R , mw, mr, mh )
 # Apply desired filters.
 Rf = np.zeros( np.shape(R) , float)
 Rf =  filterAndScale(Rf, R, flt )
+
+if( hmax ):
+  Rf = np.minimum( hmax , Rf )
 
 if( not args.printOnly ):
   fx = open( fileOut , 'w' )

@@ -13,8 +13,73 @@ iMg = 0  # Global integer for markers
 gxI = -1     # Global x-index for csv animations
 gyLst = []   # Global y-value list for csv animations
 
+# The available color maps:
+cmaps = {  1:'rainbow',  2:'jet',          3:'hot',      4:'gist_earth', 5:'nipy_spectral',\
+           6:'coolwarm', 7:'gist_rainbow', 8:'Spectral', 9:'CMRmap',    10:'cubehelix',\
+          11:'seismic', 12:'bwr',         13:'terrain', 14:'gist_ncar', 15:'gnuplot2', \
+          16:'BuPu',    17:'GnBu',        18:'RdPu',    19:'YlGnBu',    20:'YlOrRd',\
+          21:'Oranges', 22:'Reds',        23:'Purples', 24:'Blues'}
+# NOTE! Some good ones: 2, 5, 12, 14
+
+# The available color maps in the new version of matplotlib:
+cmaps_new = { 1:'viridis', 2:'inferno', 3:'plasma',  4:'magma',     5:'Blues', 
+          6:'BuGn',    7:'BuPu',    8:'GnBu',    9:'Greens',   10:'Greys', 
+         11:'Oranges', 12:'OrRd',  13:'PuBu',   14:'PuBuGn',   15:'PuRd', 
+         16:'Purples', 17:'RdPu',  18:'afmhot', 19:'autumn', 
+         20:'bone',    22:'cool',  23:'copper', 24:'gist_heat', 
+         25:'gray',    26:'hot',   27:'pink',   28:'spring',    29:'summer', 
+         30:'winter',  31:'Reds',  32:'YlGn',   33:'YlGnBu',    34:'YlOrBr', 
+         35:'YlOrRd',  36:'BrBG',  37:'bwr',    38:'coolwarm',  39:'PiYG', 
+         40:'PRGn',    41:'PuOr',      42:'RdBu',    43:'RdGy', 44:'RdYlBu', 
+         45:'RdYlGn',  46:'Spectral',  47:'seismic', 48:'Accent', 49:'Dark2', 
+         50:'Paired',  51:'Pastel1',   52:'Pastel2', 53:'Set1',   54:'Set2', 
+         55:'Set3',    56:'gist_earth',57:'terrain', 58:'ocean',  59:'gist_stern',
+         60:'brg',     61:'CMRmap',    62:'cubehelix', 63:'gnuplot', 64:'gnuplot2', 
+         65:'gist_ncar',66:'nipy_spectral', 67:'jet',  68:'rainbow', 69:'gist_rainbow', 
+         70:'hsv',      71:'flag',          72:'prism'}
+
 
 # =*=*=*=* FUNCTION DEFINITIONS *=*=*=*=*=*=*=*=*=*=*=*
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def printDict( D , ncols=3 ):
+  i = 0; pStr = str()
+  for k, v in D.iteritems():
+    i+=1
+    # use at least 13 chars to make columns line up
+    pStr += ' {}: {:13s} \t'.format(k,v) 
+    if( i%ncols == 0 ):
+      print(pStr); pStr = str()
+  
+  # print whatever is left at the end    
+  print(pStr+'\n'); pStr = None; i = None  
+  
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def setColormap( img ):
+  global cmaps
+  # Select the desired colormap
+  try:
+    printDict( cmaps, 3 )
+    icmap = input(' Enter integer key for the colormap = ')
+    img.set_cmap(cmaps[icmap])
+  except:
+    print(' Using default colormap.')
+    pass
+
+  return img
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+def setColorbarLims( img ):
+  # Specify the bounds in the colorbar
+  try:
+    lMin,lMax = map(float, raw_input(' Enter limits for colorbar: <min> <max> =').split())
+    img.set_clim([lMin,lMax])
+  except:
+    pass
+    
+  return img
+
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def random_marker():
@@ -58,32 +123,24 @@ def plotBar(fig, xb, yb, labelStr, plotStr=["","",""], wb=0.6, errb=0):
   
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 def addImagePlot( fig, X, labelStr, gridOn=False, limsOn=False ):
+  global cmaps
   ax = fig.add_axes( [0.1, 0.075 , 0.875 , 0.81] ) #[left, up, width, height]
-  im = ax.imshow(X)
-  cmaps = {1:'rainbow',  2:'jet',          3:'hot',      4:'gist_earth', 5:'nipy_spectral',\
-           6:'coolwarm', 7:'gist_rainbow', 8:'Spectral', 9:'CMRmap',    10:'cubehelix',\
-          11:'seismic', 12:'bwr',         13:'terrain', 14:'gist_ncar', 15:'gnuplot2', \
-          16:'BuPu',    17:'GnBu',        18:'RdPu',    19:'YlGnBu',    20:'YlOrRd',\
-          21:'Oranges', 22:'Reds',        23:'Purples', 24:'Blues'}        
+  im = ax.imshow(X)       
 
   ax.set_title(labelStr)
   ax.grid(gridOn)
   
   uticks =None # User-defined ticks. <None> leads to default setting.
   eformat=None
-  if(limsOn): # bounds for a colorbar
+  if(limsOn):
+    im = setColorbarLims( im )
+    im = setColormap( im )
+    
     try:
-      lMin, lMax = raw_input('Enter limits for the colorbar: <min> <max> = ').split()
-      im.set_clim([lMin,lMax])
-    except:
-      pass
-    #im.set_cmap(cmaps[5])  # Specify the colormap
-    im.set_cmap(cmaps[14])
-    #im.set_cmap(cmaps[12])
-    try:
-      uticks=input('Enter ticks separated by comma (empty=default): ')
+      uticks=input(' Enter ticks separated by comma (empty=default):')
     except:
       uticks=None
+  
   if(np.max(X)<1.e-3): eformat='%.2e'
   cbar = fig.colorbar(im, ticks=uticks, format=eformat)
   

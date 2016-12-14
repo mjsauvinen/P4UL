@@ -4,7 +4,7 @@ from utilities import vtkWritePointDataHeader, vtkWritePointDataStructured2D
 from utilities import writeLog
 from plotTools import addContourf, extractFromCSV
 from footprintTools import *
-from mapTools import readNumpyZTile
+from mapTools import readNumpyZTile, farFieldIds, farFieldMean
 import sys
 import argparse
 import numpy as np
@@ -46,30 +46,7 @@ def centralValue( a , tol, nitv=40):
 def polarPercentileAvg(dat, vleft, vright ):
   return 0.5*(np.percentile(dat,vleft) + np.percentile(dat,vright))
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - -  #
 
-def farFieldIds( xc, exclx ):
-  # Exclude the given percentile of the nearest upstream field.
-
-  exclx = max( 1. , exclx )
-  exclx = min( 99., exclx )
-  clw   = exclx / 100.
-  xth   = (clw)*np.max(xc) + (1.-clw)*np.min(xc)
-  idx   = (xc < xth )
-  
-  return idx
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - -  #
-
-def farFieldMean( dat, Xcoord, excludeNearest ):
-  if( len(dat) != len(Xcoord) ):
-    sys.exit(' Error! The data and coord arrays are different length. Exiting ...')
-  
-  idx = farFieldIds( Xcoord, excludeNearest )
-  
-  return np.mean( dat[idx] )
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - -  #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -  #
 
 def meanFromExternal( dat, xe, ye, ze, xl, yl, zl):

@@ -103,7 +103,7 @@ if( flt.count(None) == 0):
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = =   #
 # Kormann et. Meixner Analytical footprint.
-L =10000.; z_m = (74.-14.); z_0 = 2.4; sigma_v = 0.48; u=4.86
+L =10000.; z_m = (74.-14.); z_0 = 2.4; sigma_v = 0.75; u=4.86
 x_off = 2.*228.; y_off = 2.*508.
 F_km  = kormann_and_meixner_fpr(z_0, z_m, u, sigma_v, L, Xt, Yt, x_off, y_off)
 

@@ -400,6 +400,28 @@ def numpyArray2Tif( arr ):
   return Image.fromarray( arr )
   
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def farFieldIds( xc, exclx ):
+  # Exclude the given percentile of the nearest upstream field.
+
+  exclx = max( 1. , exclx )
+  exclx = min( 99., exclx )
+  clw   = exclx / 100.
+  xth   = (clw)*np.max(xc) + (1.-clw)*np.min(xc)
+  idx   = (xc < xth )
+  
+  return idx
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def farFieldMean( dat, Xcoord, excludeNearest ):
+  if( len(dat) != len(Xcoord) ):
+    sys.exit(' Error! The data and coord arrays are different length. Exiting ...')
+  
+  idx = farFieldIds( Xcoord, excludeNearest )
+  
+  return np.mean( dat[idx] )
+
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
