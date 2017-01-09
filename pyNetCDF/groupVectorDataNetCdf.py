@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-
-## #!/home/mjsauvin/.virtualenvs/netcdf4/bin/python
-
 from netcdfTools import *
 import sys
 import argparse

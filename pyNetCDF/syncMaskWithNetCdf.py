@@ -1,5 +1,4 @@
-#!/home/mjsauvin/python/bin/python
-
+#!/usr/bin/env python
 from netcdfTools import *
 from mapTools import *
 from utilities import writeLog
@@ -30,7 +29,8 @@ def domainBoundsAndResolution( xf, yf ):
 parser = argparse.ArgumentParser(prog='syncMaskWithNetCDF.py')
 parser.add_argument("-fn", "--fileNetCDF",type=str, help="Name of input NETCDF file.")
 parser.add_argument("-fm", "--fileMask",type=str, help="Name of input 2D Mask file.")
-parser.add_argument("-d", "--decomp", help="Decomposed into mean (V_m) and fluctuating (V^prime) components.",action="store_true", default=False) 
+parser.add_argument("-d", "--decomp", action="store_true", default=False, \
+    help="Decomposed into mean (V_m) and fluctuating (V^prime) components.") 
 parser.add_argument("-dd", "--decompOnly", help="Output V_m and V^prime components only.",\
   action="store_true", default=False)
 parser.add_argument("-c", "--coarse", help="Coarsening level for the NETCDF data. Int > 1.",\

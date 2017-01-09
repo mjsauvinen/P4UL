@@ -1,5 +1,4 @@
-#!/home/mjsauvin/python/bin/python
-
+#!/usr/bin/env python
 from netcdfTools import *
 import sys
 import argparse
