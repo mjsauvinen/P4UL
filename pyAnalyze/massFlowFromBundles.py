@@ -1,11 +1,21 @@
 #!/usr/bin/env python
 import sys
 import numpy as np
-import pylab as pl
+import matplotlib.pyplot as plt
 import argparse
 from utilities import filesFromList
 from plotTools import userLabels, plotBar
+''' 
+Description:
 
+
+Author: Mikko Auvinen
+        mikko.auvinen@helsinki.fi 
+        University of Helsinki &
+        Finnish Meteorological Institute
+'''
+
+#==========================================================#
 parser = argparse.ArgumentParser()
 parser.add_argument("strKey", help="Search string for collecting files.",\
     nargs='?', default=None)
@@ -16,9 +26,9 @@ parser.add_argument("--debug", help="Activate debug switch.", action="store_true
 parser.add_argument("--finn", help="Tekstit suomeksi.", action="store_true",\
     default=False)
 parser.add_argument("--legend", help="User Legend.", type=str,\
-    default="Percentage Deviation from Mean Flow Rate")
- 
+    default="Percentage Deviation from Mean Flow Rate") 
 args = parser.parse_args()
+#==========================================================#
 
 if( not args.strKey ): 
   args.strKey = raw_input(" Enter search string: ")
@@ -54,17 +64,17 @@ while 1:
   if( args.debug) : titleStr += " M_tot = {:g} kg/s".format(mtot)
   plotStr = [ titleStr, xlabelStr, ylabelStr]
 
-  fig = pl.figure(num=1, figsize=(9.5,8.))
+  fig = plt.figure(num=1, figsize=(9.5,8.))
   legendStr = args.legend
   plotBar(fig, xc, m_ratios, legendStr, plotStr, width, error)
   
-  #pfig = pl.figure(num=1, figsize=(7.,8.));
+  #pfig = plt.figure(num=1, figsize=(7.,8.));
   #for fn in fileNos:
   #  pfig = plotXX( pfig, fileList[fn], args.log )
 
   #if(args.labels):
   #  pfig = userLabels( pfig )
-  #pl.grid(True)
-  pl.legend(loc=0)
+  #plt.grid(True)
+  plt.legend(loc=0)
 
-  pl.show()
+  plt.show()

@@ -56,10 +56,10 @@ def selectFromList( L ):
         print " # [{}]: {}".format(n,entry)
         n+=1
     
-    print "\n Enter the selection number(s): \n"
+    #print "\n Enter the selection number(s): \n"
     Ids = []
     try:
-        e = input("Selection number(s): ")
+        e = input(" Selection number(s): ")
         if(isinstance(e,tuple)): Ids.extend(e)
         elif(isinstance(e,int)): Ids.append(e)
         else: sys.exit("Invalid entry. Exiting ...")
@@ -109,6 +109,14 @@ def filesFromList( searchStr ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def removeEntriesFromList(L, delList):
+  for entry in delList:
+    try: L.remove(entry)
+    except: pass
+  
+  return L
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 def reformatNumberInWord(word, separator):
   '''
   Search for number in the given string and change its format

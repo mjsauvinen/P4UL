@@ -14,6 +14,7 @@ debug = True
 def asciiEncode( uList, uStr ):
   n = len(uList)
   if( n > 0 ):
+    uList = list( uList )  # This might be a tuple coming in
     for i in xrange(len(uList)):
       uList[i] = uList[i].encode('ascii')
   else:
@@ -24,7 +25,7 @@ def asciiEncode( uList, uStr ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def netcdfDataset(filename):
+def netcdfDataset(filename, verbose=True):
   # Create Dataset
   ds = nc.Dataset(filename)
   
@@ -32,7 +33,7 @@ def netcdfDataset(filename):
   varList = asciiEncode( ds.variables.keys() , 'Variables' )
   dimList = asciiEncode( ds.dimensions.keys(), 'Dimensions')
   
-  if( debug ):
+  if( verbose ):
     print(' Variable List : {} '.format( varList ) )
     print(' Dimension List : {} '.format( dimList ))
 
@@ -78,6 +79,27 @@ def read1DVariableFromDataset( varStr, ds, checkList, iLOff=0, iROff=0, cl=1 ):
     sys.exit(1)
   
   return var[::cl], np.shape(var[::cl])
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def readVariableFromDataset( varStr, ds, checkList ):
+  if( varStr in checkList ):
+    vds    = ds.variables[varStr]
+    dlist  = asciiEncode( vds.dimensions, ' Variable dimensions ')
+    
+    # Load the independent variables and wrap them into a dict
+    dDict = dict()
+    for dname in dlist:
+      dData = ds.variables[dname][:]
+      dDict[dname] = dData; dData = None
+
+    # Then the dependent variable. When all is extracted, no need to know the shape
+    var = vds[:] 
+    
+  else:
+    sys.exit(' Variable {} not in list {}.'.format(varStr, checkList))
+
+  return var, dDict
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
