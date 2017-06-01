@@ -203,11 +203,10 @@ def readNumpyZTile( filename, dataOnly=False ):
 
 def readNumpyZTileForMesh( filename ):
   Rx, Rxdims, RxOrig, dPx = readNumpyZTile( filename )
-  dPx = entry2Int( dPx )
   
   # N,E - coords, start from top left.
-  rowCoords = np.arange(RxOrig[0],(RxOrig[0]-Rxdims[0]*dPx),-dPx) # N
-  colCoords = np.arange(RxOrig[1],(RxOrig[1]+Rxdims[1]*dPx),dPx) # E
+  rowCoords = np.arange(RxOrig[0],(RxOrig[0]-Rxdims[0]*dPx[0]),-dPx[0]) # N
+  colCoords = np.arange(RxOrig[1],(RxOrig[1]+Rxdims[1]*dPx[1]), dPx[1]) # E
   
   #Nx, Ex = np.meshgrid(ni,ej)
   
@@ -244,6 +243,7 @@ def entry2Int( ax ):
     ax = np.mean(np.abs(ax))
   except:
     pass
+
   return int(ax)
   
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*

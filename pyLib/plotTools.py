@@ -60,9 +60,9 @@ def setColormap( img ):
   global cmaps
   # Select the desired colormap
   try:
-    printDict( cmaps, 3 )
+    printDict( cmaps_new, 3 )
     icmap = input(' Enter integer key for the colormap = ')
-    img.set_cmap(cmaps[icmap])
+    img.set_cmap(cmaps_new[icmap])
   except:
     print(' Using default colormap.')
     pass
@@ -301,13 +301,13 @@ def plotCSV( fig, fileStr, revAxes=False, magY=False, globalValues=False ):
   if( not globalValues or (globalValues and gxI == -1) ):
     n = 0
     for v in varList:
-      print "  => ["+str(n)+"]: "+ v
+      print("  => ["+str(n)+"]: "+ v)
       n+=1
 
     try:  
       xI = input(" X [index]  = ")
     except:
-      print ' No selection. Exiting program. '
+      print(' No selection. Exiting program. ')
       sys.exit(1)
       
     yLst = []
@@ -317,7 +317,7 @@ def plotCSV( fig, fileStr, revAxes=False, magY=False, globalValues=False ):
       try:
         select=input(" Select All? [1-9]=> Yes, [Empty]=> No: ")
       except:
-        print ' Exiting program. '
+        print(' Exiting program. ')
         sys.exit(1)
 
     if( len(yLst) == 0 ):
@@ -386,8 +386,8 @@ def extractFromCSV( csvFile, varNames ):
     except: None
   
   if (len(Ix) == 0):
-    print "None of the variables in {0} were found in {1}".format(varNames,varList)
-    print "Exiting program. "
+    print("None of the variables in {0} were found in {1}".format(varNames,varList))
+    print("Exiting program. ")
     sys.exit(1)
   
   x = np.loadtxt(csvFile, delimiter=',', skiprows=1)

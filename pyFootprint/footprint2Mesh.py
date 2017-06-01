@@ -49,26 +49,40 @@ def polarPercentileAvg(dat, vleft, vright ):
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - -  #
 
+def externalGridIds( ce, cl ):
+  cbmin = max( np.min(cl) , np.min(ce) ) 
+  cbmax = min( np.max(cl) , np.max(ce) )
+  #if( cbmin > cbmax ): cbmin = cbmax + 1e-5
+  
+  jg = (ce>=cbmin); jl = (ce<=cbmax)
+  
+  # Check if 'greater than' and 'smaller than' are complements 
+  jcompl = all(~jl==jg) and not all(jl==True) and not all(jl==False)
+  
+  # Check resolutions
+  dce = ce[1]-ce[0]  # delta of external grid 
+  dcl = cl[1]-cl[0]  # delta of local box
+  finer_dcl = dcl < dce
+  
+  if( finer_dcl and jcompl ):
+    idN = np.arange(len(jl))
+    id2 = np.array([ idN[jl][-1], idN[jg][0] ])
+    je  = np.zeros( len(jl) , bool )
+    je[id2] = True
+  else:
+    je = jg * jl
+
+  return je
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - -  #
+
 def meanFromExternal( dat, xe, ye, ze, xl, yl, zl):
   # Define the vertical mean flow from the external data.
   # <#>e: external, <#>l: local
-  
-  zbmin = max( np.min(zl) , np.min(ze) )
-  zbmax = min( np.max(zl) , np.max(ze) )
-  if( zbmin > zbmax ): zbmin = zbmax
-  
-  ybmin = max( np.min(yl) , np.min(ye) )
-  ybmax = min( np.max(yl) , np.max(ye) )
-  if( ybmin > ybmax ): ybmin = ybmax
-  
-  xbmin = max( np.min(xl) , np.min(xe) )
-  xbmax = min( np.max(xl) , np.max(xe) )
-  if( xbmin > xbmax ): xbmin = xbmax
-  
-  # print(' zbmin = {}, zbmax = {}\n zm = {}'.format(zbmin, zbmax, zm))
-  ke = (ze>=zbmin) * (ze<=zbmax)
-  je = (ye>=ybmin) * (ye<=ybmax)
-  ie = (xe>=xbmin) * (xe<=xbmax)
+
+  ke = externalGridIds( ze, zl )
+  je = externalGridIds( ye, yl )
+  ie = externalGridIds( xe, xl )
   
   kz, jy, ix = np.meshgrid(ke, je, ie, indexing='ij', sparse=True)
   idw = (kz * jy * ix).astype(bool)
@@ -85,6 +99,8 @@ def meanFromExternal( dat, xe, ye, ze, xl, yl, zl):
 parser = argparse.ArgumentParser(prog='footprint2Mesh.py')
 parser.add_argument("fileKey", help="Search string for collecting (.npz) files.",\
   nargs='?', default="npz")
+parser.add_argument("-a", "--allfiles", help="Select all files automatically.",\
+  action="store_true", default=False) 
 parser.add_argument("-fo", "--fileout", type=str, default='FP',\
   help="Brief prefix for the footprint output file. (npz format)")
 parser.add_argument("-ft", "--filetopo", type=str,\
@@ -97,7 +113,9 @@ parser.add_argument("-dx","--dxG", type=float,nargs=2,\
   help="Resolution [dx, dy] of the 2D Palm grid.")
 #parser.add_argument("-fm", "--filemean", type=str,\
 #  help="Name of the mean velocity .csv file.", default=None)
-parser.add_argument("-v", "--vtk", help="Write VTK-files.",\
+parser.add_argument("-b","--hybrid", help="Hybrid approach with far field correction.",\
+  action="store_true", default=False)
+parser.add_argument("--vtk", help="Write VTK-files.",\
   action="store_true", default=False)
 parser.add_argument("-i", "--ijk", help="Files contain ijk info.",\
   action="store_true", default=False) 
@@ -109,6 +127,8 @@ parser.add_argument("-px","--pxzero", type=float, default=None, help=help_px)
 parser.add_argument("-p", "--printOn", help="Print the extracted tile.",\
   action="store_true", default=False) 
 parser.add_argument("-pp", "--printOnly", help="Only print the extracted tile. Don't save.",\
+  action="store_true", default=False) 
+parser.add_argument("-v", "--verbose", help="Print all information on screen.",\
   action="store_true", default=False) 
 args = parser.parse_args() 
 writeLog( parser, args )
@@ -125,17 +145,20 @@ dxG = args.dxG
 cw_init  = args.coefwm
 pxz      = args.pxzero
 
+allFiles  = args.allfiles
+hybridOn  = args.hybrid
 ijkOn     = args.ijk
 vtkOn     = args.vtk
 printOn   = args.printOn
 printOnly = args.printOnly
+verbose   = args.verbose
 
 
 # For writing the header once.
 writeHeader = True
 
 # Gather raw footprint data files: 
-fileNos, fileList = filesFromList( fileKey+"*" )
+fileNos, fileList = filesFromList( fileKey+"*", allFiles )
 
 
 if( filemean ):
@@ -150,7 +173,7 @@ else:
 
 for fn in fileNos:
 
-  print(' Processing file: {}'.format(fileList[fn]))
+  if( verbose ): print(' Processing file: {}'.format(fileList[fn]))
 
   xO, yO, zO,\
     xt, yt, zt,\
@@ -167,10 +190,12 @@ for fn in fileNos:
   wtm_2, km, jm, im = meanFromExternal( wm, xm, ym, zm, xt, yt, zt )
   
   # Choose the reference vertical velocity.
-  if( np.sum(km)>1 and np.sum(jm)>1 and np.sum(im)>1 ):
-    wtm_ref =  wtm_2
+  if( np.sum(km)>0 and np.sum(jm)>0 and np.sum(im)>0 ):
+    wtm_ref     =  wtm_2
+    meanFromExt = True       # mean from external 
   else:
-    wtm_ref = wtm_1
+    wtm_ref     = wtm_1
+    meanFromExt = False
   
   #wtm_3 = centralValue( wt, 1.e-6, 50 ) # Approximation for mean value.
   #wtm_4 = polarPercentileAvg( wt, 5, 95 )
@@ -186,11 +211,17 @@ for fn in fileNos:
     Selected:  w_mean = {8:6.3f}
   - - - - - - - - - - - - -
   '''
+  # Store the mean values just for printing.
+  xim = int(np.mean(xt)); yim = int(np.mean(yt)); zim = int(np.mean(zt))
   
-  if( pxz ): 
+  # Boolean to determine whether far field correction is performed.
+  farFieldCorrOn = (pxz is not None)
+  if( hybridOn ):
+    farFieldCorrOn = farFieldCorrOn and (not meanFromExt)
   
-    # Store the mean values just for printing.
-    xim = int(np.mean(xt)); yim = int(np.mean(yt)); zim = int(np.mean(zt))
+  
+  if( farFieldCorrOn ):
+    print(' Far Field Correction! ')
   
     idx   = farFieldIds( xO, pxz )  # Consider the first 15% (=default) of the x-range.
     cw    = cw_init
@@ -206,7 +237,7 @@ for fn in fileNos:
     Mean from external:           wtm_2 = {4:5.2f}
     - - - - - - - - - - - - -
     '''.format(xim,yim,zim, wtm_1, wtm_2)
-    print(infoStr)
+    if( verbose ): print(infoStr)
   
     while( 1 ):
 
@@ -238,6 +269,7 @@ for fn in fileNos:
       if( (r < r_lim) or (count > count_max)):
         break
 
+    # end while
   
     infoItr = '''
     Iteration = {0}
@@ -246,11 +278,13 @@ for fn in fileNos:
     r  = {4}\t dr = {5}
     - - - - - - - - - - - - -
     '''.format(count, wt_mean, wtm_ref, cw, r, dr)
-    print(infoItr)
+    if( verbose ): print(infoItr)
   
-  else: # no farfield correction
-    ipos  = ( (wt-wtm_ref) > 0.)   # Boolean array for positive values. 
+  elif( meanFromExt ): # no farfield correction
+    ipos  = ( (wt-wtm_ref) > 0.)   # Boolean array for positive values.
     ineg  = ~ipos                  # Boolean array for negative values.
+  else:
+    continue
   
 
   # Clear memory
@@ -260,20 +294,23 @@ for fn in fileNos:
   # = = = = 2d footprint evaluation. = = = = = = = = = = = =  # 
 
   # Determine grid coordinates for the footprint domain:
-  xD, yD = coordsFootprintGrid( NxG, dxG, xO, yO )
+  xD, yD = coordsFootprintGrid( NxG, dxG, xO, yO, verbose )
   
-  Nt = len(xO)
-  print(' Total number of hits: Nt = {} '.format( Nt ))
-  print(' Number of w>0 / w<0 hits: {} / {} '.format( len(xO[ipos]), len(xO[ineg] )))
+  Nt = len(xO); Ntp = len(xO[ipos]); Ntn = len(xO[ineg])
+  print(' > Nt, Nt(pos), Nt(neg), <xO>+, <xO>- xt, yt, zt = {}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'\
+    .format( Nt, Ntp, Ntn, np.mean(xO[ipos]), np.mean(xO[ineg]), xim, yim, zim ))
+  
+  
+  #print(' Number of w>0 / w<0 hits: {} / {} '.format( Ntp, Ntn))
 
-  print(' Processing positive flux contributions ...')
+  if( verbose ): print(' Processing positive flux contributions ...')
   FMpos, XM, YM, ZMpos = fp2mshIJ( xO[ipos], yO[ipos], zO[ipos], xD, yD, dxG[0], dxG[1] )
   #print(' mean( FMpos ) = {}'.format(np.mean(FMpos)))
 
-  print(' Processing negative flux contributions ...')
+  if( verbose ): print(' Processing negative flux contributions ...')
   FMneg, XM, YM, ZMneg = fp2mshIJ( xO[ineg], yO[ineg], zO[ineg], xD, yD, dxG[0], dxG[1] )
   #print(' mean( FMneg ) = {}'.format(np.mean(FMneg)))
-  print(' ... done!')
+  if( verbose ): print(' ... done!')
 
   # Clear memory
   xO = None; yO = None; zO = None
@@ -282,10 +319,10 @@ for fn in fileNos:
   ZM = np.maximum( ZMpos , ZMneg )
   ZMpos = None; ZMneg = None
 
-  print(' Gathering and Normalizing the footprint array ...')
+  if( verbose ): print(' Gathering and Normalizing the footprint array ...')
   Cnorm = (Nt*dxG[0]*dxG[1])   # Coefficient for normalization.  
   FM = (FMpos - FMneg)/Cnorm;  FMpos = None;  FMneg = None
-  print(' ... done!')
+  if( verbose ): print(' ... done!')
   
   
   # = = = = Output procedure = = = = = = = = = = = = = = =  #  

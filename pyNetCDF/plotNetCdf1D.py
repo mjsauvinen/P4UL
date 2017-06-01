@@ -17,7 +17,7 @@ Author: Mikko Auvinen
 '''
 
 #==========================================================#
-parser = argparse.ArgumentParser(prog='extractScalarDataNetCDF.py')
+parser = argparse.ArgumentParser(prog='plotNetCdf1D.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of the input NETCDF file.")
 parser.add_argument("--log", help="Logarithmic y-axis.", action="store_true",\
   default=False)

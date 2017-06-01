@@ -26,6 +26,8 @@ Author: Mikko Auvinen
 parser = argparse.ArgumentParser(prog='footprintGather.py')
 parser.add_argument("fileKey", help="Search string for collecting (.npz) files.",\
   nargs='?', default="npz")
+parser.add_argument("-a", "--allfiles", help="Select all files automatically.",\
+  action="store_true", default=False) 
 parser.add_argument("-fo", "--fileout", type=str, default='fp_gather',\
   help="Footprint output file. (npz format)")
 parser.add_argument("-ft", "--filetopo", type=str,\
@@ -52,6 +54,7 @@ fileKey   = args.fileKey
 fileout   = args.fileout
 filetopo  = args.filetopo
 flt       = args.filter
+allFiles  = args.allfiles
 norm2one  = args.norm2one
 printOn   = args.printOn or args.printOnly
 printOnly = args.printOnly
@@ -62,7 +65,7 @@ if( vtkOn and (filetopo == '')):
 
 
 # Gather footprint data files: 
-fileNos, fileList = filesFromList( "*"+fileKey+"*" )
+fileNos, fileList = filesFromList( "*"+fileKey+"*", allFiles )
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = =   #
 # xO := origin coords. # xt := target coords. # ut := target speed
@@ -76,7 +79,7 @@ for fn in fileNos:
   Fi, X, Y, Z, Ci = readNumpyZFootprint( fileList[fn] )
   Fi *= Ci  # Return the footprint into unscaled state.
   
-  if( Ft == None ):
+  if( Ft is None ):
     Ft = Fi.copy()
     Ct = Ci
     Zt = Z.copy(); Xt = X.copy(); Yt = Y.copy()
@@ -103,7 +106,11 @@ if( flt.count(None) == 0):
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = =   #
 # Kormann et. Meixner Analytical footprint.
-L =10000.; z_m = (74.-14.); z_0 = 2.4; sigma_v = 0.75; u=4.86
+# Tower: u = 4.86,       sigma_v = 0.75, 
+# LES  : u = 4.5 - 5.1,  sigma_v = 0.72-0.74
+# Upwind LES mean over 1200 m: 
+#        u = 6.1,        sigma_v = 0.95
+L =10000.; z_m = (74.-14.); z_0 = 2.4; sigma_v = 0.95; u=6.5
 x_off = 2.*228.; y_off = 2.*508.
 F_km  = kormann_and_meixner_fpr(z_0, z_m, u, sigma_v, L, Xt, Yt, x_off, y_off)
 
@@ -116,7 +123,6 @@ if( norm2one ):
   Cn = 1./np.sum( Ft  * np.prod(dPx));  Ft  *= Cn
   Ca = 1./np.sum( F_km* np.prod(dPx));  F_km*= Ca
   print('... done! C_les = {} and C_ana = {}'.format(Cn, Ca))
-
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = =   #
 # Extract indecies for partial (%) footprints
@@ -135,12 +141,12 @@ if( not printOnly ):
   
   # Compute the cross wind mean of the footprint.
   Ftm   = writeCrossWindSum( Ft, Xt, fileout )
-  Ftm50 = writeCrossWindSum( Ft, Xt, fileout+'-50' , id50 )
-  Ftm75 = writeCrossWindSum( Ft, Xt, fileout+'-75' , id75 )
-  Ftm90 = writeCrossWindSum( Ft, Xt, fileout+'-90' , id90 )
+  #Ftm50 = writeCrossWindSum( Ft, Xt, fileout+'-50' , id50 )
+  #Ftm75 = writeCrossWindSum( Ft, Xt, fileout+'-75' , id75 )
+  #Ftm90 = writeCrossWindSum( Ft, Xt, fileout+'-90' , id90 )
 
   Fm_km   = writeCrossWindSum( F_km, Xt, fileout+'_km' )
-  Fm90_km = writeCrossWindSum( F_km, Xt, fileout+'-90_km', id90_km )
+  #Fm90_km = writeCrossWindSum( F_km, Xt, fileout+'-90_km', id90_km )
   
   
   # Write the footprint in npz format.

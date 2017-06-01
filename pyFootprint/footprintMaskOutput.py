@@ -92,7 +92,7 @@ for key in IDict.keys():
 mpl.rcParams['font.size'] = 18.0
 plt.figure(num=1, figsize=(9.,6.));
 lbl = np.array(['Buildings','Impervious','Grass',\
-  'Low Vegitation','High Vegitation', 'Water', '','Road'])
+  'Low Vegetation','High Vegetation', 'Water', '','Road'])
 dat = FpM/Fptot*100.
 ix = (dat > 0.)  # Valid points. In order to isolate meaningless entries.
 #colors = ['yellowgreen', 'gold', 'lightskyblue', 'lightcoral']

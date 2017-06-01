@@ -143,10 +143,10 @@ def fp2mshBM( pxO, pyO, pzO, xG, yG, dx, dy ):  # BM as in boolean matrix.
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def coordsFootprintGrid( NxG, dxG, pxO, pyO ):
+def coordsFootprintGrid( NxG, dxG, pxO, pyO, verbose=False ):
   # Max values.
-  x_max = NxG[0]*dxG[0]  # Max dimensions.
-  y_max = NxG[1]*dxG[1]
+  xG_max = NxG[0]*dxG[0]  # Max dimensions.
+  yG_max = NxG[1]*dxG[1]
 
   '''
   Note: At this point we assume non-cyclic boundary cond. for 
@@ -156,18 +156,22 @@ def coordsFootprintGrid( NxG, dxG, pxO, pyO ):
   the x-direction.
   '''
 
-  # Smallest x/y-value recorded:
-  x_min = np.min( pxO ); print( ' min(xO) = {}'.format(x_min))
-  y_min = np.min( pyO ); print( ' min(yO) = {}'.format(y_min))
+  # Smallest and largest x/y-value recorded:
+  x_min = np.min( pxO ); y_min = np.min( pyO )
+  x_max = np.max( pxO ); y_max = np.max( pyO )
+  
+  if(verbose):
+    print( ' min(xO) = {}, max(xO) = {}'.format(x_min, x_max))
+    print( ' min(yO) = {}, max(yO) = {}'.format(y_min, y_max))
 
   # Define an integer factor for domain multiplication/extension.
   fx = 0.
   if( x_min < 0. ):
-    fx = int( abs(x_min) / x_max ) + 1.
+    fx = int( abs(x_min) / xG_max ) + 1.
     
   # Coordinates for the extended footprint grid. Cell-centers.
-  xD = np.linspace(-fx*x_max+dxG[0]/2., x_max-dxG[0]/2., (fx*NxG[0]+NxG[0])) # Last term: resolution.
-  yD = np.linspace(dxG[1]/2.          , y_max-dxG[1]/2.,  NxG[1]           )
+  xD = np.linspace(-fx*xG_max+dxG[0]/2., xG_max-dxG[0]/2., (fx*NxG[0]+NxG[0])) # Last term: resolution.
+  yD = np.linspace(dxG[1]/2.           , yG_max-dxG[1]/2.,  NxG[1]           )
 
   return xD, yD
 
@@ -180,7 +184,7 @@ def idAppendices(fstring, ijkOn=False):
     varId  = fileId[-8:]; varId = varId.replace('.','_') # variable ID string.
   else:
     fileId = str()
-    varId = str(fn)
+    varId  = str(fn)
 
   return fileId, varId
 
@@ -224,16 +228,14 @@ def writeCrossWindSum( F , X, fname, idx=None ):
   for i in xrange( nX ):
     Fm[i] = np.sum(Fx[:,i])
 
-  Fx = None
-  Fm = sn.gaussian_filter( Fm, sigma=2.5 )
+  Fx  = None
+  idx = (np.abs(Fm) > 0.)   # Select only non-zero entries
+  Fm[idx] = sn.gaussian_filter( Fm[idx], sigma=2.5 )
   
   if( fname ):
     np.savetxt(fname+'_ysum.dat', np.c_[X[0,:],Fm] )   # x,y,z equal sized 1D arrays
     
   return Fm
-
-
-
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
@@ -295,7 +297,6 @@ def kormann_and_meixner_fpr(z_0, z_m, u, sigma_v, L, X, Y, x_off=0., y_off=0. ):
   phi = D_y * phi_x
   
   return phi[:,::-1]
-  
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 

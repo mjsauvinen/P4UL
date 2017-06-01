@@ -73,8 +73,8 @@ def selectFromList( L ):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def filesFromList( searchStr ):
-  print " Extracting files with search string (or path): %s"%searchStr
+def filesFromList( searchStr , allFiles=False):
+  print(" Extracting files with search string (or path): {}".format(searchStr))
   fileList = []
   files = glob.glob(searchStr)   # obtain the list of files 
   fileList.extend(files)              # Lists are iterable
@@ -82,28 +82,35 @@ def filesFromList( searchStr ):
 
   n = 0
   for f in fileList:
-    print " # ["+str(n)+"]: "+ str(f)
+    print(" # ["+str(n)+"]: "+ str(f))
     n+=1
-
-  print """
+  
+  fileNos = []   # Create empty list for file numbers
+  if( allFiles ):
+    fileNos.extend(range(len(fileList)))
+  else:
+    infoStr = """ 
      Enter file number(s), use comma as separator:
      Example 1: File Numbers = 1
      Example 2: File Numbers = 0,2,3,
-  """
-  fileNos = []
-  try:
-    e = input(" File Numbers = ")
-    if(isinstance(e,tuple)): fileNos.extend(e)
-    elif(isinstance(e,int)): fileNos.append(e)
-  except:
+    """ 
+    print(infoStr)
+    
     try:
-      select=input(" Select All? [1-9]=> Yes, [Empty]=> No: ")
+      e = input(" File Numbers = ")
+      if(isinstance(e,tuple)): fileNos.extend(e)
+      elif(isinstance(e,int)): fileNos.append(e)
     except:
-      print ' Exiting program. '
-      sys.exit(1)
+      try:
+        select=input(" Select All? [1-9]=> Yes, [Empty]=> No: ")
+      except:
+        print ' Exiting program. '
+        sys.exit(1)
 
-  if( len(fileNos) == 0 ):
-    fileNos.extend(range(len(fileList)))  
+    if( len(fileNos) == 0 ):
+      fileNos.extend(range(len(fileList)))
+  # end else
+
 
   return fileNos, fileList
 
@@ -234,7 +241,7 @@ def vtkWriteHeaderAndGridStructured2d( X, Y, Z, fileName, dataStr ):
     for j in xrange(jcols):
       s = '{0:.1f}\t{1:.1f}\t{2:.1f}\n'.format( X[i,j], Y[i,j], Z[i,j] )
       f.write(s)
-
+  
   return f
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
@@ -267,6 +274,7 @@ def vtkWritePointDataStructured2D( fx, V, X, vStr ):
       for j in xrange(jcols):
         s = '{0:12.4e} '.format(V[i,j])
         fx.write(s)
+    fx.write('\n')  # Important to place a line change at the end.
     print(' ... done!')
   except:
     pass
@@ -319,6 +327,7 @@ def vtkWriteUnsPointData( V, X, Y, Z, filename ):
     for j in xrange(jcols):
       s = '{0:.2f} '.format(V[i,j])
       f.write(s)
+  fx.write('\n')
   f.close()
   print ' ... done!'
 

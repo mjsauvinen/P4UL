@@ -29,20 +29,15 @@ parser.add_argument("-fd", "--filesDiff", type=str,\
   help="Search string for diff footprint files. (npz format)", default='.npz')
 help_x ="Percentage of farthest x-koords excluded from the diff. (Default=None)." 
 parser.add_argument("-x","--excl", type=float, default=None, help=help_x)
-parser.add_argument("-pp", "--printOnly", help="Only print the contour. Don't save.",\
-  action="store_true", default=False)
-parser.add_argument("--save", help="Save the figure right away.", action="store_true",\
-  default=False)
 args = parser.parse_args() 
-writeLog( parser, args, args.printOnly )
+writeLog( parser, args )
 #========================================================== #
 
 # Rename ... that's all.
 fileRef   = args.fileRef
 filesDiff = args.filesDiff
 excl      = args.excl
-printOnly = args.printOnly
-saveOn    = args.save            #  save the fig
+
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = =   #
 # xO := origin coords. # xt := target coords. # ut := target speed

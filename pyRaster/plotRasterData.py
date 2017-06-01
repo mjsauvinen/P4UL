@@ -76,7 +76,10 @@ if(labels):
   fig = userLabels( fig )
 
 if(saveOn):
-  fig.savefig( rasterfile.strip('.npz')+'.jpg' )
+  filename = rasterfile.split('/')[-1]  # Remove the path in Linux system
+  filename = filename.split('\\')[-1]   # Remove the path in Windows system
+  filename = filename.strip('.npz')+'.jpg'
+  fig.savefig( filename )
   
 plt.show()
 
