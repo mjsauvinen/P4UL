@@ -201,6 +201,16 @@ def readNumpyZTile( filename, dataOnly=False ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def readNumpyLabelData(filename,dataOnly=False):
+  print(' Reading datafile {}'.format(filename))
+  dat = np.load(filename)
+  labelDat = dat['dat']
+  constant = dat['const'] #if data has been divided into A+Delta A
+  labelCount = dat['count']
+  return labelDat, constant, labelCount
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
 def readNumpyZTileForMesh( filename ):
   Rx, Rxdims, RxOrig, dPx = readNumpyZTile( filename )
   
@@ -380,6 +390,14 @@ def applyFilter(Rx, filterInfo ):
     
   return Rf
 
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def labelRaster(R):
+  import scipy.ndimage.measurements as snms
+  R, shapeCount = snms.label(R) # this might be slow for unfiltered data
+  print(' Found {} shapes from the data.'.format(shapeCount))
+  
+  return R, shapeCount
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 
