@@ -42,8 +42,12 @@ if( args.vtk and (args.filetopo == '')):
   sys.exit(' Error: VTK results require -ft/--filetopo. Exiting ...')
 
 # Read data into an ndarray
-R, Rdims, ROrig, dPx = readNumpyZTile(args.rfile)
+Rdict = readNumpyZTile(args.rfile)
+R = Rdict['R']
 Rdims = np.array(np.shape(R))
+ROrig = Rdict['LocalOrig']
+dPx = Rdict['dPx']
+Rdict=None
 
 # Label shapes from 0 to shapeCount-1 with SciPy ndimage package
 if (not(args.distribution==None)):
@@ -56,9 +60,12 @@ R = None
 if (args.add == None):
   R = np.zeros(Rdims)
 else:
-  R, Rdims2, ROrig, dPx = readNumpyZTile(args.add)
+  Rdict = readNumpyZTile(args.add)
+  R = Rdict['R']
+  Rdims2 = np.array(np.shape(R))
   if (all(Rdims!=Rdims2)):
         sys.exit(' Error: size mismatch between two data files when appending.')
+  Rdict=None
 
 # Fill the areas with generated values
 if (args.distribution==None): # Fill with a constant value
@@ -79,7 +86,13 @@ R[np.nonzero(R)] = R[np.nonzero(R)]-offset
 
 # Read topography data
 if (not(args.vtk)==None and not(args.printOnly)):
-  topo, topoDims, topoOrig, topoDPX = readNumpyZTile(args.filetopo)
+  topoDict = readNumpyZTile(args.filetopo)
+  topo = topoDict['R']
+  topoDims = np.array(np.shape(topo))
+  topoOrig = topoDict['LocalOrig']
+  topoDPX = topoDict['dPx']
+  topoDict=None
+  
   if( all(topoDims != Rdims) ):
        sys.exit(' Error: mismatch in raster data and topography data shapes, Topo_dims={} vs. Data_dims={}').format(topoDims,Rdims)
   
@@ -100,7 +113,9 @@ if (not(args.vtk)==None and not(args.printOnly)):
 
 # Save as npz
 if( not args.printOnly ):
-  saveTileAsNumpyZ( args.fileout, R, Rdims, ROrig, dPx )
+  Rdict={'R' : R, 'dPx' : dPx, 'LocalOrig' : ROrig}
+  saveTileAsNumpyZ( args.fileout, Rdict )
+  Rdict=None
 
 # Plot the resulting raster
 if( args.printOn or args.printOnly ):

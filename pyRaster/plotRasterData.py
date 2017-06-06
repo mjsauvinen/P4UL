@@ -50,7 +50,12 @@ plt.rc('ytick', labelsize=18); #plt.rc('ytick.minor', size=6)
 plt.rc('axes', titlesize=20)
 
 if( not footprintOn ):
-  R, Rdims, ROrig, dPx = readNumpyZTile(rasterfile)
+  Rdict = readNumpyZTile(rasterfile)
+  R = Rdict['R']
+  Rdims = np.array(np.shape(R))
+  ROrig = Rdict['LocalOrig']
+  dPx = Rdict['dPx']
+  Rdict = None
 else:
   R, X, Y, Z, C = readNumpyZFootprint(rasterfile)
   Rdims = np.array(np.shape(R))

@@ -55,8 +55,19 @@ figN = 1      # Figure number ... to be appended on demand.
 
 # Read in the data.
 dataOnly = False
-R1, R1dims, R1Orig, dPx1 = readNumpyZTile(args.file1, dataOnly)
-R2, R2dims, R2Orig, dPx2 = readNumpyZTile(args.file2, dataOnly)
+Rdict1 = readNumpyZTile(args.file1, dataOnly)
+R1 = Rdict1['R']
+R1dims = np.array(np.shape(R1))
+R1Orig = Rdict1['LocalOrig']
+dPx1 = Rdict1['dPx']
+Rdict1 = None
+
+Rdict2 = readNumpyZTile(args.file2, dataOnly)
+R2 = Rdict2['R']
+R2dims = np.array(np.shape(R2))
+R2Orig = Rdict2['LocalOrig']
+dPx2 = Rdict2['dPx']
+Rdict2 = None
 
 
 dPx1 = entry2Int( dPx1 ); dPx2 = entry2Int( dPx2 )
@@ -92,6 +103,7 @@ Rt2 = np.zeros( maxDims, float )
 Rt1 = filterAndScale(Rt1, R1, flt1, s1 , i1, j1)
 Rt2 = filterAndScale(Rt2, R2, flt2, s2 , i2, j2)
 Rt = Rt1 + Rt2
+Rdict = {'R' : Rt, 'LocalOrig' : R1Orig, 'dPx' : np.array([dPf,dPf])}
 
 # Print the filtered raster maps.
 if( printOn or printOnly ):
@@ -106,14 +118,14 @@ if( printOn or printOnly ):
 Rt1 = Rt2 = None
 
 if( not printOnly ):
-  saveTileAsNumpyZ( args.fileOut, Rt, maxDims, R1Orig, np.array([dPf,dPf]) )
+  saveTileAsNumpyZ( args.fileOut, Rdict )
   
 if( printOn or printOnly ):
   fig = plt.figure(num=figN, figsize=(9.,9.)); figN+=1
   fig = addImagePlot( fig, Rt[::2,::2], args.file1+' + '+args.file2, gridOn=True )
   plt.show()
 
-Rt = None
+Rt = None; Rdict = None;
 '''
 print ' {}  {} '.format( dPc/dPx1 , dPc/dPx2 )
 print ' {}  {} '.format( R1Orig ,R2Orig )

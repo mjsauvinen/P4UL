@@ -164,7 +164,12 @@ if( not printOnly ):
     
     # Footprint to VTK-format together with the complete topography. 
     Ftmp = np.zeros( np.shape(Ft), float )
-    R, Rdims, ROrig, dPx = readNumpyZTile( filetopo )
+    Rdict = readNumpyZTile( filetopo )
+    R = Rdict['R']
+    Rdims = np.array(np.shape(R))
+    ROrig = Rdict['LocalOrig']
+    dPx = Rdict['dPx']
+    Rdict = None
     if( all(Rdims != np.shape(Xt)) ):
       sys.exit(' Error! Mismatch Topo_dims={} vs. Fp_dims={}'.format(Rdims,np.shape(Xt)))
   

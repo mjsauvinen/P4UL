@@ -43,12 +43,13 @@ printOnly = args.printOnly
 sc        = args.scale
 
 
-R, Rdims = openTifAsNumpy(filename)
-dPx      = np.array([sc*reso, sc*reso])         
+R = openTifAsNumpy(filename)
+dPx      = np.array([sc*reso, sc*reso])
+Rdict = {'R' : R, 'LocalOrig' : ROrig, 'dPx' : dPx}
 
 if( not printOnly ):
   print(' Writing file {} ... '.format(fileout) ) 
-  saveTileAsNumpyZ( fileout, R, Rdims, ROrig, dPx)
+  saveTileAsNumpyZ( fileout, Rdict)
   print(' ... done! ')
 
 if( printOn or printOnly ):

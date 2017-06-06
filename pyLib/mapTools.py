@@ -92,8 +92,9 @@ def compileTileGrid( dictList, ijList, Mrows, Mcols, fileTypes ):
           if( ascii ):
             r = readAsciiGrid( d['name']+'.asc' )
           elif( npz ):
-            r, a, b, c = readNumpyZTile(d['name']+'.npz')
-            a = b = c = None   # Throw the rest away.
+            Rdict = readNumpyZTile(d['name']+'.npz')
+            r=Rdict['R']
+            Rdict = None   # Throw the rest away.
           M.append(r); r = None
   
   print(' M.shape = {}'.format(np.shape(M)))
@@ -110,9 +111,8 @@ def compileTileGrid( dictList, ijList, Mrows, Mcols, fileTypes ):
     print(' np.shape(T) = {}'.format(np.shape(T)))
 
   M = None
-  dims = np.shape(T)
-  
-  return T, np.array(dims)
+  Rdict = {'R' : T}
+  return Rdict
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
@@ -138,7 +138,11 @@ def readAsciiGridHeader( filename, idx=0 ):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*  
 
 def readNumpyZGridData( filename, idx=0 ):
-  Rx, Rxdims, RxOrig, dPx = readNumpyZTile(filename, dataOnly=True)
+  Rdict = readNumpyZTile(filename, dataOnly=True)
+  Rx=Rdict['R']
+  Rxdims=np.array(np.shape(Rx))
+  RxOrig=Rdict['LocalOrig']
+  dPx=Rdict['dPx']
   name = filename.strip('.npz') # Extract the tile name.
   hdict = {'id':idx,'name': name, 'ncols':Rxdims[1],'nrows':Rxdims[0],\
            'xtlcorner':RxOrig[1],'ytlcorner':RxOrig[0],\
@@ -174,12 +178,12 @@ def readAsciiGrid( filename ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def saveTileAsNumpyZ( filename, Rx, Rxdims, RxOrig, dPx):
+def saveTileAsNumpyZ( filename, Rdict):
   '''
-  The saved .npz file contains R,dims,dpx and XOrig
+  The saved .npz file contains R,dpx and XOrig
   '''
   try:
-    np.savez_compressed(filename, R=Rx, dims=Rxdims, dpx=dPx, XOrig=RxOrig)
+    np.savez_compressed(filename, R=Rdict['R'], dpx=Rdict['dPx'], LocalOrig=Rdict['LocalOrig'])
     print(' {}.npz saved successfully!'.format(filename))
   except:
     print(' Error in saving {}.npz in saveTileAsNumpyZ().'.format(filename))
@@ -189,28 +193,37 @@ def saveTileAsNumpyZ( filename, Rx, Rxdims, RxOrig, dPx):
 def readNumpyZTile( filename, dataOnly=False ):
   print(' Read filename {} '.format(filename))
   dat = np.load(filename)
+  Rdict = {}
   if(dataOnly):
-    Rx = []
+    Rdict['R'] = []
   else:
-    Rx = dat['R']
+    Rdict['R'] = dat['R']
     
-  Rxdims = dat['dims']; RxOrig=dat['XOrig']; dPx=dat['dpx']
+  if 'LocalOrig' in Rdict: # Backwards compability for variable name change
+    Rdict['LocalOrig']=dat['LocalOrig'];
+  else:
+    Rdict['LocalOrig']=dat['XOrig']
+  Rdict['dPx']=dat['dpx']
   dat.close()
   
-  return Rx, Rxdims, RxOrig, dPx
+  return Rdict
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def readNumpyZTileForMesh( filename ):
-  Rx, Rxdims, RxOrig, dPx = readNumpyZTile( filename )
+  Rdict = readNumpyZTile( filename )
+  Rx = Rdict['R']
+  Rxdims = np.array(np.shape(Rx))
+  RxOrig = Rdict['LocalOrig']
+  dPx = Rdict['dPx']
   
   # N,E - coords, start from top left.
-  rowCoords = np.arange(RxOrig[0],(RxOrig[0]-Rxdims[0]*dPx[0]),-dPx[0]) # N
-  colCoords = np.arange(RxOrig[1],(RxOrig[1]+Rxdims[1]*dPx[1]), dPx[1]) # E
+  Rdict['rowCoords'] = np.arange(RxOrig[0],(RxOrig[0]-Rxdims[0]*dPx[0]),-dPx[0]) # N
+  Rdict['colCoords'] = np.arange(RxOrig[1],(RxOrig[1]+Rxdims[1]*dPx[1]), dPx[1]) # E
   
   #Nx, Ex = np.meshgrid(ni,ej)
   
-  return Rx, rowCoords, colCoords, Rxdims, RxOrig, dPx 
+  return Rdict
   
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
@@ -396,9 +409,9 @@ def openTifAsNumpy(tifFile):
   
   im = Image.open(tifFile)
   #im.show()
-  a = np.array(im); a_dims = a.shape
+  a = np.array(im)
   
-  return a, a_dims
+  return a
   
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 

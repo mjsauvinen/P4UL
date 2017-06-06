@@ -64,16 +64,16 @@ print " XOrig: {} vs. {} ".format( XOrig, XOrig_check )
 # Determine the resolution of the raster data [dn,de].
 #resolution_check = UtmTileDims() / Rdims
 #print ' Pixel resolution (m): {} vs. {}'.format(resolution, resolution_check)
+Rdict = extractSubTile( rb, args.utmTile, XOrig, resolution)
+Rdict['dPx'] = resolution
 
-R, Rdims, ROrig = extractSubTile( rb, args.utmTile, XOrig, resolution)
-
-R[R>32765] = 0.
+Rdict['R'][Rdict['R']>32765] = 0.
 
 if( args.scale != 1.):
-  R*=args.scale
+  Rdict['R']*=args.scale
 
 if( not args.printOnly ):
-  saveTileAsNumpyZ( args.utmTile, R, Rdims, ROrig, resolution )
+  saveTileAsNumpyZ( args.utmTile, Rdict )
 
 
 if( args.printOnly or args.printOn ):

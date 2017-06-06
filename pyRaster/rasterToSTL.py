@@ -32,7 +32,12 @@ filename  = args.filename
 solidname = args.fileOut
 
 
-R, Rdims, ROrig, dPx = readNumpyZTile( filename )
+Rdict = readNumpyZTile( filename )
+R = Rdict['R']
+Rdims = np.array(np.shape(R))
+ROrig = Rdict['LocalOrig']
+dPx = Rdict['dPx']
+Rdict = None
 dPx = entry2Int( dPx )
 
 print ' Rdims = {} '.format(Rdims)

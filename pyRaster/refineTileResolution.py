@@ -36,7 +36,12 @@ printOnly = args.printOnly
 fileOut   = args.fileOut
 
 
-R1, R1dims, R1Orig, dPx1 = readNumpyZTile( args.filename )
+Rdict1 = readNumpyZTile( args.filename )
+R1 = Rdict1['R']
+R1dims = np.array(np.shape(R1))
+R1Orig = Rdict1['LocalOrig']
+dPx1 = Rdict1['dPx']
+Rdict1 = None
 
 # Resolution ratio (rr).
 rr = 2**n
@@ -79,13 +84,14 @@ else:
 
 R1 = None
 R2 *= s2
+Rdict2 = {'R' : R2, 'LocalOrig' : R1Orig, 'dPx' : dPx2}
 
 if( not args.printOnly ):
   fx = open( fileOut , 'w' )
   np.savetxt(fx,np.round(R2),fmt='%g')
   fx.close()
   dPx2 = dPx1/rr
-  saveTileAsNumpyZ( fileOut, R2, R2dims, R1Orig, dPx2 )
+  saveTileAsNumpyZ( fileOut, Rdict2 )
   
 if( args.printOn or args.printOnly ):
   fig = plt.figure(num=1, figsize=(9.,9.))

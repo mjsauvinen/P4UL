@@ -331,7 +331,12 @@ for fn in fileNos:
   
   if( vtkOn ):
     if( writeHeader ):
-      R, Rdims, ROrig, dPx = readNumpyZTile( filetopo )
+      Rdict = readNumpyZTile( filetopo )
+      R = Rdict['R']
+      Rdims = np.array(np.shape(R))
+      ROrig = Rdict['LocalOrig']
+      dPx = Rdict['dPx']
+      Rdict = None
       if( all(Rdims != np.shape(XM)) ):
         print(' Error! Mismatch Topo_dims={} vs. fp_dims={}'.format(Rdims,np.shape(XM)))
         sys.exit(1)

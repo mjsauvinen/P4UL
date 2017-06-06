@@ -51,8 +51,14 @@ windDir = args.windDir
 
 # Read in the underlying topography data and obtain the pivot coordinates.
 dataOnly = False
-R, nY, eX, Rdims, ROrig, dPx = readNumpyZTileForMesh( args.filename )
-dPx = entry2Int( dPx )
+Rdict= readNumpyZTileForMesh( args.filename )
+R = Rdict['R']
+nY = Rdict['rowCoords']
+eX = Rdict['colCoords']
+Rdims = np.array(np.shape(R))
+ROrig = Rdict['LocalOrig']
+dPx = entry2Int( Rdict['dPx'] )
+Rdict = None
 
 # Pivot coordinates
 pY = nY[iPv[0]]; pX = eX[iPv[1]] 
@@ -144,14 +150,14 @@ Irow = np.minimum(Irow, Rdims[0]-1); Jcol = np.minimum(Jcol, Rdims[1]-1)
 Xdims = np.array( np.shape(XTRM) )
 PR = np.zeros( Xdims  , float)
 PR[::-1,:] = R[Irow,Jcol]    # The row order must be reversed. 
-R = None 
-
+R = None
+PRdict = {'R' : PR, 'LocalOrig' : PROrig, 'dPx' : np.array([dxG[0],dxG[1]])}
 
 if( not args.printOnly ):
-  saveTileAsNumpyZ( args.fileOut, PR, Xdims, PROrig, np.array([dxG[0],dxG[1]]) )
+  saveTileAsNumpyZ( args.fileOut, PRdict)
 
 
-# I'm not fully sure why the row indecies have to be fed in reverse order ...
+# I'm not fully sure why the row indices have to be fed in reverse order ...
 if( args.printOn or args.printOnly ):
   figDims = 13.*(Xdims[::-1].astype(float)/np.max(Xdims))
   fig = plt.figure(num=1, figsize=figDims)
@@ -161,6 +167,6 @@ if( args.printOn or args.printOnly ):
   plt.show()
 
 XTRM = None; YTRM = None
-PR   = None
+PR   = None; PRDict = None
 
   

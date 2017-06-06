@@ -43,10 +43,15 @@ printOn   = args.printOn
 printOnly = args.printOnly
 
 # Read in the raster data.
-R, Rdims, ROrig, dPx = readNumpyZTile( filename )
+Rdict = readNumpyZTile( filename )
+R = Rdict['R']
+Rdims = np.array(np.shape(R))
+ROrig = Rdict['LocalOrig']
+dPx = Rdict['dPx']
+Rdict = None
 
 # Create mask raster
-Rm = np.zeros( Rdims, 'uint8' )
+Rm = np.zeros( Rdims, 'int64' )
 
 for vx in mvals:
   fx = vx
@@ -56,9 +61,11 @@ for vx in mvals:
   Rm += (R == vx ).astype(int) * int(fx)
   print(' Rmtype = {} '.format(Rm.dtype))
 
+Rdict = {'R' : Rm, 'LocalOrig' : ROrig, 'dPx' : dPx}
+
 if( not printOnly ):
   print(' Writing file {} ... '.format(fileout) ) 
-  saveTileAsNumpyZ( fileout, Rm, Rdims, ROrig, dPx)
+  saveTileAsNumpyZ( fileout, Rdict)
   print(' ... done! ')
 
 if( printOn or printOnly ):
