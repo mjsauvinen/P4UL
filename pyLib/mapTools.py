@@ -180,10 +180,11 @@ def readAsciiGrid( filename ):
 
 def saveTileAsNumpyZ( filename, Rdict):
   '''
-  The saved .npz file contains R,dpx and XOrig
+  The saved npz file doesn't contain Rdict, but separate numpy arrays matching key names.
+  Therefore np.load(filename) is equal to the saved Rdict.
   '''
   try:
-    np.savez_compressed(filename, R=Rdict['R'], dpx=Rdict['dPx'], LocalOrig=Rdict['LocalOrig'])
+    np.savez_compressed(filename, **Rdict)
     print(' {}.npz saved successfully!'.format(filename))
   except:
     print(' Error in saving {}.npz in saveTileAsNumpyZ().'.format(filename))
@@ -192,20 +193,20 @@ def saveTileAsNumpyZ( filename, Rdict):
 
 def readNumpyZTile( filename, dataOnly=False ):
   print(' Read filename {} '.format(filename))
+  # dat must be closed to avoid leaking file descriptors.
   dat = np.load(filename)
-  Rdict = {}
-  if(dataOnly):
-    Rdict['R'] = []
-  else:
-    Rdict['R'] = dat['R']
-    
-  if 'LocalOrig' in Rdict: # Backwards compability for variable name change
-    Rdict['LocalOrig']=dat['LocalOrig'];
-  else:
-    Rdict['LocalOrig']=dat['XOrig']
-  Rdict['dPx']=dat['dpx']
+  Rdict = dict(dat)
   dat.close()
   
+  if(dataOnly):
+    Rdict['R'] = []
+  
+  # Backwards compatibility for variable name change.
+  if ('XOrig' in Rdict and not('LocalOrig' in Rdict)): 
+    Rdict['LocalOrig']=Rdict['XOrig']; 
+  # For some reason dPx arrays were saved as 'dpx' in the past hardcoded versions of saveTileAsNumpyZ.
+  if ('dpx' in Rdict and not('dPx' in Rdict)):
+    Rdict['dPx']=Rdict['dpx']
   return Rdict
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
