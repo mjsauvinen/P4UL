@@ -141,7 +141,7 @@ def readNumpyZGridData( filename, idx=0 ):
   Rdict = readNumpyZTile(filename, dataOnly=True)
   Rx=Rdict['R']
   Rxdims=np.array(np.shape(Rx))
-  RxOrig=Rdict['LocalOrig']
+  RxOrig=Rdict['GlobOrig']
   dPx=Rdict['dPx']
   name = filename.strip('.npz') # Extract the tile name.
   hdict = {'id':idx,'name': name, 'ncols':Rxdims[1],'nrows':Rxdims[0],\
@@ -202,8 +202,8 @@ def readNumpyZTile( filename, dataOnly=False ):
     Rdict['R'] = []
   
   # Backwards compatibility for variable name change.
-  if ('XOrig' in Rdict and not('LocalOrig' in Rdict)): 
-    Rdict['LocalOrig']=Rdict['XOrig']; 
+  if ('XOrig' in Rdict and not('GlobOrig' in Rdict)): 
+    Rdict['GlobOrig']=Rdict['XOrig']; 
   # For some reason dPx arrays were saved as 'dpx' in the past hardcoded versions of saveTileAsNumpyZ.
   if ('dpx' in Rdict and not('dPx' in Rdict)):
     Rdict['dPx']=Rdict['dpx']
@@ -215,7 +215,7 @@ def readNumpyZTileForMesh( filename ):
   Rdict = readNumpyZTile( filename )
   Rx = Rdict['R']
   Rxdims = np.array(np.shape(Rx))
-  RxOrig = Rdict['LocalOrig']
+  RxOrig = Rdict['GlobOrig']
   dPx = Rdict['dPx']
   
   # N,E - coords, start from top left.

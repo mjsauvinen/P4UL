@@ -29,7 +29,7 @@ parser.add_argument("-N","--NxG", help="Number of points [Nx, Ny] in the 2D Palm
 parser.add_argument("-dx","--dxG", help="Resolution [dx, dy] of the 2D Palm grid.",\
   type=float,nargs=2, default=[ 2. , 2.])
 parser.add_argument("-r","--rLx", type=float,nargs=2, default=[ 0.9, 0.5],\
-  help="Pivot location [rLx, rLy] as ratio of Lx & Ly of grid domain.")
+  help="Pivot location [rLx, rLy] as ratio of Lx & Ly of grid domain (top left origo).")
 parser.add_argument("-wd", "--windDir", type=float,default=0.,\
   help="Wind direction (deg) --> Rotation angle around the pivot point. North wind = 0deg")
 parser.add_argument("-s", "--scale",type=float,\
@@ -56,8 +56,9 @@ R = Rdict['R']
 nY = Rdict['rowCoords']
 eX = Rdict['colCoords']
 Rdims = np.array(np.shape(R))
-ROrig = Rdict['LocalOrig']
+ROrig = Rdict['GlobOrig']
 dPx = entry2Int( Rdict['dPx'] )
+print(ROrig)
 Rdict = None
 
 # Pivot coordinates
@@ -82,9 +83,9 @@ XgridCoords = np.linspace(xbegin,xend, NxG[0])
 YgridCoords = np.linspace(ybegin,yend, NxG[1])
 #Xg, Yg = np.meshgrid( XgridCoords, YgridCoords )
 
-# Location of the pivot (indecies and coords) in the Palm grid.
-iPGx = int(rLx[0]*NxG[0])-1   
-iPGy = int(rLx[1]*NxG[1])-1
+# Location of the pivot (indecies and coords) in the Palm grid. Not going into negative indices.
+iPGx = np.maximum(int(rLx[0]*NxG[0])-1,0)
+iPGy = np.maximum(int((1-rLx[1])*NxG[1])-1,0)
 
 pXG = XgridCoords[iPGx]
 pYG = YgridCoords[iPGy]
@@ -138,10 +139,12 @@ Using the known transformed coordinates, we can extract the pixel values
 at those locations and copy them to the Palm grid. The grid arrays origo is 
 located at the bottom left, which makes things a bit confusing here.
 '''
-Irow = (np.abs(YTRM-ROrig[0])/dPx ).astype(int)
-Jcol = (np.abs(XTRM-ROrig[1])/dPx ).astype(int) 
+Irow = ((ROrig[0]-YTRM)/dPx ).astype(int)
+Jcol = ((XTRM-ROrig[1])/dPx ).astype(int) 
 
 # Make sure the indecies don't run beyond the allowable bounds.
+if (np.amin(Irow) < 0 or np.amin(Jcol) < 0):
+  print("WARNING: Domain out of raster data bounds!")
 Irow = np.maximum(Irow, 0);          Jcol = np.maximum(Jcol, 0)
 Irow = np.minimum(Irow, Rdims[0]-1); Jcol = np.minimum(Jcol, Rdims[1]-1)
 
@@ -151,7 +154,7 @@ Xdims = np.array( np.shape(XTRM) )
 PR = np.zeros( Xdims  , float)
 PR[::-1,:] = R[Irow,Jcol]    # The row order must be reversed. 
 R = None
-PRdict = {'R' : PR, 'LocalOrig' : PROrig, 'dPx' : np.array([dxG[0],dxG[1]])}
+PRdict = {'R' : PR, 'GlobOrig' : PROrig, 'Rotation' : windDir, 'dPx' : np.array([dxG[0],dxG[1]])}
 
 if( not args.printOnly ):
   saveTileAsNumpyZ( args.fileOut, PRdict)

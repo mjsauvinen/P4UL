@@ -45,7 +45,7 @@ if( args.vtk and (args.filetopo == '')):
 Rdict = readNumpyZTile(args.rfile)
 R = Rdict['R']
 Rdims = np.array(np.shape(R))
-ROrig = Rdict['LocalOrig']
+ROrig = Rdict['GlobOrig']
 dPx = Rdict['dPx']
 Rdict=None
 
@@ -89,7 +89,7 @@ if (not(args.vtk)==None and not(args.printOnly)):
   topoDict = readNumpyZTile(args.filetopo)
   topo = topoDict['R']
   topoDims = np.array(np.shape(topo))
-  topoOrig = topoDict['LocalOrig']
+  topoOrig = topoDict['GlobOrig']
   topoDPX = topoDict['dPx']
   topoDict=None
   
@@ -113,7 +113,7 @@ if (not(args.vtk)==None and not(args.printOnly)):
 
 # Save as npz
 if( not args.printOnly ):
-  Rdict={'R' : R, 'dPx' : dPx, 'LocalOrig' : ROrig}
+  Rdict={'R' : R, 'dPx' : dPx, 'GlobOrig' : ROrig}
   saveTileAsNumpyZ( args.fileout, Rdict )
   Rdict=None
 

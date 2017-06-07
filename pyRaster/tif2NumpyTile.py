@@ -45,7 +45,7 @@ sc        = args.scale
 
 R = openTifAsNumpy(filename)
 dPx      = np.array([sc*reso, sc*reso])
-Rdict = {'R' : R, 'LocalOrig' : ROrig, 'dPx' : dPx}
+Rdict = {'R' : R, 'GlobOrig' : ROrig, 'dPx' : dPx}
 
 if( not printOnly ):
   print(' Writing file {} ... '.format(fileout) ) 

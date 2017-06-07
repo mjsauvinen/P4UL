@@ -74,7 +74,7 @@ print 'gIJ : {} '.format( gIJ )
 
 Rdict = compileTileGrid( dictList, gIJ , Mrows, Mcols, [ascii, npz] )
 Rdims = np.array(np.shape(Rdict['R']))
-Rdict['LocalOrig'] = XOrig
+Rdict['GlobOrig'] = XOrig
 Rdict['dPx'] = dPx
 
 if(not args.printOnly ):

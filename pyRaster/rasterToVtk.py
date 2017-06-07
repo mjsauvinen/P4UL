@@ -43,7 +43,7 @@ R = Rdict['R']
 Ry = Rdict['rowCoords']
 Rx = Rdict['colCoords']
 Rdims = np.array(np.shape(R))
-ROrig = Rdict['LocalOrig']
+ROrig = Rdict['GlobOrig']
 dPx = entry2Int( Rdict['dPx'] )
 Rdict = None
 

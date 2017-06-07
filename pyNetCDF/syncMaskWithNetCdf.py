@@ -111,7 +111,7 @@ index bounds and coarsening level.
 Rdict = readNumpyZTile(fmsk)
 R = Rdict['R']
 R_dims = np.array(np.shape(R))
-ROrig = Rdict['LocalOrig']
+ROrig = Rdict['GlobOrig']
 dPx = Rdict['dPx']
 Rdict = None
 dr = entry2Int( dPx )  # Resolution as a single number

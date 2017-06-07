@@ -58,14 +58,14 @@ dataOnly = False
 Rdict1 = readNumpyZTile(args.file1, dataOnly)
 R1 = Rdict1['R']
 R1dims = np.array(np.shape(R1))
-R1Orig = Rdict1['LocalOrig']
+R1Orig = Rdict1['GlobOrig']
 dPx1 = Rdict1['dPx']
 Rdict1 = None
 
 Rdict2 = readNumpyZTile(args.file2, dataOnly)
 R2 = Rdict2['R']
 R2dims = np.array(np.shape(R2))
-R2Orig = Rdict2['LocalOrig']
+R2Orig = Rdict2['GlobOrig']
 dPx2 = Rdict2['dPx']
 Rdict2 = None
 
@@ -103,7 +103,7 @@ Rt2 = np.zeros( maxDims, float )
 Rt1 = filterAndScale(Rt1, R1, flt1, s1 , i1, j1)
 Rt2 = filterAndScale(Rt2, R2, flt2, s2 , i2, j2)
 Rt = Rt1 + Rt2
-Rdict = {'R' : Rt, 'LocalOrig' : R1Orig, 'dPx' : np.array([dPf,dPf])}
+Rdict = {'R' : Rt, 'GlobOrig' : R1Orig, 'dPx' : np.array([dPf,dPf])}
 
 # Print the filtered raster maps.
 if( printOn or printOnly ):

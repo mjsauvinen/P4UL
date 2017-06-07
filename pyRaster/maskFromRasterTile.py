@@ -46,7 +46,7 @@ printOnly = args.printOnly
 Rdict = readNumpyZTile( filename )
 R = Rdict['R']
 Rdims = np.array(np.shape(R))
-ROrig = Rdict['LocalOrig']
+ROrig = Rdict['GlobOrig']
 dPx = Rdict['dPx']
 Rdict = None
 
@@ -61,7 +61,7 @@ for vx in mvals:
   Rm += (R == vx ).astype(int) * int(fx)
   print(' Rmtype = {} '.format(Rm.dtype))
 
-Rdict = {'R' : Rm, 'LocalOrig' : ROrig, 'dPx' : dPx}
+Rdict = {'R' : Rm, 'GlobOrig' : ROrig, 'dPx' : dPx}
 
 if( not printOnly ):
   print(' Writing file {} ... '.format(fileout) ) 

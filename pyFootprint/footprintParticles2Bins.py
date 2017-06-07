@@ -38,7 +38,7 @@ def sourceAreaMask( fmsk , xO , yO ):
   Rdict = readNumpyZTile(fmsk)
   R = Rdict['R']
   R_dims = np.array(np.shape(R))
-  ROrig = Rdict['LocalOrig']
+  ROrig = Rdict['GlobOrig']
   dPx = Rdict['dPx']
   Rdict = None
   dPx = entry2Int( dPx )  # Resolution as a single number

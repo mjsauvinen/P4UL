@@ -39,7 +39,7 @@ fileOut   = args.fileOut
 Rdict1 = readNumpyZTile( args.filename )
 R1 = Rdict1['R']
 R1dims = np.array(np.shape(R1))
-R1Orig = Rdict1['LocalOrig']
+R1Orig = Rdict1['GlobOrig']
 dPx1 = Rdict1['dPx']
 Rdict1 = None
 
@@ -84,7 +84,7 @@ else:
 
 R1 = None
 R2 *= s2
-Rdict2 = {'R' : R2, 'LocalOrig' : R1Orig, 'dPx' : dPx2}
+Rdict2 = {'R' : R2, 'GlobOrig' : R1Orig, 'dPx' : dPx2}
 
 if( not args.printOnly ):
   fx = open( fileOut , 'w' )

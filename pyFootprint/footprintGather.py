@@ -167,7 +167,7 @@ if( not printOnly ):
     Rdict = readNumpyZTile( filetopo )
     R = Rdict['R']
     Rdims = np.array(np.shape(R))
-    ROrig = Rdict['LocalOrig']
+    ROrig = Rdict['GlobOrig']
     dPx = Rdict['dPx']
     Rdict = None
     if( all(Rdims != np.shape(Xt)) ):

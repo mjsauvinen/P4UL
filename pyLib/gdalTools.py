@@ -168,7 +168,7 @@ def extractSubTile( rBand, tileCode, XOrg, dPx):
   print ' Number of Offset Pixels = {}'.format(nPxOffset)
   
   Rb = readAsNumpyArray( rBand, nPxOffset, nPx)
-  Rdict = {'R' : Rb, 'LocalOrig' : Xtmp}
+  Rdict = {'R' : Rb, 'GlobOrig' : Xtmp}
   return Rdict
   
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*

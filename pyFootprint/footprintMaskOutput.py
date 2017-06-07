@@ -51,7 +51,7 @@ try:
   Rdict = readNumpyZTile( filemask )
   Rm = Rdict['R']
   Rmdims = np.array(np.shape(R))
-  RmOrig = Rdict['LocalOrig']
+  RmOrig = Rdict['GlobOrig']
   dPx = Rdict['dPx']
   Rdict = None
 except:

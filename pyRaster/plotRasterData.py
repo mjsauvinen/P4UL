@@ -53,7 +53,7 @@ if( not footprintOn ):
   Rdict = readNumpyZTile(rasterfile)
   R = Rdict['R']
   Rdims = np.array(np.shape(R))
-  ROrig = Rdict['LocalOrig']
+  ROrig = Rdict['GlobOrig']
   dPx = Rdict['dPx']
   Rdict = None
 else:

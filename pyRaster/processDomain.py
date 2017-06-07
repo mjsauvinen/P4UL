@@ -60,7 +60,7 @@ else:                 fltStr  = flt[0]+'-filtered: '
 Rdict = readNumpyZTile(args.filename)
 R = Rdict['R']
 Rdims = np.array(np.shape(R))
-ROrig = Rdict['LocalOrig']
+ROrig = Rdict['GlobOrig']
 dPx = Rdict['dPx']
 Rdict = None
 print(' Rdims = {} '.format(Rdims))
@@ -80,7 +80,7 @@ R = applyMargins( R , mw, mr, mh )
 Rf = np.zeros( np.shape(R) , float)
 Rf =  filterAndScale(Rf, R, flt )
 
-Rdict = {'R' : Rf, 'LocalOrig' : ROrig, 'dPx' : dPx}
+Rdict = {'R' : Rf, 'GlobOrig' : ROrig, 'dPx' : dPx}
 
 if( hmax ):
   Rf = np.minimum( hmax , Rf )
