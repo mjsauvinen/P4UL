@@ -63,8 +63,8 @@ Rdict = None
 
 # Pivot coordinates
 pY = nY[iPv[0]]; pX = eX[iPv[1]] 
-print(' Origo in the Topography data: [XO,YO] = [{}, {}]'.format(ROrig[1],ROrig[0]))
-print(' Pivot Coords in Topography data: [pX,pY] = [{}, {}]'.format(pX,pY))
+print(' Origo in the Topography data: [N,E] = [{}, {}]'.format(ROrig[0],ROrig[1]))
+print(' Pivot Coords in Topography data: [N,E] = [{}, {}]'.format(pY,pX))
 #NY, EX = np.meshgrid(nY,eX)
 
 '''
@@ -128,8 +128,8 @@ Top Right    :  XTRM[-1,-1], YTRM[-1,-1])
  allows the relative position of different raster maps (with identical 
  coord. rotation) to be determined easily.
 '''
-PROrig = np.array([ XTM[-1,0], YTM[-1,0] ])  # Reset top left origo
-print(' Top left origo coords. (cell centers!): [X,Y] = {}'.format(PROrig))
+PROrig = np.array([ YTM[-1,0], XTM[-1,0] ])  # Reset top left origo
+print(' Top left origo coords. (cell centers!): [N,E] = {}'.format(PROrig))
 
 XT  = None; YT  = None
 XTM = None; YTM = None
@@ -154,7 +154,9 @@ Xdims = np.array( np.shape(XTRM) )
 PR = np.zeros( Xdims  , float)
 PR[::-1,:] = R[Irow,Jcol]    # The row order must be reversed. 
 R = None
-PRdict = {'R' : PR, 'GlobOrig' : PROrig, 'Rotation' : windDir, 'dPx' : np.array([dxG[0],dxG[1]])}
+
+rotation = theta*(np.pi/180.) # Rotation of Palm grid in radians.
+PRdict = {'R' : PR, 'GlobOrig' : PROrig, 'gridRot' : theta*(np.pi/180.), 'dPx' : np.array([dxG[0],dxG[1]])}
 
 if( not args.printOnly ):
   saveTileAsNumpyZ( args.fileOut, PRdict)
