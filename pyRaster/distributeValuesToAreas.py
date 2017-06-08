@@ -113,7 +113,7 @@ if (not(args.vtk)==None and not(args.printOnly)):
 
 # Save as npz
 if( not args.printOnly ):
-  Rdict={'R' : R, 'dPx' : dPx, 'GlobOrig' : ROrig}
+  Rdict={'R' : R, 'dPx' : dPx, 'GlobOrig' : ROrig, 'ShapeCount' : shapeCount}
   saveTileAsNumpyZ( args.fileout, Rdict )
   Rdict=None
 

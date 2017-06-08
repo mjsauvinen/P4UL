@@ -67,7 +67,7 @@ else:
 info = ''' Info:
  Dimensions [rows, cols] = {}
  Origin (top-left) [N,E] = {}
- Resolution        [N,E] = {}
+ Resolution        [dX,dY] = {}
 '''.format(Rdims,ROrig,dPx)
 
 print(info)

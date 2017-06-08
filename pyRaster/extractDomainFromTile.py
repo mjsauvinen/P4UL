@@ -128,7 +128,7 @@ Top Right    :  XTRM[-1,-1], YTRM[-1,-1])
  allows the relative position of different raster maps (with identical 
  coord. rotation) to be determined easily.
 '''
-PROrig = np.array([ YTM[-1,0], XTM[-1,0] ])  # Reset top left origo
+PROrig = np.array([ YTRM[-1,0], XTRM[-1,0] ])  # Reset top left origo
 print(' Top left origo coords. (cell centers!): [N,E] = {}'.format(PROrig))
 
 XT  = None; YT  = None
@@ -144,7 +144,8 @@ Jcol = ((XTRM-ROrig[1])/dPx ).astype(int)
 
 # Make sure the indecies don't run beyond the allowable bounds.
 if (np.amin(Irow) < 0 or np.amin(Jcol) < 0):
-  print("WARNING: Domain out of raster data bounds!")
+  # Warn the user about streching edges.
+  print("WARNING: Domain out of raster data bounds! Streching edge cells to fill the domain.")
 Irow = np.maximum(Irow, 0);          Jcol = np.maximum(Jcol, 0)
 Irow = np.minimum(Irow, Rdims[0]-1); Jcol = np.minimum(Jcol, Rdims[1]-1)
 
@@ -156,7 +157,8 @@ PR[::-1,:] = R[Irow,Jcol]    # The row order must be reversed.
 R = None
 
 rotation = theta*(np.pi/180.) # Rotation of Palm grid in radians.
-PRdict = {'R' : PR, 'GlobOrig' : PROrig, 'gridRot' : theta*(np.pi/180.), 'dPx' : np.array([dxG[0],dxG[1]])}
+print(rotation/(np.pi/180))
+PRdict = {'R' : PR, 'GlobOrig' : PROrig, 'gridRot' : rotation, 'dPx' : np.array([dxG[0],dxG[1]])}
 
 if( not args.printOnly ):
   saveTileAsNumpyZ( args.fileOut, PRdict)
