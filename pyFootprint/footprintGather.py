@@ -10,9 +10,6 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 ''' 
-Description:
-
-
 Author: Mikko Auvinen
         mikko.auvinen@helsinki.fi 
         University of Helsinki &
