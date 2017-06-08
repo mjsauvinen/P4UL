@@ -29,7 +29,7 @@ parser.add_argument("-N","--NxG", help="Number of points [Nx, Ny] in the 2D Palm
 parser.add_argument("-dx","--dxG", help="Resolution [dx, dy] of the 2D Palm grid.",\
   type=float,nargs=2, default=[ 2. , 2.])
 parser.add_argument("-r","--rLx", type=float,nargs=2, default=[ 0.9, 0.5],\
-  help="Pivot location [rLx, rLy] as ratio of Lx & Ly of grid domain.")
+  help="Pivot location [rLx, rLy] as ratio of Lx & Ly of grid domain (top left origo).")
 parser.add_argument("-wd", "--windDir", type=float,default=0.,\
   help="Wind direction (deg) --> Rotation angle around the pivot point. North wind = 0deg")
 parser.add_argument("-s", "--scale",type=float,\
@@ -76,9 +76,9 @@ XgridCoords = np.linspace(xbegin,xend, NxG[0])
 YgridCoords = np.linspace(ybegin,yend, NxG[1])
 #Xg, Yg = np.meshgrid( XgridCoords, YgridCoords )
 
-# Location of the pivot (indecies and coords) in the Palm grid.
-iPGx = int(rLx[0]*NxG[0])-1   
-iPGy = int(rLx[1]*NxG[1])-1
+# Location of the pivot (indecies and coords) in the Palm grid. Not going into negative indices.
+iPGx = np.maximum(int(rLx[0]*NxG[0])-1,0)
+iPGy = np.maximum(int((1-rLx[1])*NxG[1])-1,0)
 
 pXG = XgridCoords[iPGx]
 pYG = YgridCoords[iPGy]
@@ -121,8 +121,8 @@ Top Right    :  XTRM[-1,-1], YTRM[-1,-1])
  allows the relative position of different raster maps (with identical 
  coord. rotation) to be determined easily.
 '''
-PROrig = np.array([ XTM[-1,0], YTM[-1,0] ])  # Reset top left origo
-print(' Top left origo coords. (cell centers!): [X,Y] = {}'.format(PROrig))
+PROrig = np.array([ YTRM[-1,0], XTRM[-1,0] ])  # Reset top left origo
+print(' Top left origo coords. (cell centers!): [N,E] = {}'.format(PROrig))
 
 XT  = None; YT  = None
 XTM = None; YTM = None
@@ -132,10 +132,14 @@ Using the known transformed coordinates, we can extract the pixel values
 at those locations and copy them to the Palm grid. The grid arrays origo is 
 located at the bottom left, which makes things a bit confusing here.
 '''
-Irow = (np.abs(YTRM-ROrig[0])/dPx ).astype(int)
-Jcol = (np.abs(XTRM-ROrig[1])/dPx ).astype(int) 
+Irow = ((ROrig[0]-YTRM)/dPx ).astype(int)
+Jcol = ((XTRM-ROrig[1])/dPx ).astype(int) 
 
 # Make sure the indecies don't run beyond the allowable bounds.
+if (np.amin(Irow) < 0 or np.amin(Jcol) < 0):
+  # Warn the user about streching edges.
+  print("WARNING: Domain out of raster data bounds! Streching edge cells to fill the domain.")
+
 Irow = np.maximum(Irow, 0);          Jcol = np.maximum(Jcol, 0)
 Irow = np.minimum(Irow, Rdims[0]-1); Jcol = np.minimum(Jcol, Rdims[1]-1)
 
@@ -151,7 +155,8 @@ if( not args.printOnly ):
   saveTileAsNumpyZ( args.fileOut, PR, Xdims, PROrig, np.array([dxG[0],dxG[1]]) )
 
 
-# I'm not fully sure why the row indecies have to be fed in reverse order ...
+# Print the raster map, first, in a coordinate system where x-axis is aligned with the windDir
+# and, second, in its original orientation.
 if( args.printOn or args.printOnly ):
   figDims = 13.*(Xdims[::-1].astype(float)/np.max(Xdims))
   fig = plt.figure(num=1, figsize=figDims)
