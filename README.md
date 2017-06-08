@@ -19,14 +19,23 @@ git clone https://github.com/mjsauvinen/P4UL.git
 1) Add to $HOME/.bashrc 
 
 export PATH=$HOME/bin:$PATH
+
 export PATH=$HOME/bin/pyPlot:$PATH
+
 export PATH=$HOME/bin/pyFootprint:$PATH
+
 export PATH=$HOME/bin/pyRaster:$PATH
+
 export PATH=$HOME/bin/pyUtils:$PATH
+
 export PATH=$HOME/bin/pyFoam:$PATH
+
 export PATH=$HOME/bin/pyAnalyze:$PATH
+
 export PATH=$HOME/bin/pyMisc:$PATH
+
 export PATH=$HOME/bin/pyNetCDF:$PATH
+
 
 export PYTHONPATH=$HOME/bin/pyLib/:$PYTHONPATH
 
