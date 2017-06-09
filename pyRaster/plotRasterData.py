@@ -31,8 +31,10 @@ parser.add_argument("--labels", help="User specified labels.", action="store_tru
   default=False)
 parser.add_argument("--footprint", help="Plot footprint data.", action="store_true",\
   default=False)
-parser.add_argument("--save", help="Save the figure right away.", action="store_true",\
-  default=False)
+parser.add_argument("-fs", "--save", metavar="FORMAT" ,type=str,\
+  default='png', help="Save the figure in specified format. Default is png, use eps or pdf for vector format.")
+parser.add_argument("--dpi", metavar="DPI" ,type=int,\
+  default=100, help="Desired resolution in DPI for the output image. Default: 100")
 args = parser.parse_args() 
 #writeLog( parser, args )
 #==========================================================#
@@ -43,7 +45,7 @@ limsOn      = args.lims
 gridOn      = args.grid
 labels      = args.labels
 footprintOn = args.footprint
-saveOn      = args.save
+save      = args.save
 
 plt.rc('xtick', labelsize=18); #plt.rc('ytick.major', size=10)
 plt.rc('ytick', labelsize=18); #plt.rc('ytick.minor', size=6)
@@ -80,11 +82,11 @@ R = None
 if(labels):
   fig = userLabels( fig )
 
-if(saveOn):
+if(save):
   filename = rasterfile.split('/')[-1]  # Remove the path in Linux system
   filename = filename.split('\\')[-1]   # Remove the path in Windows system
-  filename = filename.strip('.npz')+'.jpg'
-  fig.savefig( filename )
+  filename = filename.strip('.npz')+'.'+save
+  fig.savefig( filename, format=save, dpi=args.dpi)
   
 plt.show()
 

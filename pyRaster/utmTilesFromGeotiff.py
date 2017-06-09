@@ -70,7 +70,7 @@ Rdict['dPx'] = resolution
 Rdict['R'][Rdict['R']>32765] = 0.
 
 if( args.scale != 1.):
-  Rdict['R']*=args.scale
+  Rdict['R']=Rdict['R']*args.scale
 
 if( not args.printOnly ):
   saveTileAsNumpyZ( args.utmTile, Rdict )

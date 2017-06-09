@@ -35,9 +35,9 @@ def arrangeTileGrid( dictList, fileTypes ):
   ltmp = coordListSorted[-1]  # Take the last entry.
   dtmp = dictList[ltmp[0]]    # Fetch the desired dict. ltmp[0] == id.
   if( ascii ):
-    XO_TL[1]= dtmp['yllcorner']+dtmp['nrows']*dtmp['cellsize']
+    XO_TL[0]= dtmp['yllcorner']+dtmp['nrows']*dtmp['cellsize']
   else:
-    XO_TL[1]= dtmp['ytlcorner']
+    XO_TL[0]= dtmp['ytlcorner']
 
   irow = 0; maxVal = 0.
   for t in reversed(coordListSorted):
@@ -57,9 +57,9 @@ def arrangeTileGrid( dictList, fileTypes ):
   ltmp = coordListSorted[0]
   dtmp = dictList[ltmp[0]]
   if( ascii ):
-    XO_TL[0]= dtmp['xllcorner']
+    XO_TL[1]= dtmp['xllcorner']
   else:
-    XO_TL[0]= dtmp['xtlcorner']
+    XO_TL[1]= dtmp['xtlcorner']
 
   jcol = 0; minVal = 1.e12
   for t in coordListSorted:
@@ -103,7 +103,7 @@ def compileTileGrid( dictList, ijList, Mrows, Mcols, fileTypes ):
   for i in xrange(Mrows):
     c1 = i*Mcols; c2 = (i+1)*Mcols
     print 'c1={}, c2={}'.format(c1,c2)
-    if( T == None ):
+    if( T is None ):
       T = np.hstack(M[c1:c2])
     else:
       T = np.vstack( (T,np.hstack(M[c1:c2])) )
@@ -139,8 +139,8 @@ def readAsciiGridHeader( filename, idx=0 ):
 
 def readNumpyZGridData( filename, idx=0 ):
   Rdict = readNumpyZTile(filename, dataOnly=True)
-  Rx=Rdict['R']
-  Rxdims=np.array(np.shape(Rx))
+  Rxdims=np.array(np.shape(Rdict['R']))
+  Rdict['R'] = []
   RxOrig=Rdict['GlobOrig']
   dPx=Rdict['dPx']
   name = filename.strip('.npz') # Extract the tile name.
@@ -198,8 +198,8 @@ def readNumpyZTile( filename, dataOnly=False ):
   Rdict = dict(dat)
   dat.close()
   
-  if(dataOnly):
-    Rdict['R'] = []
+  #if(dataOnly):
+    #Rdict['R'] = []
   
   # Backwards compatibility for variable name change.
   if ('XOrig' in Rdict and not('GlobOrig' in Rdict)): 
@@ -333,7 +333,7 @@ def filterAndScale(Rxo, Rx, filterInfo, sx=1.0, ix=None, jx=None):
   
   # Check if the indecies are explicitly given.
   inxOn = True
-  if( ix==None or jx==None ):
+  if( ix is None or jx is None ):
     inxOn = False
     
   if( filterInfo.count(None) == 0):
