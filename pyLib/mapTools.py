@@ -185,7 +185,7 @@ def saveTileAsNumpyZ( filename, Rdict):
   '''
   try:
     np.savez_compressed(filename, **Rdict)
-    print(' {}.npz saved successfully!'.format(filename))
+    print(' {} saved successfully!'.format(filename))
   except:
     print(' Error in saving {}.npz in saveTileAsNumpyZ().'.format(filename))
     
@@ -249,6 +249,14 @@ def rotateGridAroundPivot( X, Y, xp, yp, theta, deg=True ):
 
   return XR, YR
 
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def rotatePoint(point, rotation, scale=[1,1]):
+  # Simple 2D rotation matrix
+  rotatedPoint = np.array([(point[0]*np.cos(rotation)-point[1]*np.sin(rotation))*scale[0],\
+              (point[0]*np.sin(rotation)+point[1]*np.cos(rotation))*scale[1]])
+  
+  return rotatedPoint
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 

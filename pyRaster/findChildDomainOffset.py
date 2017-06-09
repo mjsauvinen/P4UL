@@ -8,6 +8,10 @@ from utilities import writeLog
 ''' 
 Description:
 Calculates child domain's offset to parent domain.
+
+NOTE: This script uses [N,E] coordinates for global coordinates and [X,Y] for
+coordinates relative to domain's origo. This might be confusing at certain
+parts and requires special care when editing the file.
 '''
 
 #==========================================================#
@@ -47,20 +51,39 @@ print(' Resolution: [dPx,dPy] = [{}, {}]'.format(*dPxChild))
 print(' Grid rotation: [deg] = {}'.format(gridRotChild/(np.pi/180.)));print('')
 
 # Calculate bottom left origos
-ROrigParent[0] -= nPxParent[1]*dPxParent[1]*np.cos(gridRot)
-ROrigParent[1] += nPxParent[1]*dPxParent[1]*np.sin(gridRot)
+ROrigParentBL = np.zeros(2);ROrigChildBL = np.zeros(2)
+ROrigParentBL[0] = ROrigParent[0] - nPxParent[1]*dPxParent[1]*np.cos(gridRot)
+ROrigParentBL[1] = ROrigParent[1] + nPxParent[0]*dPxParent[0]*np.sin(gridRot)
 
-ROrigChild[0] -= nPxChild[1]*dPxChild[1]*np.cos(gridRotChild)
-ROrigChild[1] += nPxChild[1]*dPxChild[1]*np.sin(gridRotChild)
+ROrigChildBL[0] = ROrigChild[0] - nPxChild[1]*dPxChild[1]*np.cos(gridRot)
+ROrigChildBL[1] = ROrigChild[1] + nPxChild[0]*dPxChild[0]*np.sin(gridRot)
 
 # Offset of global origo coordinates
-OrigOffsetGlobal = ROrigChild - ROrigParent
+OrigOffsetGlobal = ROrigChildBL - ROrigParentBL
 print(' Bottom left origo offsets:')
 print(' Global: [N,E] = [{}, {}]'.format(*OrigOffsetGlobal))
 
 # Calculate local origo offset in the PALM grid of the parent domain by rotation
 # Note that the offset is given in domain's grid [X,Y]!
-OrigOffset = [(OrigOffsetGlobal[1]*np.cos(-gridRot)-OrigOffsetGlobal[0]*np.sin(-gridRot))/dPxParent[0],\
-              (OrigOffsetGlobal[1]*np.sin(-gridRot)+OrigOffsetGlobal[0]*np.cos(-gridRot))/dPxParent[1]]
+OrigOffset = rotatePoint(OrigOffsetGlobal[::-1], -gridRot, 1/dPxParent)
+print(' Parent domain\'s grid: [X,Y] = [{}, {}]'.format(*OrigOffset))
 
-print(' Parent domain\'s grid: [X,Y] = [{}, {}]'.format(*OrigOffset)))
+# Help the user to move the child domain to match the parent's grid
+if (not(OrigOffset[0].is_integer() and OrigOffset[1].is_integer())):
+  NewOffset = map(int, OrigOffset)
+  # Rotate and scale back to original global top left origo
+  NewOffset = rotatePoint(NewOffset, gridRot, dPxParent)[::-1]
+  NewOrigo = NewOffset + ROrigParentBL
+  NewOrigo[0] += nPxChild[1]*dPxChild[1]*np.cos(gridRot)
+  NewOrigo[1] -= nPxChild[0]*dPxChild[0]*np.sin(gridRot)
+  print(NewOrigo)
+  childAdj = NewOrigo-ROrigChild
+  
+  print(' WARNING: Child\'s origo doesn\'t match to the parent\'s grid.')
+  print(' Move the child domain area by [{}, {}] in N,E grid to align the origo.'.format(*childAdj))
+else:
+  # Check if the grid dimensions match, i.e. the edges align with the parent grid
+  xRatio=nPxChild[0]*dPxChild[0]/dPxParent[0]
+  yRatio=nPxChild[1]*dPxChild[1]/dPxParent[1]
+  if (not(xRatio.is_integer() and yRatio.is_integer())):
+    print(' WARNING: Child domain\'s grid edges don\'t align with the parent. Check your resolutions and dimensions.')

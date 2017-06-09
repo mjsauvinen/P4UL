@@ -30,8 +30,10 @@ parser.add_argument("-dx","--dxG", help="Resolution [dx, dy] of the 2D Palm grid
   type=float,nargs=2, default=[ 2. , 2.])
 parser.add_argument("-r","--rLx", type=float,nargs=2, default=[ 0.9, 0.5],\
   help="Pivot location [rLx, rLy] as ratio of Lx & Ly of grid domain (top left origo).")
-parser.add_argument("-wd", "--windDir", type=float,default=0.,\
+parser.add_argument("-wd", "--windDir", type=float,default=270.0,\
   help="Wind direction (deg) --> Rotation angle around the pivot point. North wind = 0deg")
+parser.add_argument("-nr", "--noRotation", action="store_true",default=False,\
+  help="Do not rotate the grid.")
 parser.add_argument("-s", "--scale",type=float,\
   help="Scale factor for the output. Default=1.", default=1.)
 parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
@@ -109,7 +111,7 @@ Coordinate transformations for counterclockwise rotation.
 # NOTE: At the pivot point XTR = pX 
 XTM, YTM = np.meshgrid( XT, YT )
 theta = 270. - windDir
-if( theta != 0. ):
+if( theta != 0. and not(args.noRotation)):
   XTRM,YTRM = rotateGridAroundPivot(XTM,YTM, pX, pY,theta, deg=True)
 else:
   print(' No rotation! ')
