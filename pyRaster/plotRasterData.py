@@ -31,7 +31,7 @@ parser.add_argument("--labels", help="User specified labels.", action="store_tru
   default=False)
 parser.add_argument("--footprint", help="Plot footprint data.", action="store_true",\
   default=False)
-parser.add_argument("-fs", "--save", metavar="FORMAT" ,type=str,\
+parser.add_argument("--save", metavar="FORMAT" ,type=str,\
   default='png', help="Save the figure in specified format. Default is png, use eps or pdf for vector format.")
 parser.add_argument("--dpi", metavar="DPI" ,type=int,\
   default=100, help="Desired resolution in DPI for the output image. Default: 100")

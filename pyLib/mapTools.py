@@ -217,6 +217,10 @@ def readNumpyZTileForMesh( filename ):
   Rxdims = np.array(np.shape(Rx))
   RxOrig = Rdict['GlobOrig']
   dPx = Rdict['dPx']
+  try:
+    gridRot = Rdict['gridRot']
+  except:
+    gridRot = Rdict['gridRot'] = 0
   
   # N,E - coords, start from top left.
   Rdict['rowCoords'] = np.arange(RxOrig[0],(RxOrig[0]-Rxdims[0]*dPx[0]),-dPx[0]) # N
@@ -251,11 +255,11 @@ def rotateGridAroundPivot( X, Y, xp, yp, theta, deg=True ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def rotatePoint(point, rotation, scale=[1,1]):
+def rotatePoint(pivot, point, angle):
   # Simple 2D rotation matrix
-  rotatedPoint = np.array([(point[0]*np.cos(rotation)-point[1]*np.sin(rotation))*scale[0],\
-              (point[0]*np.sin(rotation)+point[1]*np.cos(rotation))*scale[1]])
-  
+  rotatedPoint = np.zeros(2)
+  rotatedPoint[1] = pivot[1] + np.cos(angle) * (point[1] - pivot[1]) - np.sin(angle) * (point[0] - pivot[0])
+  rotatedPoint[0] = pivot[0] + np.sin(angle) * (point[1] - pivot[1]) + np.cos(angle) * (point[0] - pivot[0])
   return rotatedPoint
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*

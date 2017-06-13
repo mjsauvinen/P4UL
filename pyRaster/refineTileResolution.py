@@ -41,6 +41,7 @@ R1 = Rdict1['R']
 R1dims = np.array(np.shape(R1))
 R1Orig = Rdict1['GlobOrig']
 dPx1 = Rdict1['dPx']
+gridRot = Rdict1['gridRot']
 Rdict1 = None
 
 # Resolution ratio (rr).
@@ -66,7 +67,7 @@ else:
 i1/=dr1; j1/=dr1
 i1 = i1.astype(int);  j1 = j1.astype(int)
 
-i2*=fr2            ;  j2*=fr2
+i2 = i2*fr2        ;  j2 = j2*fr2
 i2 = i2.astype(int);  j2 = j2.astype(int)
 
 #print ' i2 = {} '.format(i2)
@@ -84,13 +85,13 @@ else:
 
 R1 = None
 R2 *= s2
-Rdict2 = {'R' : R2, 'GlobOrig' : R1Orig, 'dPx' : dPx2}
+dPx2 = dPx1/rr
+Rdict2 = {'R' : R2, 'GlobOrig' : R1Orig, 'gridRot' : gridRot, 'dPx' : dPx2}
 
 if( not args.printOnly ):
   fx = open( fileOut , 'w' )
   np.savetxt(fx,np.round(R2),fmt='%g')
   fx.close()
-  dPx2 = dPx1/rr
   saveTileAsNumpyZ( fileOut, Rdict2 )
   
 if( args.printOn or args.printOnly ):

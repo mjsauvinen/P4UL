@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser(prog='extractDomainFromTile.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of raster data file.")
 parser.add_argument("-fo", "--fileOut",type=str, help="Name of output Palm mesh file.",\
   default="PalmTopo")
-parser.add_argument("-iP","--iPivot", help="Pixel ids [N,E] for the pivot in the raster file.",\
+parser.add_argument("-iP","--iPivot", help="Local pixel ids [N,E] for the pivot in the raster file.",\
   type=int,nargs=2,required=True)
 parser.add_argument("-N","--NxG", help="Number of points [Nx, Ny] in the 2D Palm grid.",\
   type=int,nargs=2, default=[ 2048 , 1024])
@@ -53,14 +53,18 @@ windDir = args.windDir
 
 # Read in the underlying topography data and obtain the pivot coordinates.
 dataOnly = False
-Rdict= readNumpyZTileForMesh( args.filename )
+Rdict= readNumpyZTileForMesh( args.filename)
 R = Rdict['R']
 nY = Rdict['rowCoords']
 eX = Rdict['colCoords']
 Rdims = np.array(np.shape(R))
+# Retain information about rotation
+try:
+  gridRot = Rdict['gridRot']
+except:
+  gridRot = 0
 ROrig = Rdict['GlobOrig']
 dPx = entry2Int( Rdict['dPx'] )
-print(ROrig)
 Rdict = None
 
 # Pivot coordinates
@@ -102,16 +106,19 @@ We use the pivot point which is known for both systems.
 dXT = pX - pXG; dYT = pY - pYG
 XT = XgridCoords + dXT
 YT = YgridCoords + dYT
+
+
 '''  
 Rotate the new coordinates according to the wind direction:
 Coordinate transformations for counterclockwise rotation.
 '''
-
-
 # NOTE: At the pivot point XTR = pX 
 XTM, YTM = np.meshgrid( XT, YT )
-theta = 270. - windDir
-if( theta != 0. and not(args.noRotation)):
+if (args.noRotation):
+  theta = 0.
+else:
+  theta = 270. - windDir
+if( theta != 0.):
   XTRM,YTRM = rotateGridAroundPivot(XTM,YTM, pX, pY,theta, deg=True)
 else:
   print(' No rotation! ')
@@ -123,15 +130,6 @@ Top Left     :  XTRM[-1,0], YTRM[-1,0]
 Bottom Right :  XTRM[0,-1], YTRM[0,-1]
 Top Right    :  XTRM[-1,-1], YTRM[-1,-1])
 '''
-
-
-'''
- Reset the top left origo utilizing the NON-rotated coordinates. This 
- allows the relative position of different raster maps (with identical 
- coord. rotation) to be determined easily.
-'''
-PROrig = np.array([ YTRM[-1,0], XTRM[-1,0] ])  # Reset top left origo
-print(' Top left origo coords. (cell centers!): [N,E] = {}'.format(PROrig))
 
 XT  = None; YT  = None
 XTM = None; YTM = None
@@ -157,10 +155,19 @@ Xdims = np.array( np.shape(XTRM) )
 PR = np.zeros( Xdims  , float)
 PR[::-1,:] = R[Irow,Jcol]    # The row order must be reversed. 
 R = None
+  
+'''
+ Reset the top left origo utilizing the NON-rotated coordinates. This 
+ allows the relative position of different raster maps (with identical 
+ coord. rotation) to be determined easily.
+'''
+theta2 = gridRot/(np.pi/180.)
+XTRM,YTRM = rotateGridAroundPivot(XTRM,YTRM, ROrig[1], ROrig[0],theta2, deg=True)
+PROrig = np.array([ YTRM[-1,0], XTRM[-1,0] ])  # Reset top left origo
+print(' Top left origo coords. (cell centers!): [N,E] = {}'.format(PROrig))
+print((theta+theta2)*(np.pi/180.))
 
-rotation = theta*(np.pi/180.) # Rotation of Palm grid in radians.
-print(rotation/(np.pi/180))
-PRdict = {'R' : PR, 'GlobOrig' : PROrig, 'gridRot' : rotation, 'dPx' : np.array([dxG[0],dxG[1]])}
+PRdict = {'R' : PR, 'GlobOrig' : PROrig, 'gridRot' : (theta+theta2)*(np.pi/180.), 'dPx' : np.array([dxG[0],dxG[1]])}
 
 if( not args.printOnly ):
   saveTileAsNumpyZ( args.fileOut, PRdict)
@@ -171,7 +178,6 @@ if( args.printOn or args.printOnly ):
   figDims = 13.*(Xdims[::-1].astype(float)/np.max(Xdims))
   fig = plt.figure(num=1, figsize=figDims)
   fig = addImagePlot( fig, PR, args.fileOut )
- 
   CO = addContourf( XTRM, YTRM, PR[::-1,:], " Z(X,Y) ", "PALM DOMAIN ON MAP" )
   plt.show()
 
