@@ -10,9 +10,6 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 ''' 
-Description:
-
-
 Author: Mikko Auvinen
         mikko.auvinen@helsinki.fi 
         University of Helsinki &
@@ -228,7 +225,7 @@ for fn in fileNos:
     count = 0; ro    = None
     dr    = -1000.
     dc    = 0.005
-    count_max = 100
+    count_max = 200
     r_lim = 100
     infoStr = '''
     #- # - # - # - # - # - # - # - # - #

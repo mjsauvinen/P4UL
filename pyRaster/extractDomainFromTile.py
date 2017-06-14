@@ -30,7 +30,11 @@ parser.add_argument("-dx","--dxG", help="Resolution [dx, dy] of the 2D Palm grid
   type=float,nargs=2, default=[ 2. , 2.])
 parser.add_argument("-r","--rLx", type=float,nargs=2, default=[ 0.9, 0.5],\
   help="Pivot location [rLx, rLy] as ratio of Lx & Ly of grid domain (top left origo).")
+<<<<<<< HEAD
 parser.add_argument("-wd", "--windDir", type=float,default=270.0,\
+=======
+parser.add_argument("-wd", "--windDir", type=float,default=0.,\
+>>>>>>> master
   help="Wind direction (deg) --> Rotation angle around the pivot point. North wind = 0deg")
 parser.add_argument("-nr", "--noRotation", action="store_true",default=False,\
   help="Do not rotate the grid.")
@@ -146,6 +150,7 @@ Jcol = ((XTRM-ROrig[1])/dPx ).astype(int)
 if (np.amin(Irow) < 0 or np.amin(Jcol) < 0):
   # Warn the user about streching edges.
   print("WARNING: Domain out of raster data bounds! Streching edge cells to fill the domain.")
+
 Irow = np.maximum(Irow, 0);          Jcol = np.maximum(Jcol, 0)
 Irow = np.minimum(Irow, Rdims[0]-1); Jcol = np.minimum(Jcol, Rdims[1]-1)
 
@@ -173,7 +178,8 @@ if( not args.printOnly ):
   saveTileAsNumpyZ( args.fileOut, PRdict)
 
 
-# I'm not fully sure why the row indices have to be fed in reverse order ...
+# Print the raster map, first, in a coordinate system where x-axis is aligned with the windDir
+# and, second, in its original orientation.
 if( args.printOn or args.printOnly ):
   figDims = 13.*(Xdims[::-1].astype(float)/np.max(Xdims))
   fig = plt.figure(num=1, figsize=figDims)

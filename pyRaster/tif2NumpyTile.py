@@ -7,9 +7,6 @@ from utilities import filesFromList, writeLog
 from plotTools import addImagePlot
 import matplotlib.pyplot as plt
 ''' 
-Description:
-
-
 Author: Mikko Auvinen
         mikko.auvinen@helsinki.fi 
         University of Helsinki &

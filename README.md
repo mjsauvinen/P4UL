@@ -13,7 +13,7 @@ Mandatory steps to make the python-scripts work in Linux:
 
 cd $HOME/bin
 
-git clone https://github.com/mjsauvinen/P4US.git
+git clone https://github.com/mjsauvinen/P4UL.git
 
 
 1) Add to $HOME/.bashrc 

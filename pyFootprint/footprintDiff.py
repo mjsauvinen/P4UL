@@ -10,9 +10,6 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 ''' 
-Description:
-
-
 Author: Mikko Auvinen
         mikko.auvinen@helsinki.fi 
         University of Helsinki &
@@ -71,11 +68,14 @@ for fn in fileNos:
   if( excl ): idx -= farFieldIds( X, excl ) # Subtracting True values gives False
   
   idNz       = (Fref != 0.) * idx
+  FrefNfSum  = np.sum( Fref[idNz] * np.prod(dPx) ) # Near field sum
   FrefMean   = np.mean( Fref[idNz] )
   dF2[idx]   = ( (Fref[idx] - Fi[idx])*np.prod(dPx) )**2 #/ FrefMean
   dnorm = np.sqrt( np.sum(dF2) )   #/np.prod( np.shape(Fref) )
-  print(' norm of diff = {}\n'.format(dnorm))
-  print('#--------------------#')
+  
+  print('\n Near field integral = {} '.format( FrefNfSum  ))
+  print(' Norm of diff = {}\n'.format(dnorm))
+  print('#--------------------#\n')
   
   
 
