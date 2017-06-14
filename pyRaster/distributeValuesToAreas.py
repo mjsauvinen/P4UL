@@ -54,6 +54,7 @@ if (not(args.distribution==None)):
   LR, shapeCount = labelRaster(R)
 else: # no need for labeling
   LR = R
+  shapeCount = 1
 R = None
 
 # Initialize a new array or read existing data
@@ -104,12 +105,12 @@ if (not(args.vtk)==None and not(args.printOnly)):
     Y[:,i]=i
   
   # Write the data into a VTK file
-  t_vtk = vtkWriteHeaderAndGridStructured2d(X, Y,topo[::-1,:], args.vtk, 'VTK map');
-  t_vtk = vtkWritePointDataHeader( t_vtk, R, 1)
-  t_vtk = vtkWritePointDataStructured2D( t_vtk, R[::-1,:], X, args.name)
+  # N axis of (N,E) coordinates has to be reversed
+  t_vtk = vtkWriteHeaderAndGridStructured2d(Y, X,topo[::-1,:], args.vtk, 'VTK map');
+  t_vtk = vtkWritePointDataHeader( t_vtk, R[::-1,:] , 1)
+  t_vtk = vtkWritePointDataStructured2D( t_vtk, R[::-1,:], Y, args.name)
   
   t_vtk.close();
-
 
 # Save as npz
 if( not args.printOnly ):

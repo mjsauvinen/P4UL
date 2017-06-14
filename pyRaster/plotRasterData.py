@@ -32,7 +32,7 @@ parser.add_argument("--labels", help="User specified labels.", action="store_tru
 parser.add_argument("--footprint", help="Plot footprint data.", action="store_true",\
   default=False)
 parser.add_argument("--save", metavar="FORMAT" ,type=str,\
-  default='png', help="Save the figure in specified format. Default is png, use eps or pdf for vector format.")
+  default='', help="Save the figure in specified format. Formats available: jpg, png, pdf, ps, eps and svg")
 parser.add_argument("--dpi", metavar="DPI" ,type=int,\
   default=100, help="Desired resolution in DPI for the output image. Default: 100")
 args = parser.parse_args() 
@@ -82,7 +82,7 @@ R = None
 if(labels):
   fig = userLabels( fig )
 
-if(save):
+if(not(save=='')):
   filename = rasterfile.split('/')[-1]  # Remove the path in Linux system
   filename = filename.split('\\')[-1]   # Remove the path in Windows system
   filename = filename.strip('.npz')+'.'+save
