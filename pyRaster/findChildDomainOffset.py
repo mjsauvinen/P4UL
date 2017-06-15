@@ -5,7 +5,7 @@ import numpy as np
 from mapTools import *
 from utilities import writeLog
 
-''' 
+'''
 Description:
 Calculates child domain's offset to parent domain.
 
@@ -15,7 +15,7 @@ parts and requires special care when editing the file.
 '''
 
 #==========================================================#
-parser = argparse.ArgumentParser(prog='distributeValuesToAreas.py', description='''Calculates child domain's offset to parent domain in local and global coordinates.''')
+parser = argparse.ArgumentParser(prog='findChildDomainOffset.py', description='''Calculates child domain's offset to parent domain in local and global coordinates.''')
 parser.add_argument("-fc", "--child", metavar="CHILD" ,type=str, help="Child domain raster data file (.npz).")
 parser.add_argument("-fp", "--parent", metavar="PARENT" ,type=str, help="Parent domain raster data file (.npz).")
 args = parser.parse_args()
@@ -68,7 +68,7 @@ print(' Pixels in parent domain\'s grid: [N,E]= [{}, {}]'.format(*OrigOffsetLoca
 # Help the user to move the child domain to match the parent's grid
 if (not(OrigOffsetLocal[0].is_integer() and not(OrigOffsetLocal[1].is_integer()))):
   print(' WARNING: Child\'s origo doesn\'t match to the parent\'s grid.')
-  
+
 else:
   # Check if the grid dimensions match, i.e. the edges align with the parent grid
   xRatio=nPxChild[1]*dPxChild[0]/dPxParent[0]

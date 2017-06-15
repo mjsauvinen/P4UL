@@ -6,12 +6,12 @@ from mapTools import *
 from utilities import filesFromList, writeLog
 from plotTools import addImagePlot, addContourf, addScatterPlot
 import matplotlib.pyplot as plt
-''' 
+'''
 Description:
 
 
 Author: Mikko Auvinen
-        mikko.auvinen@helsinki.fi 
+        mikko.auvinen@helsinki.fi
         University of Helsinki &
         Finnish Meteorological Institute
 '''
@@ -41,10 +41,10 @@ parser.add_argument("-nr", "--noRotation", action="store_true",default=False,\
 parser.add_argument("-s", "--scale",type=float,\
   help="Scale factor for the output. Default=1.", default=1.)
 parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
-  action="store_true", default=False) 
+  action="store_true", default=False)
 parser.add_argument("-pp", "--printOnly", help="Only print the resulting data. Don't save.",\
-  action="store_true", default=False) 
-args = parser.parse_args() 
+  action="store_true", default=False)
+args = parser.parse_args()
 writeLog( parser, args, args.printOnly )
 #==========================================================#
 
@@ -69,10 +69,9 @@ except:
   gridRot = 0
 ROrig = Rdict['GlobOrig']
 dPx = entry2Int( Rdict['dPx'] )
-Rdict = None
 
 # Pivot coordinates
-pY = nY[iPv[0]]; pX = eX[iPv[1]] 
+pY = nY[iPv[0]]; pX = eX[iPv[1]]
 print(' Origo in the Topography data: [N,E] = [{}, {}]'.format(ROrig[0],ROrig[1]))
 print(' Pivot Coords in Topography data: [N,E] = [{}, {}]'.format(pY,pX))
 #NY, EX = np.meshgrid(nY,eX)
@@ -81,15 +80,15 @@ print(' Pivot Coords in Topography data: [N,E] = [{}, {}]'.format(pY,pX))
 Create Palm grid which obeys the X,Y-coordinate layout. This might cause confusion
 so let's proceed carefully.
 
-NOTE: 
+NOTE:
 Even though the data is saved as raster array, the data points are now cell centers.
 '''
 xbegin = dxG[0]/2. # First cell-centers.
-ybegin = dxG[1]/2. 
+ybegin = dxG[1]/2.
 xend = NxG[0]*dxG[0] - xbegin   # Last cell-center.
 yend = NxG[1]*dxG[1] - ybegin
 
-XgridCoords = np.linspace(xbegin,xend, NxG[0]) 
+XgridCoords = np.linspace(xbegin,xend, NxG[0])
 YgridCoords = np.linspace(ybegin,yend, NxG[1])
 #Xg, Yg = np.meshgrid( XgridCoords, YgridCoords )
 
@@ -112,11 +111,11 @@ XT = XgridCoords + dXT
 YT = YgridCoords + dYT
 
 
-'''  
+'''
 Rotate the new coordinates according to the wind direction:
 Coordinate transformations for counterclockwise rotation.
 '''
-# NOTE: At the pivot point XTR = pX 
+# NOTE: At the pivot point XTR = pX
 XTM, YTM = np.meshgrid( XT, YT )
 if (args.noRotation):
   theta = 0.
@@ -138,13 +137,13 @@ Top Right    :  XTRM[-1,-1], YTRM[-1,-1])
 XT  = None; YT  = None
 XTM = None; YTM = None
 
-''' 
+'''
 Using the known transformed coordinates, we can extract the pixel values
-at those locations and copy them to the Palm grid. The grid arrays origo is 
+at those locations and copy them to the Palm grid. The grid arrays origo is
 located at the bottom left, which makes things a bit confusing here.
 '''
 Irow = ((ROrig[0]-YTRM)/dPx ).astype(int)
-Jcol = ((XTRM-ROrig[1])/dPx ).astype(int) 
+Jcol = ((XTRM-ROrig[1])/dPx ).astype(int)
 
 # Make sure the indecies don't run beyond the allowable bounds.
 if (np.amin(Irow) < 0 or np.amin(Jcol) < 0):
@@ -158,21 +157,28 @@ Irow = np.minimum(Irow, Rdims[0]-1); Jcol = np.minimum(Jcol, Rdims[1]-1)
 #print " Jcol = {} ".format(Jcol[::4,::4] )
 Xdims = np.array( np.shape(XTRM) )
 PR = np.zeros( Xdims  , float)
-PR[::-1,:] = R[Irow,Jcol]    # The row order must be reversed. 
+PR[::-1,:] = R[Irow,Jcol]    # The row order must be reversed.
 R = None
-  
+
 '''
- Reset the top left origo utilizing the NON-rotated coordinates. This 
- allows the relative position of different raster maps (with identical 
+ Reset the top left origo utilizing the NON-rotated coordinates. This
+ allows the relative position of different raster maps (with identical
  coord. rotation) to be determined easily.
 '''
 theta2 = gridRot/(np.pi/180.)
 XTRM,YTRM = rotateGridAroundPivot(XTRM,YTRM, ROrig[1], ROrig[0],theta2, deg=True)
 PROrig = np.array([ YTRM[-1,0], XTRM[-1,0] ])  # Reset top left origo
 print(' Top left origo coords. (cell centers!): [N,E] = {}'.format(PROrig))
+rotation = (theta+theta2)*(np.pi/180.)
 print((theta+theta2)*(np.pi/180.))
 
-PRdict = {'R' : PR, 'GlobOrig' : PROrig, 'gridRot' : (theta+theta2)*(np.pi/180.), 'dPx' : np.array([dxG[0],dxG[1]])}
+# Retain unused keys from original raster
+PRdict = Rdict.copy()
+Rdict = None
+PRdict['R'] = PR
+PRdict['GlobOrig'] = PROrig
+PRdict['gridRot'] = rotation
+PRdict['dPx'] = np.array([dxG[0],dxG[1]])
 
 if( not args.printOnly ):
   saveTileAsNumpyZ( args.fileOut, PRdict)
@@ -189,5 +195,3 @@ if( args.printOn or args.printOnly ):
 
 XTRM = None; YTRM = None
 PR   = None; PRDict = None
-
-  
