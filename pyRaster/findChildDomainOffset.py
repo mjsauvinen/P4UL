@@ -32,7 +32,7 @@ gridRot = RdictParent['gridRot']
 RdictParent = None
 print(' Global origo: [N,E] = [{}, {}]'.format(*ROrigParent))
 print(' Size: [N,E] = [{}, {}]'.format(*nPxParent))
-print(' Resolution: [dPx,dPy] = [{}, {}]'.format(*dPxParent))
+print(' Resolution: [dPy,dPx] = [{}, {}]'.format(*dPxParent))
 print(' Grid rotation: [deg] = {}'.format(gridRot/(np.pi/180.)));print('')
 
 RdictChild = readNumpyZTile(args.child)
@@ -44,7 +44,7 @@ RdictChild = None
 
 print(' Global origo: [N,E] = [{}, {}]'.format(*ROrigChild))
 print(' Size: [N,E] = [{}, {}]'.format(*nPxChild))
-print(' Resolution: [dPx,dPy] = [{}, {}]'.format(*dPxChild))
+print(' Resolution: [dPy,dPx] = [{}, {}]'.format(*dPxChild))
 print(' Grid rotation: [deg] = {}'.format(gridRotChild/(np.pi/180.)));print('')
 
 if (gridRot != gridRotChild):
@@ -54,9 +54,9 @@ if (gridRot != gridRotChild):
 # Calculate bottom left origos
 ROrigParentBL = ROrigParent.copy(); ROrigChildBL = ROrigChild.copy()
 
-ROrigParentBL[0] -= nPxParent[0]*dPxParent[1]
+ROrigParentBL[0] -= nPxParent[0]*dPxParent[0]
 ROrigChildBL = rotatePoint(ROrigParent, ROrigChildBL, -gridRot)
-ROrigChildBL[0] -= nPxChild[0]*dPxChild[1]
+ROrigChildBL[0] -= nPxChild[0]*dPxChild[0]
 
 # Offset of global origo coordinates
 OrigOffset =  ROrigChildBL - ROrigParentBL
@@ -71,8 +71,8 @@ if (not(OrigOffsetLocal[0].is_integer() and not(OrigOffsetLocal[1].is_integer())
 
 else:
   # Check if the grid dimensions match, i.e. the edges align with the parent grid
-  xRatio=nPxChild[1]*dPxChild[0]/dPxParent[0]
-  yRatio=nPxChild[0]*dPxChild[1]/dPxParent[1]
+  xRatio=nPxChild[1]*dPxChild[1]/dPxParent[1]
+  yRatio=nPxChild[0]*dPxChild[0]/dPxParent[0]
   if (not(xRatio.is_integer() and yRatio.is_integer())):
     print(' WARNING: Child domain\'s grid edges don\'t align with the parent. Check your resolutions and dimensions.')
   else:
