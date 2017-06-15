@@ -15,8 +15,8 @@ parser = argparse.ArgumentParser(prog='topographyToNetCdf.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of the input topography raster data file.")
 parser.add_argument("-fo", "--fileout",type=str, help="Name of the output NetCDF file.", default='output.ncdf')
 parser.add_argument("-N", "--NdZ",type=int, help="Number of grid points in z direction. Leave empty to calculate automatically.")
-parser.add_argument("-dz", "--dZ",type=int, help="Resolution of z axis. Defaults to resolution of N axis.")
-parser.add_argument("-vn", "--varname",type=int, help="Name of the variable in NetCDF. Default 'topography'.")
+parser.add_argument("-dz", "--dZ",type=float, help="Resolution of z axis. Defaults to resolution of N axis.")
+parser.add_argument("-vn", "--varname",type=str, help="Name of the variable in NetCDF. Default 'topography'.", default='topography')
 args = parser.parse_args()
 #==========================================================#
 
@@ -91,5 +91,5 @@ for x in xrange(Rdims[1]):
         topo[0:maxind, y, x] = 1
 print(' ...done. \n')
 
-topovar = createNetcdfVariable( dso, topo, args.name, 0, '', 'b',('z','y','x',) , variable )
+topovar = createNetcdfVariable( dso, topo, args.varname, 0, '', 'b',('z','y','x',) , variable )
 netcdfWriteAndClose(dso)
