@@ -14,8 +14,9 @@ Reads topography data from Numpy Z file and exports it as NetCDF4.
 parser = argparse.ArgumentParser(prog='topographyToNetCdf.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of the input topography raster data file.")
 parser.add_argument("-fo", "--fileout",type=str, help="Name of the output NetCDF file.", default='output.ncdf')
-parser.add_argument("-z", "--zlength",type=int, help="Number of grid points in z direction.")
-parser.add_argument("-r", "--zresolution",type=int, help="Resolution of z axis. Defaults to resolution of N axis.")
+parser.add_argument("-N", "--NdZ",type=int, help="Number of grid points in z direction. Leave empty to calculate automatically.")
+parser.add_argument("-dz", "--dZ",type=int, help="Resolution of z axis. Defaults to resolution of N axis.")
+parser.add_argument("-vn", "--varname",type=int, help="Name of the variable in NetCDF. Default 'topography'.")
 args = parser.parse_args()
 #==========================================================#
 
@@ -23,14 +24,19 @@ args = parser.parse_args()
 Rdict = readNumpyZTile(args.filename)
 Rtopo = Rdict['R']
 Rdims = np.shape(Rtopo)
-Rdims = np.append(Rdims, args.zlength)
 Rdpx = Rdict['dPx']
 
 # Set z axis resolution
-if (args.zresolution):
-    Rdpx = np.append(Rdpx, args.zresolution)
+if (args.dZ):
+    Rdpx = np.append(Rdpx, args.dZ)
 else:
     Rdpx = np.append(Rdpx, Rdpx[0])
+
+# Set vertical grid dimensions
+if (args.NdZ):
+    Rdims = np.append(Rdims, args.NdZ)
+else:
+    Rdims = np.append(Rdims, int(round(np.amax(Rtopo)/Rdpx[2])))
 
 print(' Input raster data:')
 print(' Size: [N,E] = [{}, {}]'.format(*Rdims))
@@ -72,7 +78,7 @@ topo(z,y,x) containing 0 for air and 1 for land.
 Loop through horizontal grid and use slices to fill the z grid.
 '''
 topodims = np.array([Rdims[2],Rdims[0],Rdims[1]])
-topo = np.zeros(topodims, dtype=int)
+topo = np.zeros(topodims, dtype=bool)
 
 print('\n Output data array:')
 print(' Dimensions [z,y,x]: [{}, {}, {}]'.format(*topodims))
@@ -80,9 +86,10 @@ print(' Total number of data points: {}'.format(np.prod(topodims)))
 print(' Filling the output array...')
 for x in xrange(Rdims[1]):
     for y in xrange(Rdims[0]):
-        maxind = int(round(Rtopo[y][x]))
+        # Reverse y axis because of the top-left origo
+        maxind = int(round(Rtopo[-y-1][x]/Rdpx[2]))
         topo[0:maxind, y, x] = 1
 print(' ...done. \n')
 
-topovar = createNetcdfVariable( dso, topo, 'topography', 0, '', 'i4',('z','y','x',) , variable )
+topovar = createNetcdfVariable( dso, topo, args.name, 0, '', 'b',('z','y','x',) , variable )
 netcdfWriteAndClose(dso)
