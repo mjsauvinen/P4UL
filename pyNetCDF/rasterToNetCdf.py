@@ -23,6 +23,8 @@ parser.add_argument("-dz", "--dZ", type=float,
                     help="Resolution of z axis. Defaults to resolution of N axis.")
 parser.add_argument("-vn", "--varname", type=str,
                     help="Name of the variable in NetCDF. Default 'topography'.", default='topography')
+parser.add_argument("-c", "--compress", help="Compress netCDF variables with zlib.",
+                    action="store_true", default=False)
 args = parser.parse_args()
 #==========================================================#
 
@@ -34,15 +36,15 @@ Rdpx = Rdict['dPx']
 
 # Set z axis resolution
 if (args.dZ):
-    Rdpx = np.append(Rdpx, args.dZ)
+  Rdpx = np.append(Rdpx, args.dZ)
 else:
-    Rdpx = np.append(Rdpx, Rdpx[0])
+  Rdpx = np.append(Rdpx, Rdpx[0])
 
 # Set vertical grid dimensions
 if (args.NdZ):
-    Rdims = np.append(Rdims, args.NdZ)
+  Rdims = np.append(Rdims, args.NdZ)
 else:
-    Rdims = np.append(Rdims, int(round(np.amax(Rtopo) / Rdpx[2])))
+  Rdims = np.append(Rdims, int(round(np.amax(Rtopo) / Rdpx[2])))
 
 print(' Input raster data:')
 print(' Size: [N,E] = [{}, {}]'.format(*Rdims))
@@ -71,9 +73,12 @@ arrays containing information on the position of the data point in metres.
 '''
 
 dso = netcdfOutputDataset(args.fileout)
-xv = createCoordinateAxis(dso, Rdims, Rdpx, 1, 'x', float32, 'm', parameter)
-yv = createCoordinateAxis(dso, Rdims, Rdpx, 0, 'y', float32, 'm', parameter)
-zv = createCoordinateAxis(dso, Rdims, Rdpx, 2, 'z', float32, 'm', parameter)
+xv = createCoordinateAxis(dso, Rdims, Rdpx, 1, 'x',
+                          float32, 'm', parameter, args.compress)
+yv = createCoordinateAxis(dso, Rdims, Rdpx, 0, 'y',
+                          float32, 'm', parameter, args.compress)
+zv = createCoordinateAxis(dso, Rdims, Rdpx, 2, 'z',
+                          float32, 'm', parameter, args.compress)
 
 '''
 Fill in a 3D array of topography data.
@@ -83,5 +88,5 @@ Loop through horizontal grid and use slices to fill the z grid.
 topo = fillTopographyArray(Rtopo, Rdims, Rdpx, bool)
 
 topovar = createNetcdfVariable(
-    dso, topo, args.varname, 0, '', int32, ('z', 'y', 'x',), variable)
+    dso, topo, args.varname, 0, '', int32, ('z', 'y', 'x',), variable, args.compress)
 netcdfWriteAndClose(dso)
