@@ -7,11 +7,12 @@ from mapTools import readNumpyZTile
 
 '''
 Description:
-Reads topography data from Numpy Z file and exports it as NetCDF4.
+Reads data from Numpy npz file and exports it as an array in NetCDF.
+Note that dealing with larger rasters require a lot of memory.
 '''
 
 #==========================================================#
-parser = argparse.ArgumentParser(prog='topographyToNetCdf.py')
+parser = argparse.ArgumentParser(prog='rasterToNetCdf.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of the input topography raster data file.")
 parser.add_argument("-fo", "--fileout",type=str, help="Name of the output NetCDF file.", default='output.ncdf')
 parser.add_argument("-N", "--NdZ",type=int, help="Number of grid points in z direction. Leave empty to calculate automatically.")
@@ -47,49 +48,33 @@ independent or dependent variable in function createNetcdfVariable().
 '''
 parameter = True;  variable  = False
 
-# Create netCDF output dataset
+'''
+Available external data types for NetCDF variables. Used data type has
+a significant effect on file size and memory usage.
+'''
+int16 = 'i2' # 16-bit signed integer
+int32 = 'i4' # 32-bit signed integer
+int64 = 'i8' # 64-bit signed integer
+float32= 'f4' # 32-bit floating point
+float64 = 'f8' # 64-bit floating point
+byte = 'b' # One byte (8-bit)
+
+'''
+Create the dataset and coordinate parameter arrays. These are 1D
+arrays containing information on the position of the data point in metres.
+'''
+
 dso = netcdfOutputDataset( args.fileout )
-
-'''
-Create coordinate parameter arrays. These are 1D arrays containing
-information on the position of the data point in metres.
-'''
-x = np.empty(Rdims[1]);
-for i in xrange(Rdims[1]):
-    x[i] = i*Rdpx[1] # dpx is in [N,E], see getGeoTransform() in gdalTools.py
-xv = createNetcdfVariable(dso, x, 'x', len(x), 'm', 'f4', ('x',), parameter)
-x = None
-
-y = np.empty(Rdims[0])
-for i in xrange(Rdims[0]):
-    y[i] = i*Rdpx[0]
-yv = createNetcdfVariable(dso, y, 'y', len(y), 'm', 'f4', ('y',), parameter)
-y = None
-
-z = np.empty(Rdims[2])
-for i in xrange(Rdims[2]):
-    z[i] = i*Rdpx[2]
-zv = createNetcdfVariable(dso, z, 'z', len(z), 'm', 'f4', ('z',), parameter)
-z = None
+xv = createCoordinateAxis(dso, Rdims, Rdpx, 1, 'x', float32, 'm', parameter)
+yv = createCoordinateAxis(dso, Rdims, Rdpx, 0, 'y', float32, 'm', parameter)
+zv = createCoordinateAxis(dso, Rdims, Rdpx, 2, 'z', float32, 'm', parameter)
 
 '''
 Fill in a 3D array of topography data.
 topo(z,y,x) containing 0 for air and 1 for land.
 Loop through horizontal grid and use slices to fill the z grid.
 '''
-topodims = np.array([Rdims[2],Rdims[0],Rdims[1]])
-topo = np.zeros(topodims, dtype=bool)
+topo = fillTopographyArray(Rtopo, Rdims, Rdpx, bool)
 
-print('\n Output data array:')
-print(' Dimensions [z,y,x]: [{}, {}, {}]'.format(*topodims))
-print(' Total number of data points: {}'.format(np.prod(topodims)))
-print(' Filling the output array...')
-for x in xrange(Rdims[1]):
-    for y in xrange(Rdims[0]):
-        # Reverse y axis because of the top-left origo
-        maxind = int(round(Rtopo[-y-1][x]/Rdpx[2]))
-        topo[0:maxind, y, x] = 1
-print(' ...done. \n')
-
-topovar = createNetcdfVariable( dso, topo, args.varname, 0, '', 'b',('z','y','x',) , variable )
+topovar = createNetcdfVariable( dso, topo, args.varname, 0, '', int32,('z','y','x',) , variable )
 netcdfWriteAndClose(dso)
