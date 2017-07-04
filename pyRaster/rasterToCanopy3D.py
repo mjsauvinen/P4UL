@@ -15,7 +15,7 @@ Writes PLANT_CANOPY_DATA_3D for PALM from input raster data.
 parser = argparse.ArgumentParser(prog='rasterToCanopy3D.py', description='''Writes PLANT_CANOPY_DATA_3D for PALM from input raster data.''')
 parser.add_argument("rfile", type=str, nargs='?', default=None, help="Name of the input raster data file.")
 parser.add_argument("-fo", "--fileout", type=str, help="Name of the output 3D data file.")
-parser.add_argument("-dz", "--dZ", type=float, help="Resolution of z axis. Defaults to resolution of N axis.")
+parser.add_argument("-dz", "--dZ", type=float, help="Resolution of the z axis. Defaults to resolution of N axis.")
 parser.add_argument("-a", "--alpha", type=float, help="Dimensionless coefficient required for constructing the leaf area density (LAD) profile, using beta probability density function (Markkanen et al., 2003, BLM 106, 437-459).")
 parser.add_argument("-b", "--beta", type=float, help="Dimensionless coefficient required for constructing the leaf area density (LAD) profile, using beta probability density function.")
 parser.add_argument("-l", "--lai", type=float, help="Leaf area index LAI value. LAI is the vertical integral over the LAD profile.")
@@ -45,7 +45,7 @@ print(" 3D grid array dimensions [x,y,z]: {}, {}, {}".format(*np.shape(canopy)))
 print(" Calculating vertical profiles of leaf area densities...")
 
 # Calclulate the value of the integral in the denominator only once
-d_integral = (gamma(args.alpha)*gamma(args.beta))/gamma(alpha+beta)
+d_integral = (gamma(args.alpha)*gamma(args.beta))/gamma(args.alpha+args.beta)
 
 # Calculate leaf area density profiles for each horizontal grid tile and fill array vertically
 for x in xrange(nPx3D[1]):
@@ -59,7 +59,7 @@ for x in xrange(nPx3D[1]):
 print(" ...done.")
 
 # Write output data file
-print(" Writing output output file...")
+print(" Writing output file...")
 fx = open(args.fileout, 'w')
 # The first row of the file is number of vertical canopy layers
 fx.write(str(nPx3D[2])+"\n")

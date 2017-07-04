@@ -466,7 +466,7 @@ def canopyBetaFunction(nind,height,dpz,alpha,beta,lai,d_integral):
   lad_d=np.zeros(nind)
   for z in xrange(nind):
     zHrel= z*dpz/height # z/h
-    lad_d[z]=float((zHrel**(alpha-1)*(1-zHrel)**(beta-1)))/float(d_integral[0])
+    lad_d[z]=float((zHrel**(alpha-1)*(1-zHrel)**(beta-1)))/float(d_integral)
   lad=np.multiply(lad_d,lai)
   return lad
 

@@ -15,12 +15,9 @@ parts and requires special care when editing the file.
 '''
 
 #==========================================================#
-parser = argparse.ArgumentParser(prog='findChildDomainOffset.py',
-                                 description='''Calculates child domain's offset to parent domain in local and global coordinates.''')
-parser.add_argument("-fc", "--child", metavar="CHILD",
-                    type=str, help="Child domain raster data file (.npz).")
-parser.add_argument("-fp", "--parent", metavar="PARENT",
-                    type=str, help="Parent domain raster data file (.npz).")
+parser = argparse.ArgumentParser(prog='findChildDomainOffset.py', description='''Calculates child domain's offset to parent domain in local and global coordinates.''')
+parser.add_argument("-fc", "--child", metavar="CHILD", type=str, help="Child domain raster data file (.npz).")
+parser.add_argument("-fp", "--parent", metavar="PARENT", type=str, help="Parent domain raster data file (.npz).")
 args = parser.parse_args()
 writeLog(parser, args)
 
@@ -48,12 +45,10 @@ RdictChild = None
 print(' Global origo: [N,E] = [{}, {}]'.format(*ROrigChild))
 print(' Size: [N,E] = [{}, {}]'.format(*nPxChild))
 print(' Resolution: [dPy,dPx] = [{}, {}]'.format(*dPxChild))
-print(' Grid rotation: [deg] = {}'.format(
-    gridRotChild / (np.pi / 180.))); print('')
+print(' Grid rotation: [deg] = {}'.format(gridRotChild / (np.pi / 180.))); print('')
 
 if (gridRot != gridRotChild):
   sys.exit('Rotations of parent and child domain don\'t match! Exiting...')
-
 
 # Calculate bottom left origos
 ROrigParentBL = ROrigParent.copy()
@@ -68,8 +63,7 @@ OrigOffset = ROrigChildBL - ROrigParentBL
 print(' Bottom left origo offsets:')
 OrigOffsetLocal = OrigOffset / dPxParent
 print(' Parent domain\'s grid: [N,E] = [{}, {}]'.format(*OrigOffset))
-print(' Pixels in parent domain\'s grid: [N,E]= [{}, {}]'.format(
-    *OrigOffsetLocal))
+print(' Pixels in parent domain\'s grid: [N,E]= [{}, {}]'.format(*OrigOffsetLocal))
 
 # Help the user to move the child domain to match the parent's grid
 if (not(OrigOffsetLocal[0].is_integer() and not(OrigOffsetLocal[1].is_integer()))):
