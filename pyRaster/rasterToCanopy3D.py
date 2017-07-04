@@ -52,9 +52,12 @@ for y in xrange(nPx3D[0]):
   for x in xrange(nPx3D[1]):
     # Reverse the y-axis because of the top-left origo in raster
     canopyHeight = R[-y - 1, x]
+    # Check if there is canopy at all in the vertical column
+    if (canopyHeight == 0.0):
+      continue
     nind = int(np.floor(canopyHeight / float(dPx3D[2])))+1 # Number of layers
     # Calculate LAD profile
-    lad = canopyBetaFunction(nind,nPx3D[2],dPx3D[2],args.alpha,args.beta,args.lai,d_integral)
+    lad = canopyBetaFunction(nind,canopyHeight,dPx3D,args.alpha,args.beta,args.lai,d_integral)
     canopy[x,y,0:nind] = lad
 print(" ...done.")
 
