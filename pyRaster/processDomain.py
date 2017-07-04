@@ -61,7 +61,6 @@ Rdict = readNumpyZTile(args.filename)
 R = Rdict['R']
 Rdims = np.array(np.shape(R))
 ROrig = Rdict['GlobOrig']
-dPx = Rdict['dPx']
 print(' Rdims = {} '.format(Rdims))
 print(' ROrig = {} '.format(ROrig))
 
@@ -79,7 +78,7 @@ R = applyMargins( R , mw, mr, mh )
 Rf = np.zeros( np.shape(R) , float)
 Rf =  filterAndScale(Rf, R, flt )
 
-Rdict['R'] = Rf; Rdict['GlobOrig'] = ROrig, Rdict['dPx'] = dPx
+Rdict['R'] = Rf; Rdict['GlobOrig'] = ROrig,
 
 if( hmax ):
   Rf = np.minimum( hmax , Rf )
@@ -88,7 +87,7 @@ if( not args.printOnly ):
   fx = open( fileOut , 'w' )
   np.savetxt(fx,np.round(Rf),fmt='%g')
   fx.close()
-  saveTileAsNumpyZ( fileOut, Rdict )
+  #saveTileAsNumpyZ( fileOut, Rdict )
 
 if( args.printOn or args.printOnly ):
   figDims = 13.*(Rdims[::-1].astype(float)/np.max(Rdims))

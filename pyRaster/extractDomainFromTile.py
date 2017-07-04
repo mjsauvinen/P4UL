@@ -30,11 +30,7 @@ parser.add_argument("-dx","--dxG", help="Resolution [dx, dy] of the 2D Palm grid
   type=float,nargs=2, default=[ 2. , 2.])
 parser.add_argument("-r","--rLx", type=float,nargs=2, default=[ 0.9, 0.5],\
   help="Pivot location [rLx, rLy] as ratio of Lx & Ly of grid domain (top left origo).")
-<<<<<<< HEAD
 parser.add_argument("-wd", "--windDir", type=float,default=270.0,\
-=======
-parser.add_argument("-wd", "--windDir", type=float,default=0.,\
->>>>>>> master
   help="Wind direction (deg) --> Rotation angle around the pivot point. North wind = 0deg")
 parser.add_argument("-nr", "--noRotation", action="store_true",default=False,\
   help="Do not rotate the grid.")

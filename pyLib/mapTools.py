@@ -1,12 +1,12 @@
 import operator
 import numpy as np
 import sys
-''' 
+'''
 Description:
 
 
 Author: Mikko Auvinen
-        mikko.auvinen@helsinki.fi 
+        mikko.auvinen@helsinki.fi
         University of Helsinki &
         Finnish Meteorological Institute
 '''
@@ -16,9 +16,9 @@ Author: Mikko Auvinen
 def arrangeTileGrid( dictList, fileTypes ):
   coordList = []
   ascii = fileTypes[0]; npz = fileTypes[1]
-  
+
   XO_TL = np.zeros(2)  # Initialize the Top Left Origin.
-  
+
   for d in dictList:
     # The last two indecies are for row / col addresses.
     if( ascii ):
@@ -27,7 +27,7 @@ def arrangeTileGrid( dictList, fileTypes ):
       coordList.append( [d['id'], d['xtlcorner'], d['ytlcorner'], 0, 0] )
 
   # Sort the list according to y-values
-  coordListSorted = sorted( coordList, key=operator.itemgetter(2) ) 
+  coordListSorted = sorted( coordList, key=operator.itemgetter(2) )
   #print ' y-sorted : {} '.format( coordListSorted )
 
 
@@ -46,11 +46,11 @@ def arrangeTileGrid( dictList, fileTypes ):
     else:
       irow+=1  # Change row
     t[3] = irow; maxVal = t[2]
-  
+
   imax = irow+1  # Store the number of rows.
 
   # Sort the list according to x-values
-  coordListSorted = sorted( coordList, key=operator.itemgetter(1) ) 
+  coordListSorted = sorted( coordList, key=operator.itemgetter(1) )
   #print ' x-sorted : {} '.format( coordListSorted )
 
   # Determine the Top Left Origin (x-value).
@@ -68,13 +68,13 @@ def arrangeTileGrid( dictList, fileTypes ):
     else:
       jcol+=1  # Change column
     t[4] = jcol; minVal = t[1]
-  
+
   jmax = jcol+1   # Store the number of columns
-  
+
   ijList = []
   for t in coordListSorted:
     ijList.append( [ t[0], t[3], t[4] ] )# id, irow, jcol
-  
+
   return ijList, XO_TL, imax, jmax
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
@@ -82,11 +82,11 @@ def arrangeTileGrid( dictList, fileTypes ):
 def compileTileGrid( dictList, ijList, Mrows, Mcols, fileTypes ):
   M = []  # An empty array to start with.
   ascii = fileTypes[0]; npz = fileTypes[1]
-  
+
   for i in xrange(Mrows):
     for j in xrange(Mcols):
       for idTile, irow, jcol in ijList:
-      
+
         if(irow == i and jcol == j ):
           d = dictList[idTile]
           if( ascii ):
@@ -96,7 +96,7 @@ def compileTileGrid( dictList, ijList, Mrows, Mcols, fileTypes ):
             r=Rdict['R']
             Rdict = None   # Throw the rest away.
           M.append(r); r = None
-  
+
   print(' M.shape = {}'.format(np.shape(M)))
 
   T = None
@@ -107,7 +107,7 @@ def compileTileGrid( dictList, ijList, Mrows, Mcols, fileTypes ):
       T = np.hstack(M[c1:c2])
     else:
       T = np.vstack( (T,np.hstack(M[c1:c2])) )
-  
+
     print(' np.shape(T) = {}'.format(np.shape(T)))
 
   M = None
@@ -127,15 +127,15 @@ def readAsciiGridHeader( filename, idx=0 ):
     try:
       s = fl.readline().split()
       hdict[s[0]] = float( s[1] )
-    except: 
+    except:
       print('Unexpected ascii grid header format. Exiting.')
       sys.exit(1)
-  
+
   idx += 1
   fl.close()
-  return hdict, idx 
-  
-# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*  
+  return hdict, idx
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def readNumpyZGridData( filename, idx=0 ):
   Rdict = readNumpyZTile(filename, dataOnly=True)
@@ -149,22 +149,22 @@ def readNumpyZGridData( filename, idx=0 ):
            'cellsize':int(dPx[0]),'NODATA_value':None}
   idx += 1
   return hdict, idx
-  
-# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*  
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def resolutionFromDicts( dictList ):
   d1 = dictList[0]
   dPxRef = d1['cellsize']
-  
+
   for d in dictList:
     dPx = d['cellsize']
     if( dPx != dPxRef ):
       print 'The tile resolutions do not match. Exiting.'
       sys.exit(1)
-      
+
   return np.array([dPxRef,dPxRef])
 
-# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*  
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def readAsciiGrid( filename ):
   try:
@@ -188,7 +188,7 @@ def saveTileAsNumpyZ( filename, Rdict):
     print(' {} saved successfully!'.format(filename))
   except:
     print(' Error in saving {}.npz in saveTileAsNumpyZ().'.format(filename))
-    
+
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def readNumpyZTile( filename, dataOnly=False ):
@@ -197,13 +197,13 @@ def readNumpyZTile( filename, dataOnly=False ):
   dat = np.load(filename)
   Rdict = dict(dat)
   dat.close()
-  
+
   #if(dataOnly):
     #Rdict['R'] = []
-  
+
   # Backwards compatibility for variable name change.
-  if ('XOrig' in Rdict and not('GlobOrig' in Rdict)): 
-    Rdict['GlobOrig']=Rdict['XOrig']; 
+  if ('XOrig' in Rdict and not('GlobOrig' in Rdict)):
+    Rdict['GlobOrig']=Rdict['XOrig'];
   # For some reason dPx arrays were saved as 'dpx' in the past hardcoded versions of saveTileAsNumpyZ.
   if ('dpx' in Rdict and not('dPx' in Rdict)):
     Rdict['dPx']=Rdict['dpx']
@@ -221,35 +221,35 @@ def readNumpyZTileForMesh( filename ):
     gridRot = Rdict['gridRot']
   except:
     gridRot = Rdict['gridRot'] = 0
-  
+
   # N,E - coords, start from top left.
   Rdict['rowCoords'] = np.arange(RxOrig[0],(RxOrig[0]-Rxdims[0]*dPx[0]),-dPx[0]) # N
   Rdict['colCoords'] = np.arange(RxOrig[1],(RxOrig[1]+Rxdims[1]*dPx[1]), dPx[1]) # E
-  
+
   #Nx, Ex = np.meshgrid(ni,ej)
-  
+
   return Rdict
-  
+
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def rotateGridAroundPivot( X, Y, xp, yp, theta, deg=True ):
-  
+
   if( deg ):
     theta = theta * (np.pi/180.)
-  
+
   CtX = np.array([ np.cos(theta), -np.sin(theta)  ])
   CtY = np.array([ np.sin(theta) , np.cos(theta) ])
-  #print ' CtX = {} , CtY = {} '.format(CtX, CtY) 
-  
+  #print ' CtX = {} , CtY = {} '.format(CtX, CtY)
+
   Mdims = np.shape(X)
   XR = np.zeros( Mdims, float )
   YR = np.zeros( Mdims, float )
 
-  
+
   for i in xrange( Mdims[0] ):
-    XR[i,:] = xp + (X[i,:]-xp)*CtX[0] + (Y[i,:]-yp)*CtX[1] # E-X 
-    YR[i,:] = yp + (X[i,:]-xp)*CtY[0] + (Y[i,:]-yp)*CtY[1] # N-Y 
+    XR[i,:] = xp + (X[i,:]-xp)*CtX[0] + (Y[i,:]-yp)*CtX[1] # E-X
+    YR[i,:] = yp + (X[i,:]-xp)*CtY[0] + (Y[i,:]-yp)*CtY[1] # N-Y
 
   return XR, YR
 
@@ -271,16 +271,16 @@ def entry2Int( ax ):
     pass
 
   return int(ax)
-  
+
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 def applyMargins( Rx, Mw, Mr, Mh ):
-  
+
   Rxdims = np.shape(Rx)
   if( Mw.count(None) == 0 ):
     print(' Zero (or non-zero) margins: L={}, R={}, B={}, T={}'.format(Mw[0],Mw[1],Mw[2],Mw[3]))
     L1= 0; L2 = max( int(Mw[0]*Rxdims[1]-1), 0 )  # These can never be -1.
     R1= int((1-Mw[1])*Rxdims[1]); R2 = Rxdims[1]
-    B1= int((1-Mw[2])*Rxdims[0]); B2 = Rxdims[0] 
+    B1= int((1-Mw[2])*Rxdims[0]); B2 = Rxdims[0]
     T1= 0; T2 = max( int(Mw[3]*Rxdims[0]-1) , 0 )  # These can never be -1.
 
     Rx[:,L1:L2] = Mh[0]; Rx[:,R1:R2] = Mh[1]
@@ -288,7 +288,7 @@ def applyMargins( Rx, Mw, Mr, Mh ):
   else:
     L1= L2 = 0.
     R1= R2 = Rxdims[1]-1
-    B1= B2 = Rxdims[0]-1 
+    B1= B2 = Rxdims[0]-1
     T1= T2 = 0
 
   if( Mr.count(None) == 0 ):
@@ -299,7 +299,7 @@ def applyMargins( Rx, Mw, Mr, Mh ):
     R11 = R1-dR ; R22 = R1
     B11 = B1-dB ; B22 = B1
     T11 = T2    ; T22 = T2+dT
-  
+
     #Rc = Rx.copy()
     Rx = applyRamp( Rx, L11, L22, 1, 0 )
     Rx = applyRamp( Rx, R11, R22, 1, 1 )
@@ -307,7 +307,7 @@ def applyMargins( Rx, Mw, Mr, Mh ):
     Rx = applyRamp( Rx, T11, T22, 0, 0 )
 
     #Rx -= Rc
-    
+
   return Rx
 
 
@@ -318,7 +318,7 @@ def applyRamp( Rz, L1, L2, LeftRight, End ):
   w = np.arange( L1, L2 ).astype(float)
   w -= np.min(w); w /= np.max(w)
   w *= np.pi    ; w -= (np.pi/2.)
-  w = np.sin(w)/2. + 0.5 
+  w = np.sin(w)/2. + 0.5
   if( End ):
     w = (1.-w)
   #print ' w = {}, len(w) = {}, len(dL) = {}'.format(w,len(w),dL)
@@ -330,30 +330,30 @@ def applyRamp( Rz, L1, L2, LeftRight, End ):
       Rz[L1+i,:] *= w[i]
 
   return Rz
-      
+
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def filterAndScale(Rxo, Rx, filterInfo, sx=1.0, ix=None, jx=None):
-  
+
   # Check if the indecies are explicitly given.
   inxOn = True
   if( ix is None or jx is None ):
     inxOn = False
-    
+
   if( filterInfo.count(None) == 0):
     if( 'user' in filterInfo[0] ):
       nI = int(filterInfo[1])
       for i in xrange(nI):
         ftmp = raw_input(' Enter <method>, <num> = ').split(',')
         if( i == 0 and inxOn ):  Rxf = applyFilter(Rx[ix,jx], ftmp)
-        else:                    Rxf = applyFilter(Rx, ftmp)       
+        else:                    Rxf = applyFilter(Rx, ftmp)
         Rx = Rxf.copy()
       Rx = None
     else:
       if( inxOn ): Rxf = applyFilter(Rx[ix,jx], filterInfo)
       else:        Rxf = applyFilter(Rx, filterInfo)
       Rx = None
-    
+
     Rxo += sx*Rxf
 
   else:
@@ -362,29 +362,29 @@ def filterAndScale(Rxo, Rx, filterInfo, sx=1.0, ix=None, jx=None):
     else:
       Rxo += sx*Rx
 
-  return Rxo 
+  return Rxo
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def applyFilter(Rx, filterInfo ):
   import scipy.ndimage as sn # contains the filters
-  
+
   if( 'gauss' in filterInfo[0] ):
-    try: 
+    try:
       Nf = float(filterInfo[1])
-    except: 
+    except:
       print(' Failed to obtain <sigma> for the Gaussian filter. Exiting.')
       sys.exit(1)
   else:
-    try: 
+    try:
       Nf = int(filterInfo[1])
-    except: 
+    except:
       print(' Failed to obtain <size> for the filters. Exiting.')
       sys.exit(1)
-  
+
   if( 'median' in filterInfo[0] ):
     print(' Median {0}x{0} filter applied. '.format(Nf))
-    Rf = sn.median_filter(Rx, size=Nf) 
+    Rf = sn.median_filter(Rx, size=Nf)
   elif( 'perc' in filterInfo[0] ):
     print(' Percentile 60 {0}x{0} filter applied. '.format(Nf))
     Rf = sn.percentile_filter(Rx, 60, size=Nf)
@@ -403,7 +403,7 @@ def applyFilter(Rx, filterInfo ):
   else:
     print(' No filter applied. ')
     Rf = Rx
-    
+
   return Rf
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
@@ -412,7 +412,7 @@ def labelRaster(R):
   import scipy.ndimage.measurements as snms
   R, shapeCount = snms.label(R) # this might be slow for unfiltered data
   print(' Found {} shapes from the data.'.format(shapeCount))
-  
+
   return R, shapeCount
 
 
@@ -421,20 +421,20 @@ def labelRaster(R):
 
 def openTifAsNumpy(tifFile):
   from PIL import Image
-  
+
   im = Image.open(tifFile)
   #im.show()
   a = np.array(im)
-  
+
   return a
-  
+
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def numpyArray2Tif( arr ):
   from PIL import Image
-  
+
   return Image.fromarray( arr )
-  
+
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def farFieldIds( xc, exclx ):
@@ -445,7 +445,7 @@ def farFieldIds( xc, exclx ):
   clw   = exclx / 100.
   xth   = (clw)*np.max(xc) + (1.-clw)*np.min(xc)
   idx   = (xc < xth )
-  
+
   return idx
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
@@ -453,14 +453,25 @@ def farFieldIds( xc, exclx ):
 def farFieldMean( dat, Xcoord, excludeNearest ):
   if( len(dat) != len(Xcoord) ):
     sys.exit(' Error! The data and coord arrays are different length. Exiting ...')
-  
+
   idx = farFieldIds( Xcoord, excludeNearest )
-  
+
   return np.mean( dat[idx] )
 
-# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+def canopyBetaFunction(nind,height,dpz,alpha,beta,lai,d_integral):
+  '''
+  Calculate lead area index using beta probability density function
+  (Markkanen et al., 2003, BLM 106, 437-459).
+  '''
+  lad_d=np.zeros(nind)
+  for z in xrange(nind):
+    zHrel= z*dpz/height # z/h
+    lad_d[z]=float((zHrel**(alpha-1)*(1-zHrel)**(beta-1)))/float(d_integral[0])
+  lad=np.multiply(lad_d,lai)
+  return lad
 
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*

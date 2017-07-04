@@ -52,7 +52,7 @@ print(' Grid rotation: [deg] = {}'.format(
     gridRotChild / (np.pi / 180.))); print('')
 
 if (gridRot != gridRotChild):
-    sys.exit('Rotations of parent and child domain don\'t match! Exiting...')
+  sys.exit('Rotations of parent and child domain don\'t match! Exiting...')
 
 
 # Calculate bottom left origos
@@ -73,13 +73,13 @@ print(' Pixels in parent domain\'s grid: [N,E]= [{}, {}]'.format(
 
 # Help the user to move the child domain to match the parent's grid
 if (not(OrigOffsetLocal[0].is_integer() and not(OrigOffsetLocal[1].is_integer()))):
-    print(' WARNING: Child\'s origo doesn\'t match to the parent\'s grid.')
+  print(' WARNING: Child\'s origo doesn\'t match to the parent\'s grid.')
 
 else:
-    # Check if the grid dimensions match, i.e. the edges align with the parent grid
-    xRatio = nPxChild[1] * dPxChild[1] / dPxParent[1]
-    yRatio = nPxChild[0] * dPxChild[0] / dPxParent[0]
-    if (not(xRatio.is_integer() and yRatio.is_integer())):
-        print(' WARNING: Child domain\'s grid edges don\'t align with the parent. Check your resolutions and dimensions.')
-    else:
-        print(' Child\'s grid aligns with the parent\'s grid.')
+  # Check if the grid dimensions match, i.e. the edges align with the parent grid
+  xRatio = nPxChild[1] * dPxChild[1] / dPxParent[1]
+  yRatio = nPxChild[0] * dPxChild[0] / dPxParent[0]
+  if (not(xRatio.is_integer() and yRatio.is_integer())):
+    print(' WARNING: Child domain\'s grid edges don\'t align with the parent. Check your resolutions and dimensions.')
+  else:
+    print(' Child\'s grid aligns with the parent\'s grid.')

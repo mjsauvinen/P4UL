@@ -13,18 +13,13 @@ Note that dealing with larger rasters require a lot of memory.
 
 #==========================================================#
 parser = argparse.ArgumentParser(prog='rasterToNetCdf.py')
-parser.add_argument("-f", "--filename", type=str,
-                    help="Name of the input topography raster data file.")
-parser.add_argument("-fo", "--fileout", type=str,
-                    help="Name of the output NetCDF file.", default='output.ncdf')
-parser.add_argument("-N", "--NdZ", type=int,
-                    help="Number of grid points in z direction. Leave empty to calculate automatically.")
-parser.add_argument("-dz", "--dZ", type=float,
-                    help="Resolution of z axis. Defaults to resolution of N axis.")
-parser.add_argument("-vn", "--varname", type=str,
-                    help="Name of the variable in NetCDF. Default 'topography'.", default='topography')
-parser.add_argument("-c", "--compress", help="Compress netCDF variables with zlib.",
-                    action="store_true", default=False)
+parser.add_argument("-f", "--filename", type=str, help="Name of the input topography raster data file.")
+parser.add_argument("-fo", "--fileout", type=str, help="Name of the output NetCDF file.", default='output.ncdf')
+parser.add_argument("-N", "--NdZ", type=int, help="Number of grid points in z direction. Leave empty to calculate automatically.")
+parser.add_argument("-dz", "--dZ", type=float, help="Resolution of z axis. Defaults to resolution of N axis.")
+parser.add_argument("-flat", "--flatarray", action="store_true", help="Save as an 2D array instead of a 3D mask.", default=False)
+parser.add_argument("-vn", "--varname", type=str, help="Name of the variable in NetCDF. Default 'buildings_0'.", default='buildings_0')
+parser.add_argument("-c", "--compress", help="Compress netCDF variables with zlib.", action="store_true", default=False)
 args = parser.parse_args()
 #==========================================================#
 
@@ -34,16 +29,19 @@ Rtopo = Rdict['R']
 Rdims = np.shape(Rtopo)
 Rdpx = Rdict['dPx']
 
+# Create a 3D mask instead of an 2D array
+mask = not(args.flatarray)
+
 # Set z axis resolution
-if (args.dZ):
+if (args.dZ and mask):
   Rdpx = np.append(Rdpx, args.dZ)
-else:
+elif (mask):
   Rdpx = np.append(Rdpx, Rdpx[0])
 
 # Set vertical grid dimensions
-if (args.NdZ):
+if (args.NdZ and mask):
   Rdims = np.append(Rdims, args.NdZ)
-else:
+elif (mask):
   Rdims = np.append(Rdims, int(round(np.amax(Rtopo) / Rdpx[2])))
 
 print(' Input raster data:')
@@ -73,20 +71,20 @@ arrays containing information on the position of the data point in metres.
 '''
 
 dso = netcdfOutputDataset(args.fileout)
-xv = createCoordinateAxis(dso, Rdims, Rdpx, 1, 'x',
-                          float32, 'm', parameter, args.compress)
-yv = createCoordinateAxis(dso, Rdims, Rdpx, 0, 'y',
-                          float32, 'm', parameter, args.compress)
-zv = createCoordinateAxis(dso, Rdims, Rdpx, 2, 'z',
-                          float32, 'm', parameter, args.compress)
+xv = createCoordinateAxis(dso, Rdims, Rdpx, 1, 'x', float32, 'm', parameter, args.compress)
+yv = createCoordinateAxis(dso, Rdims, Rdpx, 0, 'y', float32, 'm', parameter, args.compress)
+if (mask):
+  zv = createCoordinateAxis(dso, Rdims, Rdpx, 2, 'z', float32, 'm', parameter, args.compress)
 
 '''
 Fill in a 3D array of topography data.
 topo(z,y,x) containing 0 for air and 1 for land.
 Loop through horizontal grid and use slices to fill the z grid.
 '''
-topo = fillTopographyArray(Rtopo, Rdims, Rdpx, bool)
-
-topovar = createNetcdfVariable(
-    dso, topo, args.varname, 0, '', int32, ('z', 'y', 'x',), variable, args.compress)
+if (mask):
+  topo = fillTopographyArray(Rtopo, Rdims, Rdpx, int)
+  topovar = createNetcdfVariable(dso, topo, args.varname, 0, '', int32, ('z', 'y', 'x',), variable, args.compress)
+  topovar.lod = 2
+else:
+  topovar = createNetcdfVariable(dso, Rtopo, args.varname, 0, '', float32, ('y', 'x',), variable, args.compress)
 netcdfWriteAndClose(dso)
