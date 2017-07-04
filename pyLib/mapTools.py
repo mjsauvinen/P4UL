@@ -458,6 +458,8 @@ def farFieldMean( dat, Xcoord, excludeNearest ):
 
   return np.mean( dat[idx] )
 
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
 def canopyBetaFunction(nind,height,dpz,alpha,beta,lai,d_integral):
   '''
   Calculate lead area index using beta probability density function

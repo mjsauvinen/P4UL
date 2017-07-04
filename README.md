@@ -16,7 +16,7 @@ cd $HOME/bin
 git clone https://github.com/mjsauvinen/P4UL.git
 
 
-1) Add to $HOME/.bashrc 
+1) Add to $HOME/.bashrc
 
 export PATH=$HOME/bin:$PATH
 
@@ -52,3 +52,10 @@ Now the scripts can be run everywhere in your system.
 ### Who do I talk to? ###
 
 * Mikko Auvinen, University of Helsinki / Finnish Meteorological Institute.
+
+#########################
+##### Contributors ######
+
+* Mikko Auvinen, University of Helsinki / Finnish Meteorological Institute.
+
+* Sasu Karttunen, University of Helsinki

@@ -48,14 +48,14 @@ print(" Calculating vertical profiles of leaf area densities...")
 d_integral = (gamma(args.alpha)*gamma(args.beta))/gamma(args.alpha+args.beta)
 
 # Calculate leaf area density profiles for each horizontal grid tile and fill array vertically
-for x in xrange(nPx3D[1]):
-  for y in xrange(nPx3D[0]):
+for y in xrange(nPx3D[0]):
+  for x in xrange(nPx3D[1]):
     # Reverse the y-axis because of the top-left origo in raster
     canopyHeight = R[-y - 1, x]
     nind = int(np.floor(canopyHeight / float(dPx3D[2])))+1 # Number of layers
     # Calculate LAD profile
     lad = canopyBetaFunction(nind,nPx3D[2],dPx3D[2],args.alpha,args.beta,args.lai,d_integral)
-    canopy[x,y,0:nind] = lad[:]
+    canopy[x,y,0:nind] = lad
 print(" ...done.")
 
 # Write output data file
@@ -64,8 +64,8 @@ fx = open(args.fileout, 'w')
 # The first row of the file is number of vertical canopy layers
 fx.write(str(nPx3D[2])+"\n")
 # Loop through the verical canopy columns
-for y in xrange(nPx3D[0]):
-  for x in xrange(nPx3D[1]):
+for x in xrange(nPx3D[1]):
+  for y in xrange(nPx3D[0]):
     # Convert everything into strings and write
     # datatype x y col(:)
     lineStr = str(1)+","+str(x)+","+str(y)+","+",".join(map(str,canopy[x,y,:]))+"\n"
