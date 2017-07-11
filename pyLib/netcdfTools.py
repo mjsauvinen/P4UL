@@ -273,7 +273,7 @@ def createCoordinateAxis(dso, Rdims, Rdpx, axis, varname, formatstr, unit, param
 
 def fillTopographyArray(Rtopo, Rdims, Rdpx, datatype):
   topodims = np.array([Rdims[2], Rdims[0], Rdims[1]])
-  topo = np.ones(topodims, dtype=datatype)
+  topo = np.zeros(topodims, dtype=datatype)
   print(' \n Filling 3D array from topography data...')
   print(' Dimensions [z,y,x]: [{}, {}, {}]'.format(*topodims))
   print(' Total number of data points: {}'.format(np.prod(topodims)))
@@ -281,7 +281,7 @@ def fillTopographyArray(Rtopo, Rdims, Rdpx, datatype):
     for y in xrange(Rdims[0]):
       # Reverse the y-axis because of the top-left origo in raster
       maxind = int(round(Rtopo[-y - 1][x] / Rdpx[2]))
-      topo[0:maxind, y, x] = 0
+      topo[0:maxind, y, x] = 1
   print(' ...done. \n')
   return topo
 

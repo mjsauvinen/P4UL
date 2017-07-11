@@ -460,15 +460,15 @@ def farFieldMean( dat, Xcoord, excludeNearest ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def canopyBetaFunction(nind,height,dpz,alpha,beta,lai,d_integral):
+def canopyBetaFunction(height,dpz,alpha,beta,lai):
   '''
   Calculate lead area index using beta probability density function
   (Markkanen et al., 2003, BLM 106, 437-459).
   '''
-  lad_d=np.zeros(nind)
-  for z in xrange(nind):
-    zHrel= z*dpz[2]/height # z/h
-    lad_d[z]=float((zHrel**(alpha-1)*(1-zHrel)**(beta-1)))/float(d_integral)
+  from scipy.stats import beta as betadist
+  z_col=np.arange(0.,height/dpz[2],dpz[2])
+  z_col=np.divide(z_col,height) # z/H
+  lad_d = betadist.pdf(z_col,alpha,beta)/height
   lad=np.multiply(lad_d,lai)
   return lad
 

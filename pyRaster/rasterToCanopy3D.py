@@ -4,7 +4,6 @@ import argparse
 import numpy as np
 from utilities import writeLog
 from mapTools import *
-from scipy.special import gamma
 
 '''
 Description:
@@ -44,9 +43,6 @@ canopy = np.zeros([nPx3D[1], nPx3D[0], nPx3D[2]])
 print(" 3D grid array dimensions [x,y,z]: {}, {}, {}".format(*np.shape(canopy)))
 print(" Calculating vertical profiles of leaf area densities...")
 
-# Calclulate the value of the integral in the denominator only once
-d_integral = (gamma(args.alpha)*gamma(args.beta))/gamma(args.alpha+args.beta)
-
 # Calculate leaf area density profiles for each horizontal grid tile and fill array vertically
 for y in xrange(nPx3D[0]):
   for x in xrange(nPx3D[1]):
@@ -57,8 +53,8 @@ for y in xrange(nPx3D[0]):
       continue
     nind = int(np.floor(canopyHeight / float(dPx3D[2])))+1 # Number of layers
     # Calculate LAD profile
-    lad = canopyBetaFunction(nind,canopyHeight,dPx3D,args.alpha,args.beta,args.lai,d_integral)
-    canopy[x,y,0:nind] = lad
+    lad = canopyBetaFunction(canopyHeight,dPx3D,args.alpha,args.beta,args.lai)
+    canopy[x,y,0:nind-1] = lad # Grid point at canopy top level gets value 0
 print(" ...done.")
 
 # Write output data file
@@ -69,6 +65,9 @@ fx.write(str(nPx3D[2])+"\n")
 # Loop through the verical canopy columns
 for x in xrange(nPx3D[1]):
   for y in xrange(nPx3D[0]):
+    if (np.all(canopy[x,y,:]==0)):
+      # There is no need to write empty columns
+      continue
     # Convert everything into strings and write
     # datatype x y col(:)
     lineStr = str(1)+","+str(x)+","+str(y)+","+",".join(map(str,canopy[x,y,:]))+"\n"
