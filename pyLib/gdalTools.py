@@ -167,8 +167,9 @@ def extractSubTile( rBand, tileCode, XOrg, dPx):
   nPxOffset = np.abs( (Xtmp-XOrg)/dPx )
   print ' Number of Offset Pixels = {}'.format(nPxOffset)
   
-  Rb, Rbdims = readAsNumpyArray( rBand, nPxOffset, nPx)
-  return Rb, Rbdims, Xtmp
+  Rb = readAsNumpyArray( rBand, nPxOffset, nPx)
+  Rdict = {'R' : Rb, 'GlobOrig' : Xtmp}
+  return Rdict
   
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
@@ -249,8 +250,7 @@ def readAsNumpyArray( rBand, nPxoff=None, nPx=None ):
       print 'Error in (1) readAsNumpyArray. Exiting.'
       sys.exit(1)
     
-  dims = np.shape(dat) # np.shape gives a tuple.
-  return dat, np.array(dims) 
+  return dat
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 

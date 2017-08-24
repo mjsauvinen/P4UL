@@ -7,12 +7,12 @@ from mapTools import saveTileAsNumpyZ
 from utilities import filesFromList, writeLog
 from plotTools import addImagePlot
 import matplotlib.pyplot as plt
-''' 
+'''
 Description:
 
 
 Author: Mikko Auvinen
-        mikko.auvinen@helsinki.fi 
+        mikko.auvinen@helsinki.fi
         University of Helsinki &
         Finnish Meteorological Institute
 '''
@@ -21,16 +21,16 @@ parser = argparse.ArgumentParser(prog='utmTilesFromGeoTiff.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of the target .tif file", \
   default=None)
 parser.add_argument("-b", "--bandSelect", help="Raster Band Selection. Default=1.",\
-  action="store_true", default=False) 
+  action="store_true", default=False)
 parser.add_argument("-p", "--printOn", help="Print the extracted tile.",\
-  action="store_true", default=False) 
+  action="store_true", default=False)
 parser.add_argument("-pp", "--printOnly", help="Only print the extracted tile. Don't save.",\
-  action="store_true", default=False) 
+  action="store_true", default=False)
 parser.add_argument("-t", "--utmTile", help="Utm tile code (2 chars). For example: P5",\
    type=str, default=False)
 parser.add_argument("-s", "--scale",type=float,\
    help="Scale factor for the output. Default=1.", default=1.)
-args = parser.parse_args() 
+args = parser.parse_args()
 writeLog( parser, args, args.printOnly )
 #==========================================================#
 
@@ -64,16 +64,17 @@ print " XOrig: {} vs. {} ".format( XOrig, XOrig_check )
 # Determine the resolution of the raster data [dn,de].
 #resolution_check = UtmTileDims() / Rdims
 #print ' Pixel resolution (m): {} vs. {}'.format(resolution, resolution_check)
+Rdict = extractSubTile( rb, args.utmTile, XOrig, resolution)
+Rdict['dPx'] = resolution
+Rdict['rotation'] = 0.
 
-R, Rdims, ROrig = extractSubTile( rb, args.utmTile, XOrig, resolution)
-
-R[R>32765] = 0.
+Rdict['R'][Rdict['R']>32765] = 0.
 
 if( args.scale != 1.):
-  R*=args.scale
+  Rdict['R']=Rdict['R']*args.scale
 
 if( not args.printOnly ):
-  saveTileAsNumpyZ( args.utmTile, R, Rdims, ROrig, resolution )
+  saveTileAsNumpyZ( args.utmTile, Rdict )
 
 
 if( args.printOnly or args.printOn ):
@@ -81,4 +82,3 @@ if( args.printOnly or args.printOn ):
   fig = plt.figure(num=1, figsize=figDims)
   fig = addImagePlot( fig, R, args.utmTile )
   plt.show()
-

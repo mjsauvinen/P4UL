@@ -6,12 +6,12 @@ from mapTools import *
 from utilities import filesFromList, writeLog
 from plotTools import addImagePlot
 import matplotlib.pyplot as plt
-''' 
+'''
 Description:
 
 
 Author: Mikko Auvinen
-        mikko.auvinen@helsinki.fi 
+        mikko.auvinen@helsinki.fi
         University of Helsinki &
         Finnish Meteorological Institute
 '''
@@ -23,14 +23,14 @@ parser.add_argument("-f1", "--file1",type=str, help="Name of raster data file (1
 parser.add_argument("-f2", "--file2",type=str, help="Name of raster data file (2).",\
   default='Rout')
 parser.add_argument("-s1", "--scale1",type=float,\
-  help="Scaling factor for the data in file 1. Default=1.", default=1.)   
+  help="Scaling factor for the data in file 1. Default=1.", default=1.)
 parser.add_argument("-s2", "--scale2",type=float,\
-  help="Scaling factor for the data in file 2. Default=1.", default=1.)  
+  help="Scaling factor for the data in file 2. Default=1.", default=1.)
 
 helpFlt = ''' Filter type and its associated number for file 1.
- The raster data will be migrated into the max(f1,f2) resolution 
- before filtering is applied. 
- Available filters: median, percentile, rank, gaussian, local. 
+ The raster data will be migrated into the max(f1,f2) resolution
+ before filtering is applied.
+ Available filters: median, percentile, rank, gaussian, local.
  Entering \"user, num\" allows the user to specify <num> different filters consecutively.
  Example entry: median 5'''
 parser.add_argument("-ft1","--filter1",type=str,nargs=2,default=[None,None],\
@@ -39,10 +39,10 @@ parser.add_argument("-ft2","--filter2",type=str,nargs=2,default=[None,None],\
   help="See help for -ft1 above.")
 parser.add_argument("-fo", "--fileOut",type=str, help="Name of output .npz file.")
 parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
-  action="store_true", default=False) 
+  action="store_true", default=False)
 parser.add_argument("-pp", "--printOnly", help="Only print the resulting data. Don't save.",\
-  action="store_true", default=False) 
-args = parser.parse_args() 
+  action="store_true", default=False)
+args = parser.parse_args()
 writeLog( parser, args, args.printOnly )
 #==========================================================#
 
@@ -55,8 +55,18 @@ figN = 1      # Figure number ... to be appended on demand.
 
 # Read in the data.
 dataOnly = False
-R1, R1dims, R1Orig, dPx1 = readNumpyZTile(args.file1, dataOnly)
-R2, R2dims, R2Orig, dPx2 = readNumpyZTile(args.file2, dataOnly)
+Rdict1 = readNumpyZTile(args.file1, dataOnly)
+R1 = Rdict1['R']
+R1dims = np.array(np.shape(R1))
+R1Orig = Rdict1['GlobOrig']
+dPx1 = Rdict1['dPx']
+
+Rdict2 = readNumpyZTile(args.file2, dataOnly)
+R2 = Rdict2['R']
+R2dims = np.array(np.shape(R2))
+R2Orig = Rdict2['GlobOrig']
+dPx2 = Rdict2['dPx']
+Rdict2 = None
 
 
 dPx1 = entry2Int( dPx1 ); dPx2 = entry2Int( dPx2 )
@@ -88,17 +98,18 @@ print ' dims 2: {}, {} '.format(np.max(i2),np.max(j2))
 Rt1 = np.zeros( maxDims, float )
 Rt2 = np.zeros( maxDims, float )
 
-# Apply filtering if desired and perform the superposition with appropriate scaling.  
+# Apply filtering if desired and perform the superposition with appropriate scaling.
 Rt1 = filterAndScale(Rt1, R1, flt1, s1 , i1, j1)
 Rt2 = filterAndScale(Rt2, R2, flt2, s2 , i2, j2)
 Rt = Rt1 + Rt2
+Rdict['R'] = Rt; Rdict['GlobOrig'] = R10Orig; Rdict['dPx'] = np.array([dPf,dPf])
 
 # Print the filtered raster maps.
 if( printOn or printOnly ):
   if( flt1.count(None) == 0):
     fg1 = plt.figure(num=figN, figsize=(9.,9.)); figN+=1
     fg1 = addImagePlot(fg1, Rt2, args.file1, gridOn=True )
-  
+
   if( flt2.count(None) == 0):
     fg2 = plt.figure(num=figN, figsize=(9.,9.)); figN+=1
     fg2 = addImagePlot(fg2, Rt2, args.file2, gridOn=True )
@@ -106,20 +117,16 @@ if( printOn or printOnly ):
 Rt1 = Rt2 = None
 
 if( not printOnly ):
-  saveTileAsNumpyZ( args.fileOut, Rt, maxDims, R1Orig, np.array([dPf,dPf]) )
-  
+  saveTileAsNumpyZ( args.fileOut, Rdict )
+
 if( printOn or printOnly ):
   fig = plt.figure(num=figN, figsize=(9.,9.)); figN+=1
   fig = addImagePlot( fig, Rt[::2,::2], args.file1+' + '+args.file2, gridOn=True )
   plt.show()
 
-Rt = None
+Rt = None; Rdict = None;
 '''
 print ' {}  {} '.format( dPc/dPx1 , dPc/dPx2 )
 print ' {}  {} '.format( R1Orig ,R2Orig )
 print ' {}  {} '.format( R1dims ,R2dims )
 '''
-
-
-
-

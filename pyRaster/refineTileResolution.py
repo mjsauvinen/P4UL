@@ -5,12 +5,12 @@ from mapTools import *
 from utilities import writeLog
 from plotTools import addImagePlot
 import matplotlib.pyplot as plt
-''' 
+'''
 Description:
 
 
 Author: Mikko Auvinen
-        mikko.auvinen@helsinki.fi 
+        mikko.auvinen@helsinki.fi
         University of Helsinki &
         Finnish Meteorological Institute
 '''
@@ -22,10 +22,10 @@ parser.add_argument("-fo", "--fileOut",type=str, help="Name of output Palm/npz t
   default="TOPOGRAPHY_MOD")
 parser.add_argument("-n","--refn", help="Refinement factor n in 2^n (int). Negative value coarsens.", type=int)
 parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
-  action="store_true", default=False) 
+  action="store_true", default=False)
 parser.add_argument("-pp", "--printOnly", help="Only print the resulting data. Don't save.",\
-  action="store_true", default=False) 
-args = parser.parse_args() 
+  action="store_true", default=False)
+args = parser.parse_args()
 writeLog( parser, args )
 #==========================================================#
 
@@ -36,7 +36,11 @@ printOnly = args.printOnly
 fileOut   = args.fileOut
 
 
-R1, R1dims, R1Orig, dPx1 = readNumpyZTile( args.filename )
+Rdict = readNumpyZTile( args.filename )
+R1 = Rdict['R']
+R1dims = np.array(np.shape(R1))
+R1Orig = Rdict['GlobOrig']
+dPx1 = Rdict['dPx']
 
 # Resolution ratio (rr).
 rr = 2**n
@@ -50,7 +54,7 @@ if( n > 0 ):
   i1,j1 = np.ogrid[ 0:maxDims[0] , 0:maxDims[1] ]
   i2,j2 = np.ogrid[ 0:maxDims[0] , 0:maxDims[1] ]
 else:
-  dr1 = 1; fr2 = rr    # fr2 < 1 
+  dr1 = 1; fr2 = rr    # fr2 < 1
   maxDims = R1dims     # Coarsening, R2dims < R1dims
   R2dims  = (rr * R1dims).astype(int)
   s2 = (2**(2*n))   # Scale factor. If we coarsen, the R1 values are appended. Same value to 2^2n cells.
@@ -61,13 +65,13 @@ else:
 i1/=dr1; j1/=dr1
 i1 = i1.astype(int);  j1 = j1.astype(int)
 
-i2*=fr2            ;  j2*=fr2
+i2 = i2*fr2        ;  j2 = j2*fr2
 i2 = i2.astype(int);  j2 = j2.astype(int)
 
 #print ' i2 = {} '.format(i2)
 #print ' i1 = {} '.format(i1)
 
-# Create the output array. 
+# Create the output array.
 R2 = np.zeros( R2dims, float )
 
 if( n > 0 ):
@@ -79,16 +83,17 @@ else:
 
 R1 = None
 R2 *= s2
+dPx2 = dPx1/rr
+Rdict['R'] = R2; Rdict['GlobOrig'] = R1Orig; Rdict['dPx'] = dPx2
 
 if( not args.printOnly ):
   fx = open( fileOut , 'w' )
   np.savetxt(fx,np.round(R2),fmt='%g')
   fx.close()
-  dPx2 = dPx1/rr
-  saveTileAsNumpyZ( fileOut, R2, R2dims, R1Orig, dPx2 )
-  
+  saveTileAsNumpyZ( fileOut, Rdict )
+
 if( args.printOn or args.printOnly ):
   fig = plt.figure(num=1, figsize=(9.,9.))
   fig = addImagePlot( fig, R2 , fileOut )
-  
+
   plt.show()

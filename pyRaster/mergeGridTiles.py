@@ -72,10 +72,13 @@ dPx = resolutionFromDicts( dictList )
 gIJ, XOrig, Mrows, Mcols = arrangeTileGrid( dictList, [ascii,npz] )
 print 'gIJ : {} '.format( gIJ )
 
-R, Rdims = compileTileGrid( dictList, gIJ , Mrows, Mcols, [ascii, npz] )
+Rdict = compileTileGrid( dictList, gIJ , Mrows, Mcols, [ascii, npz] )
+Rdims = np.array(np.shape(Rdict['R']))
+Rdict['GlobOrig'] = XOrig
+Rdict['dPx'] = dPx
 
 if(not args.printOnly ):
-  saveTileAsNumpyZ( fileOut, R, Rdims, XOrig, dPx )
+  saveTileAsNumpyZ( fileOut, Rdict )
 
 if( args.printOn or args.printOnly ):
   figDims = 13.*(Rdims[::-1].astype(float)/np.max(Rdims))

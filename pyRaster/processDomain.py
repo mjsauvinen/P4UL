@@ -6,12 +6,12 @@ from mapTools import *
 from utilities import filesFromList, writeLog
 from plotTools import addImagePlot, addContourf, addScatterPlot
 import matplotlib.pyplot as plt
-''' 
+'''
 Description:
 
 
 Author: Mikko Auvinen
-        mikko.auvinen@helsinki.fi 
+        mikko.auvinen@helsinki.fi
         University of Helsinki &
         Finnish Meteorological Institute
 '''
@@ -37,10 +37,10 @@ helpFlt = ''' Filter type and its associated number. Available filters:
 parser.add_argument("-ft","--filter",type=str,nargs=2,default=[None,None], help=helpFlt)
 parser.add_argument("-hx","--hmax", help="Maximum allowable height.",type=float,default=None)
 parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
-  action="store_true", default=False) 
+  action="store_true", default=False)
 parser.add_argument("-pp", "--printOnly", help="Only print the resulting data. Don't save.",\
-  action="store_true", default=False) 
-args = parser.parse_args() 
+  action="store_true", default=False)
+args = parser.parse_args()
 writeLog( parser, args, args.printOnly )
 #==========================================================#
 
@@ -57,7 +57,10 @@ else:                 fltStr  = flt[0]+'-filtered: '
 
 
 # Read the raster tile to be processed.
-R, Rdims, ROrig, dPx = readNumpyZTile(args.filename)
+Rdict = readNumpyZTile(args.filename)
+R = Rdict['R']
+Rdims = np.array(np.shape(R))
+ROrig = Rdict['GlobOrig']
 print(' Rdims = {} '.format(Rdims))
 print(' ROrig = {} '.format(ROrig))
 
@@ -75,6 +78,8 @@ R = applyMargins( R , mw, mr, mh )
 Rf = np.zeros( np.shape(R) , float)
 Rf =  filterAndScale(Rf, R, flt )
 
+Rdict['R'] = Rf; Rdict['GlobOrig'] = ROrig,
+
 if( hmax ):
   Rf = np.minimum( hmax , Rf )
 
@@ -82,17 +87,17 @@ if( not args.printOnly ):
   fx = open( fileOut , 'w' )
   np.savetxt(fx,np.round(Rf),fmt='%g')
   fx.close()
-  saveTileAsNumpyZ( fileOut, Rf, Rdims, ROrig, dPx )
-  
+  #saveTileAsNumpyZ( fileOut, Rdict )
+
 if( args.printOn or args.printOnly ):
   figDims = 13.*(Rdims[::-1].astype(float)/np.max(Rdims))
   print('Sum = {}'.format(np.sum(Rf)))
   fig = plt.figure(num=1, figsize=figDims)
   fig = addImagePlot( fig, Rf, fltStr+fileOut )
-  
+
   plt.show()
 
-  
+
 R = Rf = None
 
 '''

@@ -45,7 +45,12 @@ except:
   sys.exit(' Could not read the footprint file: {}'.format(filename))
 
 try:
-  Rm, Rmdims, RmOrig, dPx = readNumpyZTile( filemask )
+  Rdict = readNumpyZTile( filemask )
+  Rm = Rdict['R']
+  Rmdims = np.array(np.shape(R))
+  RmOrig = Rdict['GlobOrig']
+  dPx = Rdict['dPx']
+  Rdict = None
 except:
   sys.exit(' Could not read the mask file: {}'.format(filemask))
 

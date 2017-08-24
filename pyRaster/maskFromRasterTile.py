@@ -6,12 +6,12 @@ from mapTools import *
 from utilities import filesFromList, writeLog
 from plotTools import addImagePlot
 import matplotlib.pyplot as plt
-''' 
+'''
 Description:
 
 
 Author: Mikko Auvinen
-        mikko.auvinen@helsinki.fi 
+        mikko.auvinen@helsinki.fi
         University of Helsinki &
         Finnish Meteorological Institute
 '''
@@ -26,10 +26,10 @@ parser.add_argument("-zv", "--zeroval",type=int, help="Value used in place of ze
 parser.add_argument("-a1", "--allone", help="All values as one [1].",\
   action="store_true", default=False)
 parser.add_argument("-p", "--printOn", help="Print the numpy array data.",\
-  action="store_true", default=False) 
+  action="store_true", default=False)
 parser.add_argument("-pp", "--printOnly", help="Only print the numpy array data. Don't save.",\
-  action="store_true", default=False) 
-args = parser.parse_args() 
+  action="store_true", default=False)
+args = parser.parse_args()
 writeLog( parser, args, args.printOnly )
 #==========================================================#
 
@@ -43,22 +43,28 @@ printOn   = args.printOn
 printOnly = args.printOnly
 
 # Read in the raster data.
-R, Rdims, ROrig, dPx = readNumpyZTile( filename )
+Rdict = readNumpyZTile( filename )
+R = Rdict['R']
+Rdims = np.array(np.shape(R))
+ROrig = Rdict['GlobOrig']
+dPx = Rdict['dPx']
 
 # Create mask raster
-Rm = np.zeros( Rdims, 'uint8' )
+Rm = np.zeros( Rdims, 'int64' )
 
 for vx in mvals:
   fx = vx
   if( fx == 0 ): fx = zval
   if( allOne  ): fx = 1
-  
+
   Rm += (R == vx ).astype(int) * int(fx)
   print(' Rmtype = {} '.format(Rm.dtype))
 
+Rdict['R'] = Rm; Rdict['GlobOrig'] = ROrig; Rdict['dPx'] = dPx;
+
 if( not printOnly ):
-  print(' Writing file {} ... '.format(fileout) ) 
-  saveTileAsNumpyZ( fileout, Rm, Rdims, ROrig, dPx)
+  print(' Writing file {} ... '.format(fileout) )
+  saveTileAsNumpyZ( fileout, Rdict)
   print(' ... done! ')
 
 if( printOn or printOnly ):
@@ -66,4 +72,3 @@ if( printOn or printOnly ):
   pfig = plt.figure(num=1, figsize=figDims)
   pfig = addImagePlot( pfig, Rm, fileout, gridOn=True )
   plt.show()
-

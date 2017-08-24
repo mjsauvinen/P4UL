@@ -38,7 +38,15 @@ printOnly = args.printOnly
 # Read in the raster data for mesh.
 # NOTE! The Ry and Rx coords are in top left [N,E] format. 
 # If y-origin is at zero, the Ry-values run downward into neg. numbers.
-R, Ry, Rx, Rdims, ROrig, dPx = readNumpyZTileForMesh( filename )
+Rdict = readNumpyZTileForMesh( filename )
+R = Rdict['R']
+Ry = Rdict['rowCoords']
+Rx = Rdict['colCoords']
+Rdims = np.array(np.shape(R))
+ROrig = Rdict['GlobOrig']
+dPx = entry2Int( Rdict['dPx'] )
+Rdict = None
+
 if( Ry[-1] < Ry[0] ): 
   Ry *= -1.  # Make values run into positive direction.
   R = R[::-1,:]

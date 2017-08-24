@@ -108,7 +108,12 @@ index bounds and coarsening level.
 
 
 # Read the mask raster info.
-R, R_dims, ROrig, dPx = readNumpyZTile(fmsk)
+Rdict = readNumpyZTile(fmsk)
+R = Rdict['R']
+R_dims = np.array(np.shape(R))
+ROrig = Rdict['GlobOrig']
+dPx = Rdict['dPx']
+Rdict = None
 dr = entry2Int( dPx )  # Resolution as a single number
 clr = int( dx/dr )     # Raster to NETCDF coarsening factor
 print(' Orig mask dims = {} '.format(R_dims))
