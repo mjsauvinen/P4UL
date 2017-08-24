@@ -107,7 +107,7 @@ if( flt.count(None) == 0):
 # LES  : u = 4.5 - 5.1,  sigma_v = 0.72-0.74
 # Upwind LES mean over 1200 m: 
 #        u = 6.1,        sigma_v = 0.95
-L =10000.; z_m = (74.-14.); z_0 = 2.4; sigma_v = 0.95; u=6.5
+L =10000.; z_m = (60.-14.9); z_0 = 1.4; sigma_v = 0.75; u=4.86
 x_off = 2.*228.; y_off = 2.*508.
 F_km  = kormann_and_meixner_fpr(z_0, z_m, u, sigma_v, L, Xt, Yt, x_off, y_off)
 
