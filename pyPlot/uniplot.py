@@ -28,27 +28,40 @@ parser.add_argument("-fx", "--factorX", help="Multiplication factor for x-values
   type=float, default=1.0)
 parser.add_argument("-fy", "--factorY", help="Multiplication factor for y-values: fy*y",\
   type=float, default=1.0)
+parser.add_argument("-s", "--save", type=str, default=None, help="Name of the saved figure. Default=None")
 args = parser.parse_args()
 #==========================================================#
 
-if( not args.strKey ): 
-  args.strKey = raw_input(" Enter search string: ")
-  if( not args.strKey ): sys.exit(1)
+strKey  = args.strKey
+
+factorX = args.factorX
+factorY = args.factorY
+logOn   = args.log
+labelsOn= args.labels
+saveFig = args.save
+
+
+if( not strKey ): 
+  strKey = raw_input(" Enter search string: ")
+  if( not strKey ): sys.exit(1)
 
 plt.rc('xtick', labelsize=24); #plt.rc('ytick.major', size=10)
 plt.rc('ytick', labelsize=24); #plt.rc('ytick.minor', size=6)
 
 while 1:
 
-  fileNos, fileList = filesFromList( "*"+args.strKey+"*" )
+  fileNos, fileList = filesFromList( "*"+strKey+"*" )
 
   pfig = plt.figure(num=1, figsize=(12.,9.5));
   for fn in fileNos:
-    pfig = plotXX( pfig, fileList[fn], args.log, args.factorX, args.factorY )
+    pfig = plotXX( pfig, fileList[fn], logOn, factorX, factorY )
 
-  if(args.labels):
+  if( labelsOn ):
     pfig = userLabels( pfig )
   plt.grid(True)
   plt.legend(loc=0)
+  
+  if( saveFig ):
+    pfig.savefig( saveFig, format='jpg', dpi=300)
 
   plt.show()

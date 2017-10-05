@@ -150,25 +150,30 @@ def UtmReference( LocCode ):
 
 def extractSubTile( rBand, tileCode, XOrg, dPx):
   
-  tileChars = list(tileCode)
   Xtmp = XOrg.copy()    # Make a proper copy of the XOrg.
-  code = tileChars[0]; code+=tileChars[1]
-  pStr = '{}: XOrig = {}, nPx = {} [N,E]'
-  print pStr.format(code,Xtmp,None)
+  nPx  = None # np.array([ rBand.YSize , rBand.XSize ], int)/dPx 
+  nPxOffset = None
   
-  if( len(tileCode) == 2 ): # The user could ask for the entire tile.
-    nPx = UtmTileDims()/np.abs(dPx)
-  else:  
-    for level in xrange(1,len(tileCode)-1):
-      code+=tileChars[level+1]
-      Xtmp, nPx = newTileCoords( Xtmp, tileChars, level, dPx )
-      print pStr.format(code,Xtmp,nPx)
+  if( tileCode is not None ):
+    tileChars = list(tileCode)
+    code = tileChars[0]; code+=tileChars[1]
+    pStr = '{}: XOrig = {}, nPx = {} [N,E]'
+    print pStr.format(code,Xtmp,None)
+  
+    if( len(tileCode) == 2 ): # The user could ask for the entire tile.
+      nPx = UtmTileDims()/np.abs(dPx)
+    else:  
+      for level in xrange(1,len(tileCode)-1):
+        code+=tileChars[level+1]
+        Xtmp, nPx = newTileCoords( Xtmp, tileChars, level, dPx )
+        print pStr.format(code,Xtmp,nPx)
 
-  nPxOffset = np.abs( (Xtmp-XOrg)/dPx )
-  print ' Number of Offset Pixels = {}'.format(nPxOffset)
+    nPxOffset = np.abs( (Xtmp-XOrg)/dPx )
+    print ' Number of Offset Pixels = {}'.format(nPxOffset)
   
   Rb = readAsNumpyArray( rBand, nPxOffset, nPx)
   Rdict = {'R' : Rb, 'GlobOrig' : Xtmp}
+  
   return Rdict
   
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*

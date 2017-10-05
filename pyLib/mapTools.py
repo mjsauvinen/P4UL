@@ -137,6 +137,26 @@ def readAsciiGridHeader( filename, idx=0 ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def asciiTileToNumpyZ(filename):
+
+  Rdict, idx = readAsciiGridHeader( filename )
+  R = readAsciiGrid( filename )
+  
+  Rdict['id'] = idx
+  Rdict['ytlcorner'] = Rdict['yllcorner'] + Rdict['cellsize']* Rdict['nrows']
+  Rdict['xtlcorner'] = Rdict['xllcorner']
+  
+  # These are ofter used later.
+  Rdict['GlobOrig'] = np.array([ Rdict['ytlcorner'], Rdict['xtlcorner']]) # [N,E]
+  Rdict['dPx'] = np.array([ Rdict['cellsize'], Rdict['cellsize'] ])
+  Rdict['R'] = R
+  
+  saveTileAsNumpyZ( filename.strip('.asc'), Rdict )
+  
+  return Rdict
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
 def readNumpyZGridData( filename, idx=0 ):
   Rdict = readNumpyZTile(filename, dataOnly=True)
   Rxdims=np.array(np.shape(Rdict['R']))
@@ -223,8 +243,11 @@ def readNumpyZTileForMesh( filename ):
     gridRot = Rdict['gridRot'] = 0
 
   # N,E - coords, start from top left.
-  Rdict['rowCoords'] = np.arange(RxOrig[0],(RxOrig[0]-Rxdims[0]*dPx[0]),-dPx[0]) # N
-  Rdict['colCoords'] = np.arange(RxOrig[1],(RxOrig[1]+Rxdims[1]*dPx[1]), dPx[1]) # E
+  # Sometimes the dPx[0] is correctly negative, but sometimes not. 
+  # Here, we need to make sure it's own sign is irrelevant
+  dPN = np.abs(dPx[0]); dPE = np.abs(dPx[1])
+  Rdict['rowCoords'] = np.arange(RxOrig[0],(RxOrig[0]-Rxdims[0]*dPN),-dPN) # N
+  Rdict['colCoords'] = np.arange(RxOrig[1],(RxOrig[1]+Rxdims[1]*dPE), dPE) # E
 
   #Nx, Ex = np.meshgrid(ni,ej)
 
@@ -272,21 +295,39 @@ def entry2Int( ax ):
 
   return int(ax)
 
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def marginIds( Rxdims, Mw ):
+  
+  Li = np.zeros(2, int); Ri = Li.copy(); Bi = Li.copy(); Ti = Li.copy()
+  
+  Li[0]= 0; Li[1] = max( int( np.ceil(Mw[0]*Rxdims[1]-1) ), 0 )  # These can never be -1.
+  Ri[0]= int((1.-Mw[1])*Rxdims[1]+1); Ri[1] = Rxdims[1]
+  Bi[0]= int((1.-Mw[2])*Rxdims[0]+1); Bi[1] = Rxdims[0]
+  Ti[0]= 0; Ti[1] = max( int( np.ceil(Mw[3]*Rxdims[0]-1) ), 0 )  # These can never be -1.
+  
+  return Li, Ri, Bi, Ti
+
+
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 def applyMargins( Rx, Mw, Mr, Mh ):
 
   Rxdims = np.shape(Rx)
   if( Mw.count(None) == 0 ):
     print(' Zero (or non-zero) margins: L={}, R={}, B={}, T={}'.format(Mw[0],Mw[1],Mw[2],Mw[3]))
-    L1= 0; L2 = max( int(Mw[0]*Rxdims[1]-1), 0 )  # These can never be -1.
-    R1= int((1-Mw[1])*Rxdims[1]); R2 = Rxdims[1]
-    B1= int((1-Mw[2])*Rxdims[0]); B2 = Rxdims[0]
-    T1= 0; T2 = max( int(Mw[3]*Rxdims[0]-1) , 0 )  # These can never be -1.
-
-    Rx[:,L1:L2] = Mh[0]; Rx[:,R1:R2] = Mh[1]
-    Rx[T1:T2,:] = Mh[3]; Rx[B1:B2,:] = Mh[2]
+    L12, R12, B12, T12 = marginIds( Rxdims, Mw )
+    L1 = L12[0]; L2 = L12[1]
+    R1 = R12[0]; R2 = R12[1]
+    B1 = B12[0]; B2 = B12[1]
+    T1 = T12[0]; T2 = T12[1]
+    
+    if( not all( L12 == 0 ) ): Rx[:,L1:L2] = Mh[0] 
+    if( not all( R12 == 0 ) ): Rx[:,R1:R2] = Mh[1]
+    if( not all( T12 == 0 ) ): Rx[T1:T2,:] = Mh[3]
+    if( not all( B12 == 0 ) ): Rx[B1:B2,:] = Mh[2]
   else:
-    L1= L2 = 0.
+    L1= L2 = 0
     R1= R2 = Rxdims[1]-1
     B1= B2 = Rxdims[0]-1
     T1= T2 = 0
@@ -301,10 +342,10 @@ def applyMargins( Rx, Mw, Mr, Mh ):
     T11 = T2    ; T22 = T2+dT
 
     #Rc = Rx.copy()
-    Rx = applyRamp( Rx, L11, L22, 1, 0 )
-    Rx = applyRamp( Rx, R11, R22, 1, 1 )
-    Rx = applyRamp( Rx, B11, B22, 0, 1 )
-    Rx = applyRamp( Rx, T11, T22, 0, 0 )
+    if( dL != 0 ): Rx = applyRamp( Rx, L11, L22, 1, 0 )
+    if( dR != 0 ): Rx = applyRamp( Rx, R11, R22, 1, 1 )
+    if( dB != 0 ): Rx = applyRamp( Rx, B11, B22, 0, 1 )
+    if( dT != 0 ): Rx = applyRamp( Rx, T11, T22, 0, 0 )
 
     #Rx -= Rc
 
@@ -466,9 +507,12 @@ def canopyBetaFunction(height,dpz,alpha,beta,lai):
   (Markkanen et al., 2003, BLM 106, 437-459).
   '''
   from scipy.stats import beta as betadist
-  z_col=np.arange(0.,height/dpz[2],dpz[2])
+  z_col=np.arange(0.,height,dpz[2])  # BUG HERE: np.arange(0.,height/dpz[2],dpz[2])
   z_col=np.divide(z_col,height) # z/H
+  #print(' z_col (2) = {}'.format(z_col))
+  
   lad_d = betadist.pdf(z_col,alpha,beta)/height
+  #print(' lad_d = {}'.format(lad_d))
   lad=np.multiply(lad_d,lai)
   return lad
 

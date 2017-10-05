@@ -23,6 +23,10 @@ parser.add_argument("--log", help="Logarithmic y-axis.", action="store_true",\
   default=False)
 parser.add_argument("--labels", help="User specified labels.", action="store_true",\
   default=False)
+parser.add_argument("-wa", "--writeAscii", help="Write X, Y[-1,:] data to an ascii file.",\
+  action="store_true", default=False)
+parser.add_argument("-waa", "--writeAllAscii", help="Write X, Y data to an ascii file.",\
+  action="store_true", default=False)
 args = parser.parse_args() 
 #==========================================================#
 # Initial renaming operations and variable declarations
@@ -30,6 +34,8 @@ args = parser.parse_args()
 filename = args.filename
 labelsOn = args.labels
 logOn    = args.log
+writeAscii = args.writeAscii or args.writeAllAscii
+writeAll   = args.writeAllAscii
 
 '''
 Establish two boolean variables which indicate whether the created variable is an
@@ -60,7 +66,7 @@ while 1:
       print(' time not in dict = {} '.format(xdict.keys()))
       print(' adding time=[None] ...')
       xdict['time'] = np.array([None])
-      y = y.reshape((1,len(y)))  # to ensure len(np.shape(y) == 2
+      y = y.reshape((1,len(y)))  # to ensure len(np.shape(y)) == 2
     
     # If time is the only parameter, use it on x-axis
     if(len(np.shape(y)) == 1):
@@ -68,6 +74,9 @@ while 1:
       labelStr = ' {}({}) '.format(varList[iy],'time')
       plotTxt   = [labelStr, xStr, varList[iy]]
       fig = addToPlot(fig, xdict[xStr], y, labelStr, plotTxt, logOn)
+      if( writeAscii ):
+        print(' (1) Writing data to ascii file: {}.dat'.format(varList[iy])) 
+        np.savetxt(varList[iy]+'.dat', np.c_[xdict[xStr],y] )   # x,y,z equal sized 1D arrays
     
     elif(len(np.shape(y)) == 2):
       time  = xdict['time']
@@ -86,6 +95,16 @@ while 1:
           fig = addToPlot(fig, xdict[xStr][idy], y[j,idy], labelStr, plotTxt, logOn)
         else:
           pass
+      
+      if( writeAscii ):
+        print(' (2) Writing data to ascii file: {}.dat'.format(varList[iy]))
+        print(' x.shape = {} vs y.shape = {}'.format(np.shape(xdict[xStr]), np.shape(y)))
+        if(writeAll):
+          hStr = ' {} at times = {}'.format(varList[iy], time )
+          np.savetxt(varList[iy]+'.dat', np.c_[xdict[xStr], np.transpose(y)], header=hStr )
+        else:
+          hStr = ' {} at times = {}'.format(varList[iy], time[-1] )
+          np.savetxt(varList[iy]+'.dat', np.c_[xdict[xStr], np.transpose(y[-1,:])], header=hStr )
     
     else:
       sys.exit(' Plotting of profiles with more than one spatial dimension not supported.')

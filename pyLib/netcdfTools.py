@@ -12,7 +12,6 @@ debug = True
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-
 def asciiEncode(uList, uStr):
   n = len(uList)
   if(n > 0):
@@ -26,7 +25,6 @@ def asciiEncode(uList, uStr):
   return uList
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-
 
 def netcdfDataset(filename, verbose=True):
   # Create Dataset
@@ -43,7 +41,6 @@ def netcdfDataset(filename, verbose=True):
   return ds, varList, dimList
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-
 
 def netcdfOutputDataset(filename, mode='w'):
   dso = nc.Dataset(filename, mode, format='NETCDF4')

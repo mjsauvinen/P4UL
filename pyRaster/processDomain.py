@@ -20,8 +20,7 @@ Author: Mikko Auvinen
 #==========================================================#
 parser = argparse.ArgumentParser(prog='processDomain.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of the comp domain data file.")
-parser.add_argument("-fo", "--fileOut",type=str, help="Name of output Palm topography file.",\
-  default="TOPOGRAPHY_DATA")
+parser.add_argument("-fo", "--fileOut",type=str, help="Name of output Palm topography file.")
 parser.add_argument("-i0","--iZero", help="Pixel ids [N,E] for the zero level.",\
   type=int,nargs=2,default=[None,None])
 parser.add_argument("-mw","--mrgnW", help="Zero or non-zero margin widths as ratios (0-1): [L,R,B,T]",\
@@ -36,6 +35,8 @@ helpFlt = ''' Filter type and its associated number. Available filters:
  Example entry: median 5'''
 parser.add_argument("-ft","--filter",type=str,nargs=2,default=[None,None], help=helpFlt)
 parser.add_argument("-hx","--hmax", help="Maximum allowable height.",type=float,default=None)
+parser.add_argument("-wa", "--writeAscii", help="Write 'TOPOGRAPHY_DATA' ascii file.",\
+  action="store_true", default=False)
 parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
   action="store_true", default=False)
 parser.add_argument("-pp", "--printOnly", help="Only print the resulting data. Don't save.",\
@@ -51,6 +52,7 @@ mh      = args.mrgnH
 flt     = args.filter
 hmax    = args.hmax
 fileOut = args.fileOut
+writeAscii = args.writeAscii
 
 if( flt[0] == None):  fltStr  = ' '
 else:                 fltStr  = flt[0]+'-filtered: '
@@ -78,16 +80,17 @@ R = applyMargins( R , mw, mr, mh )
 Rf = np.zeros( np.shape(R) , float)
 Rf =  filterAndScale(Rf, R, flt )
 
-Rdict['R'] = Rf; Rdict['GlobOrig'] = ROrig,
-
 if( hmax ):
   Rf = np.minimum( hmax , Rf )
 
+Rdict['R'] = Rf; Rdict['GlobOrig'] = ROrig
+
 if( not args.printOnly ):
-  fx = open( fileOut , 'w' )
-  np.savetxt(fx,np.round(Rf),fmt='%g')
-  fx.close()
-  #saveTileAsNumpyZ( fileOut, Rdict )
+  if( writeAscii ):
+    fx = open( 'TOPOGRAPHY_DATA' , 'w' )
+    np.savetxt(fx,np.round(Rf),fmt='%g')
+    fx.close()
+  saveTileAsNumpyZ( fileOut, Rdict )
 
 if( args.printOn or args.printOnly ):
   figDims = 13.*(Rdims[::-1].astype(float)/np.max(Rdims))

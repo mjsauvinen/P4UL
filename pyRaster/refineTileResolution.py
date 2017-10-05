@@ -26,7 +26,7 @@ parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
 parser.add_argument("-pp", "--printOnly", help="Only print the resulting data. Don't save.",\
   action="store_true", default=False)
 args = parser.parse_args()
-writeLog( parser, args )
+writeLog( parser, args, args.printOnly )
 #==========================================================#
 
 # Renaming ... nothing else

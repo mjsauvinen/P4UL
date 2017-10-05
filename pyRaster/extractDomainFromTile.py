@@ -40,9 +40,12 @@ parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
   action="store_true", default=False)
 parser.add_argument("-pp", "--printOnly", help="Only print the resulting data. Don't save.",\
   action="store_true", default=False)
+parser.add_argument("-v", "--verbose", help="Print intermediates onto the screen.",\
+  action="store_true", default=False)
 args = parser.parse_args()
 writeLog( parser, args, args.printOnly )
 #==========================================================#
+
 
 # Renaming the argument variables for brevity and clarity:
 NxG = args.NxG
@@ -50,6 +53,7 @@ iPv = args.iPivot
 dxG = args.dxG
 rLx = args.rLx
 windDir = args.windDir
+verbose = args.verbose
 
 # Read in the underlying topography data and obtain the pivot coordinates.
 dataOnly = False
@@ -57,6 +61,10 @@ Rdict= readNumpyZTileForMesh( args.filename)
 R = Rdict['R']
 nY = Rdict['rowCoords']
 eX = Rdict['colCoords']
+if( verbose ): 
+  print(' [N] coords = {}...{}, [E] coords = {}...{}'\
+    .format(nY[0], nY[-1], eX[0], eX[-1] )) 
+
 Rdims = np.array(np.shape(R))
 # Retain information about rotation
 try:
@@ -65,6 +73,8 @@ except:
   gridRot = 0
 ROrig = Rdict['GlobOrig']
 dPx = entry2Int( Rdict['dPx'] )
+if( verbose ): print(' dPx = {} '.format(dPx))
+
 
 # Pivot coordinates
 pY = nY[iPv[0]]; pX = eX[iPv[1]]
@@ -95,17 +105,28 @@ iPGy = np.maximum(int((1-rLx[1])*NxG[1])-1,0)
 pXG = XgridCoords[iPGx]
 pYG = YgridCoords[iPGy]
 
-#print ' Palm grid: iPGx = {}, iPGy = {}'.format( iPGx, iPGy )
-#print ' Palm grid: pXG = {}, pYG = {}'.format( pXG, pYG )
+if( verbose ):
+  print ' Palm grid pivot indices: iPGx = {}, iPGy = {}'.format( iPGx, iPGy )
+  print ' Palm grid pivot coords:   pXG = {},  pYG = {}'.format( pXG, pYG )
+
 
 '''
 From palm coordinates to underlying topography coordinates.
 We use the pivot point which is known for both systems.
 '''
-dXT = pX - pXG; dYT = pY - pYG
+
+dXT = pX - pXG
+dYT = pY - pYG
+#dXT = (pX - ROrig[1]) - pXG
+#dYT = (pY - ROrig[0]) - pYG
+
 XT = XgridCoords + dXT
 YT = YgridCoords + dYT
 
+if(verbose):
+  print(' Coordinate transform:  dXT = {},  dYT = {}'.format( dXT, dYT ))
+  print(' Transformed coords: XT = {}...{}, YT = {}...{}'\
+    .format(np.min(XT), np.max(XT),np.min(YT), np.max(YT)))
 
 '''
 Rotate the new coordinates according to the wind direction:
@@ -117,6 +138,7 @@ if (args.noRotation):
   theta = 0.
 else:
   theta = 270. - windDir
+
 if( theta != 0.):
   XTRM,YTRM = rotateGridAroundPivot(XTM,YTM, pX, pY,theta, deg=True)
 else:
@@ -138,6 +160,7 @@ Using the known transformed coordinates, we can extract the pixel values
 at those locations and copy them to the Palm grid. The grid arrays origo is
 located at the bottom left, which makes things a bit confusing here.
 '''
+
 Irow = ((ROrig[0]-YTRM)/dPx ).astype(int)
 Jcol = ((XTRM-ROrig[1])/dPx ).astype(int)
 

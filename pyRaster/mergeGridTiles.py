@@ -81,9 +81,10 @@ if(not args.printOnly ):
   saveTileAsNumpyZ( fileOut, Rdict )
 
 if( args.printOn or args.printOnly ):
+  R = Rdict['R']
   figDims = 13.*(Rdims[::-1].astype(float)/np.max(Rdims))
   fig = plt.figure(num=1, figsize=figDims)
   fig = addImagePlot( fig, R, 'Combined Tiles: '+fileOut )
   plt.show()
+  R = None
 
-R = None

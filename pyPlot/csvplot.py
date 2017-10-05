@@ -7,15 +7,10 @@ from plotTools import userLabels, plotCSV
 ''' 
 A script to extract and plot data from a CSV file.
 
-Author: Mikko Auvinen, Department of Applied Mechanics, Aalto University
-
-Example usage: (1) Place in your $HOME/bin directory (with plotTools.py) and make it an executable.
-  (2) Run the script in the directory where you have the .csv files with an optional file search string:
-   csvplot.py [optional str, default=".csv"] 
+Author: Mikko Auvinen, Department of Applied Mechanics, Aalto University 
 '''
 
-
-
+#==========================================================#
 parser = argparse.ArgumentParser()
 parser.add_argument("strKey", help="Search string for collecting files.",nargs='?',\
     default=".csv")
@@ -27,7 +22,7 @@ parser.add_argument("--labels", help="User specified labels.", action="store_tru
     default=False)
 parser.add_argument("--reuse", help="Reuse once specified variable selections.", action="store_true",\
     default=False)
-
+#==========================================================#
 args = parser.parse_args()    
 strKey = args.strKey
 

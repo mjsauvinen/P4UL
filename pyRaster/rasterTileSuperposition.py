@@ -101,8 +101,19 @@ Rt2 = np.zeros( maxDims, float )
 # Apply filtering if desired and perform the superposition with appropriate scaling.
 Rt1 = filterAndScale(Rt1, R1, flt1, s1 , i1, j1)
 Rt2 = filterAndScale(Rt2, R2, flt2, s2 , i2, j2)
+
+
 Rt = Rt1 + Rt2
-Rdict['R'] = Rt; Rdict['GlobOrig'] = R10Orig; Rdict['dPx'] = np.array([dPf,dPf])
+
+'''
+In case two rasters need to be merged, but not superimposed.
+Rt = Rt1.copy()
+idx = (Rt == 0.)
+Rt[idx] = Rt2[idx]
+'''
+
+Rdict = dict()
+Rdict['R'] = Rt; Rdict['GlobOrig'] = R1Orig; Rdict['dPx'] = np.array([dPf,dPf])
 
 # Print the filtered raster maps.
 if( printOn or printOnly ):
@@ -124,7 +135,7 @@ if( printOn or printOnly ):
   fig = addImagePlot( fig, Rt[::2,::2], args.file1+' + '+args.file2, gridOn=True )
   plt.show()
 
-Rt = None; Rdict = None;
+Rt = None; Rdict = None; Rdict1 = None; Rdict2 = None
 '''
 print ' {}  {} '.format( dPc/dPx1 , dPc/dPx2 )
 print ' {}  {} '.format( R1Orig ,R2Orig )

@@ -4,7 +4,7 @@ import sys
 import argparse
 import numpy as np
 from mapTools import readNumpyZTile
-
+from utilities import writeLog
 '''
 Description:
 Reads data from Numpy npz file and exports it as an array in NetCDF.
@@ -21,6 +21,7 @@ parser.add_argument("-flat", "--flatarray", action="store_true", help="Save as a
 parser.add_argument("-vn", "--varname", type=str, help="Name of the variable in NetCDF. Default 'buildings_0'.", default='buildings_0')
 parser.add_argument("-c", "--compress", help="Compress netCDF variables with zlib.", action="store_true", default=False)
 args = parser.parse_args()
+writeLog( parser, args )
 #==========================================================#
 
 # Read input raster data file.
