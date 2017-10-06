@@ -23,7 +23,10 @@ parser.add_argument("-l", "--lengthscale",type=float, help="Length Scale: Atmosp
 parser.add_argument("-nu", "--viscosity",type=float, help="Kinematic Viscosity (mu/rho) [m^2/s^2].")
 parser.add_argument("-z0", "--z0",type=float, help="(Optinal) Roughness length [m].", default=0.)
 parser.add_argument("-d", "--dheight",type=float, help="(Optinal) Displacement height [m].", default=0.)
+parser.add_argument("-dz", "--dz",type=float, help=" Vertical resolution [m]. Default=2.", default=2.)
 parser.add_argument("-us", "--ustar",type=float, help="(Optinal) Friction velocity.", default=1.)
+parser.add_argument("-s", "--scale",type=float, help="Scaling factor for the results.", default=1.)
+parser.add_argument("-c", "--coarsen",type=int, help="Coarsen printing.", default=1)
 parser.add_argument("-p", "--printOn", help="Print the velocity profile.",\
   action="store_true", default=False)
 args = parser.parse_args() 
@@ -35,7 +38,9 @@ z0 = args.z0
 d  = args.dheight
 us = args.ustar
 printOn = args.printOn
-
+dz = args.dz
+s  = args.scale
+c  = args.coarsen
 
 mnx = np.array([ 0.4 , 1.1])
 mxn = np.array([ 1. , 1.])
@@ -105,11 +110,11 @@ elif( isinstance(u, np.float) ):
 
 
 # The log-law profile for the velocity
-z = np.linspace(0.,l,int(l/8))
+z = np.linspace(0.,l,int(l/dz))
 kappa = 0.41
 
 # Um := mean(U)/u*
-Um = us/kappa * np.log( np.maximum( (z-d), 1e-5)/z0 )
+Um = us/kappa * np.log( np.maximum( (z-d)/z0, 1.) )
 
 if( printOn ):
   ufig = plt.figure(1)
@@ -118,13 +123,14 @@ if( printOn ):
 
 dUm = Um[1:]-Um[:-1]
 dz = z[1:]-z[:-1]
-zm = (z[1:]+z[:-1])/2.
+zm = z[:-1] 
 dUmdz = dUm/dz
 
-print('u(z):\n'+' '.join('{:.2f},'.format(uv) for uv in Um[::2]))
-print('z :\n'+' '.join('{},'.format(zi) for zi in z[::2].astype(int)))
-print('v(z):\n'+' '.join('{},'.format(v) for v in np.zeros( len(z[::2]))))
 
-print('dudz(z):\n'+' '.join('{:.3f},'.format(duz) for duz in dUmdz[::4]))
-print('dudz(z):\n'+' '.join('{},'.format(zim) for zim in zm[::4].astype(int)))
+print('u(z):\n'+' '.join('{:.2f},'.format(uv) for uv in Um[::c]))
+print('z :\n'+' '.join('{},'.format(zi) for zi in z[::c].astype(int)))
+print('v(z):\n'+' '.join('{},'.format(v) for v in np.zeros( len(z[::c]))))
+
+print('dudz(z):\n'+' '.join('{:.3f},'.format(s*duz) for duz in dUmdz[::c]))
+print('z :\n'+' '.join('{},'.format(zim) for zim in zm[::c].astype(int)))
 
