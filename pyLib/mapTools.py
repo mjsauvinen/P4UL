@@ -302,10 +302,17 @@ def marginIds( Rxdims, Mw ):
   
   Li = np.zeros(2, int); Ri = Li.copy(); Bi = Li.copy(); Ti = Li.copy()
   
-  Li[0]= 0; Li[1] = max( int( np.ceil(Mw[0]*Rxdims[1]-1) ), 0 )  # These can never be -1.
-  Ri[0]= int((1.-Mw[1])*Rxdims[1]+1); Ri[1] = Rxdims[1]
-  Bi[0]= int((1.-Mw[2])*Rxdims[0]+1); Bi[1] = Rxdims[0]
-  Ti[0]= 0; Ti[1] = max( int( np.ceil(Mw[3]*Rxdims[0]-1) ), 0 )  # These can never be -1.
+  Li[0]= 0
+  Li[1]= max( int( np.ceil(Mw[0]*Rxdims[1]-1) ), 1 )  # These can never be -1.
+  
+  Ri[0]= min( int((1.-Mw[1])*Rxdims[1]+1), Rxdims[1]-1 )
+  Ri[1]= Rxdims[1]
+  
+  Bi[0]= min( int((1.-Mw[2])*Rxdims[0]+1), Rxdims[0]-1 )
+  Bi[1]= Rxdims[0]
+  
+  Ti[0]= 0
+  Ti[1]= max( int( np.ceil(Mw[3]*Rxdims[0]-1) ), 1 )  # These can never be -1.
   
   return Li, Ri, Bi, Ti
 
@@ -321,54 +328,93 @@ def applyMargins( Rx, Mw, Mr, Mh ):
     R1 = R12[0]; R2 = R12[1]
     B1 = B12[0]; B2 = B12[1]
     T1 = T12[0]; T2 = T12[1]
-    
+    print('Margin\nL:{},{},R:{},{},T:{},{},B:{},{}'.format(L1,L2,R1,R2,T1,T2,B1,B2))
+
     if( not all( L12 == 0 ) ): Rx[:,L1:L2] = Mh[0] 
     if( not all( R12 == 0 ) ): Rx[:,R1:R2] = Mh[1]
     if( not all( T12 == 0 ) ): Rx[T1:T2,:] = Mh[3]
-    if( not all( B12 == 0 ) ): Rx[B1:B2,:] = Mh[2]
+    if( not all( B12 == 0 ) ): Rx[B1:B2,:] = Mh[2]    
+
+
   else:
-    L1= L2 = 0
-    R1= R2 = Rxdims[1]-1
-    B1= B2 = Rxdims[0]-1
-    T1= T2 = 0
+    L1=0; L2=1
+    R1=Rxdims[1]-1; R2=Rxdims[1]
+    B1=Rxdims[0]-1; B2=Rxdims[0]
+    T1=0; T2=1
 
   if( Mr.count(None) == 0 ):
     print(' Ramp margins: L={}, R={}, B={}, T={}'.format(Mr[0],Mr[1],Mr[2],Mr[3]))
     dL  = int(Mr[0]*Rxdims[1]); dR = int(Mr[1]*Rxdims[1])
     dB  = int(Mr[2]*Rxdims[0]); dT = int(Mr[3]*Rxdims[0])
-    L11 = L2    ; L22 = L2+dL
-    R11 = R1-dR ; R22 = R1
-    B11 = B1-dB ; B22 = B1
-    T11 = T2    ; T22 = T2+dT
+    
+    L11 = max(L2-1,0) ; L22 = L2+dL
+    R11 = R1-dR       ; R22 = min(R1+1, Rxdims[1])
+    B11 = B1-dB       ; B22 = min(B1+1, Rxdims[0])
+    T11 = max(T2-1,0) ; T22 = T2+dT
+    print('Ramp\nL:{},{},R:{},{},T:{},{},B:{},{}'.format(L11,L22,R11,R22,T11,T22,B11,B22))
 
-    #Rc = Rx.copy()
-    if( dL != 0 ): Rx = applyRamp( Rx, L11, L22, 1, 0 )
-    if( dR != 0 ): Rx = applyRamp( Rx, R11, R22, 1, 1 )
-    if( dB != 0 ): Rx = applyRamp( Rx, B11, B22, 0, 1 )
-    if( dT != 0 ): Rx = applyRamp( Rx, T11, T22, 0, 0 )
-
-    #Rx -= Rc
+    
+    if( dL != 0 ):
+      if( (Mw[0] is None) or (Mw[0] ==0.) ):
+        Rx = applyRamp( Rx, L11, L22, 1, 0, Mh )
+      else:
+        Rx = applyRamp( Rx, L11, L22, 1, 0 )
+    
+    if( dR != 0 ):
+      if( (Mw[1] is None) or (Mw[1] ==0.) ):
+        Rx = applyRamp( Rx, R11, R22, 1, 1, Mh )
+      else:
+        Rx = applyRamp( Rx, R11, R22, 1, 1 )
+        
+    if( dB != 0 ): 
+      if( (Mw[2] is None) or (Mw[2] ==0.) ):
+        Rx = applyRamp( Rx, B11, B22, 0, 1, Mh )
+      else:
+        Rx = applyRamp( Rx, B11, B22, 0, 1 )
+        
+    if( dT != 0 ): 
+      if( (Mw[3] is None) or (Mw[3] ==0.) ):
+        Rx = applyRamp( Rx, T11, T22, 0, 0, Mh )
+      else:
+        Rx = applyRamp( Rx, T11, T22, 0, 0 )
 
   return Rx
 
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def applyRamp( Rz, L1, L2, LeftRight, End ):
+def applyRamp( Rz, L1, L2, LeftRight, End, Mh=None ):
   dL = (L2-L1)
   w = np.arange( L1, L2 ).astype(float)
   w -= np.min(w); w /= np.max(w)
   w *= np.pi    ; w -= (np.pi/2.)
   w = np.sin(w)/2. + 0.5
+  
+  if  ( LeftRight and not End ):      # Left
+    if( Mh is None ): Rm = Rz[:,L1] 
+    else:             Rm = Mh[0]
+    #
+  elif( LeftRight and End ):          # Right
+    if( Mh is None ): Rm = Rz[:,L2]
+    else:             Rm = Mh[1]
+  elif( not LeftRight and End ):      # Bottom
+    if( Mh is None ): Rm = Rz[L2,:]
+    else:             Rm = Mh[2]
+  else:                               # Top 
+    if( Mh is None ): Rm = Rz[L1,:]
+    else:             Rm = Mh[3]
+
+
+
   if( End ):
     w = (1.-w)
   #print ' w = {}, len(w) = {}, len(dL) = {}'.format(w,len(w),dL)
   if( LeftRight ):
     for i in xrange(dL):
-      Rz[:,L1+i] *= w[i]
+      Rz[:,L1+i] = w[i]*Rz[:,L1+i] + (1.-w[i])*Rm
   else: # TopBottom
     for i in xrange(dL):
-      Rz[L1+i,:] *= w[i]
+      Rz[L1+i,:] = w[i]*Rz[L1+i,:] + (1.-w[i])*Rm
 
   return Rz
 
