@@ -28,8 +28,9 @@ RdictParent = readNumpyZTile(args.parent)
 nPxParent = np.shape(RdictParent['R'])
 ROrigParent = RdictParent['GlobOrig']
 dPxParent = RdictParent['dPx']
-gridRot = RdictParent['gridRot']
+if( 'gridRot' in RdictParent.keys()): gridRot = RdictParent['gridRot'] # Grid rotation may not be present in the dictionary
 RdictParent = None
+
 print(' Global origo: [N,E] = [{}, {}]'.format(*ROrigParent))
 print(' Size: [N,E] = [{}, {}]'.format(*nPxParent))
 print(' Resolution: [dPy,dPx] = [{}, {}]'.format(*dPxParent))
@@ -39,7 +40,7 @@ RdictChild = readNumpyZTile(args.child)
 nPxChild = np.shape(RdictChild['R'])
 ROrigChild = RdictChild['GlobOrig']
 dPxChild = RdictChild['dPx']
-gridRotChild = RdictChild['gridRot']
+if( 'gridRot' in RdictChild.keys()): gridRotChild = RdictChild['gridRot']
 RdictChild = None
 
 print(' Global origo: [N,E] = [{}, {}]'.format(*ROrigChild))

@@ -47,26 +47,27 @@ writeLog( parser, args, args.printOnly )
 #==========================================================#
 
 # Rename some args for brevity.
-s1 = args.scale1;       s2 = args.scale2
-flt1 = args.filter1;    flt2 = args.filter2
-printOn = args.printOn; printOnly = args.printOnly
+file1 = args.file1;     file2 = args.file2
+s1    = args.scale1;       s2 = args.scale2
+flt1  = args.filter1;    flt2 = args.filter2
+printOn   = args.printOn
+printOnly = args.printOnly
 
 figN = 1      # Figure number ... to be appended on demand.
 
-# Read in the data.
-dataOnly = False
-Rdict1 = readNumpyZTile(args.file1, dataOnly)
+# Read in the data. The output raster will inherit Rdict1 properties not shown here.
+Rdict1 = readNumpyZTile(file1)
 R1 = Rdict1['R']
 R1dims = np.array(np.shape(R1))
 R1Orig = Rdict1['GlobOrig']
 dPx1 = Rdict1['dPx']
 
-Rdict2 = readNumpyZTile(args.file2, dataOnly)
+Rdict2 = readNumpyZTile(file2)
 R2 = Rdict2['R']
 R2dims = np.array(np.shape(R2))
 R2Orig = Rdict2['GlobOrig']
 dPx2 = Rdict2['dPx']
-Rdict2 = None
+Rdict2 = None 
 
 
 dPx1 = entry2Int( dPx1 ); dPx2 = entry2Int( dPx2 )
@@ -91,8 +92,8 @@ i1/=rr1; j1/=rr1
 i2,j2 = np.ogrid[0:maxDims[0], 0:maxDims[1]]
 i2/=rr2; j2/=rr2
 
-print ' dims 1: {}, {} '.format(np.max(i1),np.max(j1))
-print ' dims 2: {}, {} '.format(np.max(i2),np.max(j2))
+print ' index dims 1: {}, {} '.format(np.max(i1),np.max(j1))
+print ' index dims 2: {}, {} '.format(np.max(i2),np.max(j2))
 
 # Initialize the new storage arrays which are of fine resolution.
 Rt1 = np.zeros( maxDims, float )
@@ -112,8 +113,7 @@ idx = (Rt == 0.)
 Rt[idx] = Rt2[idx]
 '''
 
-Rdict = dict()
-Rdict['R'] = Rt; Rdict['GlobOrig'] = R1Orig; Rdict['dPx'] = np.array([dPf,dPf])
+Rdict1['R'] = Rt; Rdict1['GlobOrig'] = R1Orig; Rdict1['dPx'] = np.array([dPf,dPf])
 
 # Print the filtered raster maps.
 if( printOn or printOnly ):
@@ -128,14 +128,14 @@ if( printOn or printOnly ):
 Rt1 = Rt2 = None
 
 if( not printOnly ):
-  saveTileAsNumpyZ( args.fileOut, Rdict )
+  saveTileAsNumpyZ( args.fileOut, Rdict1 )
 
 if( printOn or printOnly ):
   fig = plt.figure(num=figN, figsize=(9.,9.)); figN+=1
   fig = addImagePlot( fig, Rt[::2,::2], args.file1+' + '+args.file2, gridOn=True )
   plt.show()
 
-Rt = None; Rdict = None; Rdict1 = None; Rdict2 = None
+Rt = None; Rdict1 = None
 '''
 print ' {}  {} '.format( dPc/dPx1 , dPc/dPx2 )
 print ' {}  {} '.format( R1Orig ,R2Orig )

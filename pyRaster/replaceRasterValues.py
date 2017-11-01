@@ -31,13 +31,19 @@ parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
   action="store_true", default=False)
 parser.add_argument("-pp", "--printOnly", help="Only print the resulting data. Don't save.",\
   action="store_true", default=False)
+parser.add_argument("-gt", "--gt", type=float, default=None,\
+  help="Replace values greater than the given value.")
+parser.add_argument("-lt", "--lt", type=float, default=None,\
+  help="Replace values less than the given value.")
 args = parser.parse_args()
 writeLog( parser, args, args.printOnly )
 #==========================================================#
 
 p1      = args.pixels1 
 p2      = args.pixels2 
-val     = args.value
+val     = args.value        # Replacement value
+gtval   = args.gt           # value greater than which will be replaced by [val]
+ltval   = args.lt           # value less than which will be replaced by [val]
 filename= args.filename
 fileOut = args.fileOut
 
@@ -62,7 +68,21 @@ print(' ROrig = {} '.format(ROrig))
 print(' Value at top left: {} '.format(R[p1[0],p1[1]]))
 print(' Value at bottom right: {} '.format(R[p2[0],p2[1]]))
 
-R[p1[0]:p2[0],p1[1]:p2[1]] = val 
+if( (gtval is not None) or (ltval is not None) ):
+  idx = np.zeros( R.shape, bool )
+  if( gtval is not None ):
+    idx[p1[0]:p2[0],p1[1]:p2[1]] = ( R[p1[0]:p2[0],p1[1]:p2[1]] > gtval )
+    print(' {} values > {} will be replaced.'.format(np.count_nonzero(idx),gtval)) 
+    R[idx] = val
+    idx[:,:] = False  # Reset
+  if( ltval is not None ):
+    idx[p1[0]:p2[0],p1[1]:p2[1]] = ( R[p1[0]:p2[0],p1[1]:p2[1]] < ltval )
+    print(' {} values < {} will be replaced.'.format(np.count_nonzero(idx),ltval))
+    R[idx] = val 
+else:
+  R[p1[0]:p2[0],p1[1]:p2[1]] = val
+
+
 Rdict['R'] = R
 
 if( not args.printOnly ):

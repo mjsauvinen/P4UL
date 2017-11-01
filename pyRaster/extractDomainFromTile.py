@@ -48,16 +48,21 @@ writeLog( parser, args, args.printOnly )
 
 
 # Renaming the argument variables for brevity and clarity:
-NxG = args.NxG
-iPv = args.iPivot
-dxG = args.dxG
-rLx = args.rLx
-windDir = args.windDir
-verbose = args.verbose
+filename  = args.filename
+fileOut   = args.fileOut
+NxG       = args.NxG
+iPv       = args.iPivot
+dxG       = args.dxG
+rLx       = args.rLx
+windDir   = args.windDir
+noRotation= args.noRotation
+verbose   = args.verbose
+printOn   = args.printOn
+printOnly = args.printOnly
 
 # Read in the underlying topography data and obtain the pivot coordinates.
 dataOnly = False
-Rdict= readNumpyZTileForMesh( args.filename)
+Rdict= readNumpyZTileForMesh( filename )
 R = Rdict['R']
 nY = Rdict['rowCoords']
 eX = Rdict['colCoords']
@@ -134,7 +139,7 @@ Coordinate transformations for counterclockwise rotation.
 '''
 # NOTE: At the pivot point XTR = pX
 XTM, YTM = np.meshgrid( XT, YT )
-if (args.noRotation):
+if (noRotation):
   theta = 0.
 else:
   theta = 270. - windDir
@@ -200,12 +205,12 @@ PRdict['gridRot'] = rotation
 PRdict['dPx'] = np.array([dxG[0],dxG[1]])
 
 if( not args.printOnly ):
-  saveTileAsNumpyZ( args.fileOut, PRdict)
+  saveTileAsNumpyZ( fileOut, PRdict)
 
 
 # Print the raster map, first, in a coordinate system where x-axis is aligned with the windDir
 # and, second, in its original orientation.
-if( args.printOn or args.printOnly ):
+if( printOn or printOnly ):
   figDims = 13.*(Xdims[::-1].astype(float)/np.max(Xdims))
   fig = plt.figure(num=1, figsize=figDims)
   fig = addImagePlot( fig, PR, args.fileOut )

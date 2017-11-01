@@ -60,13 +60,15 @@ args = parser.parse_args()
 writeLog( parser, args, args.printOnly )
 #==========================================================#
 
-filename= args.filename
-fileOut = args.fileOut
-mw      = args.mrgnW
-mh      = args.mrgnH
-stride  = args.stride
-Lb      = args.Lblocks
-zeroAll = args.zero
+filename   = args.filename
+fileOut    = args.fileOut
+mw         = args.mrgnW
+mh         = args.mrgnH
+stride     = args.stride
+Lb         = args.Lblocks
+zeroAll    = args.zero
+printOn    = args.printOn
+printOnly  = args.printOnly
 writeAscii = args.writeAscii
 
 if( mw.count(None) != 0 ):

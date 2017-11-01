@@ -34,6 +34,8 @@ helpFlt = ''' Filter type and its associated number. Available filters:
  to specify <num> different filters consecutively.
  Example entry: median 5'''
 parser.add_argument("-ft","--filter",type=str,nargs=2,default=[None,None], help=helpFlt)
+parser.add_argument("-rx","--rmax", type=float, default=None,\
+  help="Recover peaks (after filtering) above given value.")
 parser.add_argument("-hx","--hmax", help="Maximum allowable height.",type=float,default=None)
 parser.add_argument("-wa", "--writeAscii", help="Write 'TOPOGRAPHY_DATA' ascii file.",\
   action="store_true", default=False)
@@ -45,13 +47,17 @@ args = parser.parse_args()
 writeLog( parser, args, args.printOnly )
 #==========================================================#
 
+filename= args.filename
+fileOut = args.fileOut
 i0      = args.iZero    # Rename
 mw      = args.mrgnW
 mr      = args.mrgnR
 mh      = args.mrgnH
 flt     = args.filter
 hmax    = args.hmax
-fileOut = args.fileOut
+rmax    = args.rmax
+printOn    = args.printOn
+printOnly  = args.printOnly
 writeAscii = args.writeAscii
 
 if( flt[0] == None):  fltStr  = ' '
@@ -59,7 +65,7 @@ else:                 fltStr  = flt[0]+'-filtered: '
 
 
 # Read the raster tile to be processed.
-Rdict = readNumpyZTile(args.filename)
+Rdict = readNumpyZTile(filename)
 R = Rdict['R']
 Rdims = np.array(np.shape(R))
 ROrig = Rdict['GlobOrig']
@@ -79,6 +85,10 @@ R = applyMargins( R , mw, mr, mh )
 # Apply desired filters.
 Rf = np.zeros( np.shape(R) , float)
 Rf =  filterAndScale(Rf, R, flt )
+if( rmax is not None ):
+  idv = (Rf > rmax)
+  Rf[idv]  = np.maximum( Rf[idv], R[idv] )
+
 
 if( hmax ):
   Rf = np.minimum( hmax , Rf )

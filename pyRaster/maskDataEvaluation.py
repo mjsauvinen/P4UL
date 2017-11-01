@@ -76,13 +76,13 @@ def maskMeanValues(Rm, Ri, mlist):
   
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
 
-def areaFractions( Ri, mlist ):
+def planAreaFractions( Ri, mlist ):
   Npx = np.prod( np.array(Ri.shape) )
   r = np.zeros( np.shape(mlist) )
   j = 0
   for im in mlist:
     r[j] = np.count_nonzero( Ri == im )/float( Npx )
-    print(' Mask {} area fraction = {} '.format(im, r[j]))
+    print(' Mask {} plan area fraction = {} '.format(im, r[j]))
     j += 1
     
   return r
@@ -91,9 +91,9 @@ def areaFractions( Ri, mlist ):
 
 #==========================================================#
 parser = argparse.ArgumentParser(prog='maskDataEvaluation.py')
-parser.add_argument("-f", "--filemask",type=str, default=None,\
+parser.add_argument("-fm", "--filemask",type=str, default=None,\
   help="Input .npz mask file name.")
-parser.add_argument("-ft", "--filedata",type=str, default=None,\
+parser.add_argument("-fd", "--filedata",type=str, default=None,\
   help="(Optional) Topography .npz file name.")
 parser.add_argument("-Fb", "--Fafb", action="store_true", default=False, \
   help="Compute frontal area fraction (of buildings) from the topography data.")
@@ -169,11 +169,12 @@ else:
 
 # Create an empty mask id list
 if( Rxm is not None ):
-  ratios = areaFractions( Rxm , mskList )
+  ratios = planAreaFractions( Rxm , mskList )
   if( Rt is not None ):
     vm = maskMeanValues( Rxm, Rt, mskList )
   
   if( printOn ):
+    Rdims = np.array(Rxm.shape)
     figDims = 13.*(Rdims[::-1].astype(float)/np.max(Rdims))
     pfig = plt.figure(num=1, figsize=figDims)
     pfig = addImagePlot( pfig, Rxm, ' Mask ', gridOn=True )

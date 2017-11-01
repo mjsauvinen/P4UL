@@ -64,7 +64,8 @@ for iy in xrange(nPx3D[0]):
       # Calculate LAD profile
       lad = canopyBetaFunction(canopyHeight,dPx3D, alpha, beta, lai)
       # BUG: canopy[ix,iy,0:nind-1] = lad
-      canopy[ix,iy,0:nind] = lad #  Grid point at canopy top level gets value 0
+      iend = min( nind, len(lad) )
+      canopy[ix,iy,0:iend] = lad[0:iend] #  Grid point at canopy top level gets value 0
 print(" ...done.")
 
 # Write output data file

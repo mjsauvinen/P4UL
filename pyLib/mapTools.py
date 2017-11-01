@@ -328,7 +328,7 @@ def applyMargins( Rx, Mw, Mr, Mh ):
     R1 = R12[0]; R2 = R12[1]
     B1 = B12[0]; B2 = B12[1]
     T1 = T12[0]; T2 = T12[1]
-    print('Margin\nL:{},{},R:{},{},T:{},{},B:{},{}'.format(L1,L2,R1,R2,T1,T2,B1,B2))
+    #print('Margin\nL:{},{},R:{},{},T:{},{},B:{},{}'.format(L1,L2,R1,R2,T1,T2,B1,B2))
 
     if( not all( L12 == 0 ) ): Rx[:,L1:L2] = Mh[0] 
     if( not all( R12 == 0 ) ): Rx[:,R1:R2] = Mh[1]
@@ -351,7 +351,7 @@ def applyMargins( Rx, Mw, Mr, Mh ):
     R11 = R1-dR       ; R22 = min(R1+1, Rxdims[1])
     B11 = B1-dB       ; B22 = min(B1+1, Rxdims[0])
     T11 = max(T2-1,0) ; T22 = T2+dT
-    print('Ramp\nL:{},{},R:{},{},T:{},{},B:{},{}'.format(L11,L22,R11,R22,T11,T22,B11,B22))
+    #print('Ramp\nL:{},{},R:{},{},T:{},{},B:{},{}'.format(L11,L22,R11,R22,T11,T22,B11,B22))
 
     
     if( dL != 0 ):
