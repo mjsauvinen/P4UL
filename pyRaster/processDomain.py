@@ -60,6 +60,9 @@ printOn    = args.printOn
 printOnly  = args.printOnly
 writeAscii = args.writeAscii
 
+# Test comment
+# Another one
+
 if( flt[0] == None):  fltStr  = ' '
 else:                 fltStr  = flt[0]+'-filtered: '
 
