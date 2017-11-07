@@ -4,9 +4,17 @@ import numpy as np
 import argparse
 import matplotlib.pyplot as plt
 from plotTools import addToPlot
-from spectraTools import *
-from netcdfTools import *
+from spectraTools import spectraAnalysis
+from netcdfTools import read3dDataFromNetCDF
 
+#==========================================================#
+def sensibleIds( ixyz, x, y, z ):
+  ixyz[0] = np.minimum( ixyz[0] , len(x)-1 ); ixyz[0] = np.maximum( ixyz[0], 0 )
+  ixyz[1] = np.minimum( ixyz[1] , len(y)-1 ); ixyz[1] = np.maximum( ixyz[1], 0 )
+  ixyz[2] = np.minimum( ixyz[2] , len(z)-1 ); ixyz[2] = np.maximum( ixyz[2], 0 )
+  
+  return ixyz
+#==========================================================#
 
 '''
 Kaimal & Finnigan:
@@ -17,137 +25,86 @@ about the expected ensemple mean, and \sigma^{2}_{\alpha}, the ensemble variance
 #==========================================================#
 sepStr = ' # = # = # = # = # = # = # = # = '
 parser = argparse.ArgumentParser()
-parser.add_argument("-f", "--filename", type=str, help="Name of the input NETCDF file.")
-parser.add_argument("-v", "--varname",  type=str, help="Name of the variable in NETCDF file.",\
-  default='u')
+parser.add_argument("-f", "--filename", type=str,\
+  help="Name of the input NETCDF file.")
+parser.add_argument("-v", "--varname",  type=str, default='u',\
+  help="Name of the variable in NETCDF file. Default='u' ")
 #parser.add_argument("-T", "--DeltaT", help="Length of period to be analyzed in seconds [s].",\
 #  type=float)
-parser.add_argument("-nb", "--nbins", help="Number of frequency bins.", type=int, default=76)
-parser.add_argument("-n", "--normalize", help="Compute f*S/sigma^2.", action="store_true", \
-  default=False)
-parser.add_argument("-xn", "--xname",type=str, help="Specify the x coordinate. e.g. xu or x",\
-  default='x')
-parser.add_argument("-yn", "--yname",type=str, help="Specify the y coordinate. e.g. yv or y",\
-  default='y')
-parser.add_argument("-zn", "--zname",type=str, help="Specify the z coordinate. e.g. zu_3d or zw_3d",\
-  default='zu_3d')
-parser.add_argument("-p", "--printOn", help="Print the numpy array data.",\
-  action="store_true", default=False) 
-parser.add_argument("-pp", "--printOnly", help="Only print the numpy array data. Don't save.",\
-  action="store_true", default=False)
-parser.add_argument("-c", "--coarse", type=int, help="Coarsening level. Int > 1.",\
-  default=1)
+parser.add_argument("-nb", "--nbins", type=int, default=76,\
+  help="Number of frequency bins. Default = 76")
+parser.add_argument("-m", "--mode", type=str, default='S', choices=['S', 'E', 'P'],\
+  help="Mode: 'S': power spectral density, 'E': energy spectrum, 'P': power spectrum.")
+parser.add_argument("-n", "--normalize", action="store_true", default=False,\
+  help="Compute f*S/sigma^2.")
+parser.add_argument("-xn", "--xname",type=str, default='x',\
+  help="Specify the x coordinate. e.g. xu or x. Default='x' ")
+parser.add_argument("-yn", "--yname",type=str, default='y',\
+  help="Specify the y coordinate. e.g. yv or y. Default='y' ")
+parser.add_argument("-zn", "--zname",type=str, default='zu_3d',\
+  help="Specify the z coordinate. e.g. zu_3d or zw_3d. Default='zu_3d' ")
+parser.add_argument("-p", "--printOn", action="store_true", default=False,\
+  help="Print the numpy array data.") 
+parser.add_argument("-pp", "--printOnly", action="store_true", default=False,\
+  help="Only print the numpy array data. Don't save.")
+parser.add_argument("-c", "--coarse", type=int, default=1,\
+  help="Coarsening level. Int > 1.")
 args = parser.parse_args()    
 #==========================================================# 
 # Rename ...
 filename  = args.filename
-varName   = args.varname
 normalize = args.normalize
 Nbins     = args.nbins
+mode     = args.mode
 cl        = abs(args.coarse)
-xname     = args.xname
-yname     = args.yname
-zname     = args.zname
+
 #==========================================================# 
+# Create a dict that is passed into the function read3dDataFromNetCDF
+nameDict = dict()
+nameDict['xname'] = args.xname
+nameDict['yname'] = args.yname
+nameDict['zname'] = args.zname
+nameDict['varname'] = args.varname
 
-'''
-Establish two boolean variables which indicate whether the created variable is an
-independent or dependent variable in function createNetcdfVariable().
-'''
-parameter = True;  variable  = False
-''' 
-Create a NETCDF input dataset (ds), and its associated lists of dependent (varList)
-and independent (dimList) variables. 
-'''
-ds, varList, paramList = netcdfDataset(filename)
-'''
-Read cell center coordinates and time.
-Create the output independent variables right away and empty memory.
-'''
-time, time_dims = read1DVariableFromDataset('time', ds, paramList, 0, 0, 1 ) # All values.
-x, x_dims = read1DVariableFromDataset( xname,ds, paramList, 0, 0, cl )
-y, y_dims = read1DVariableFromDataset( yname,ds, paramList, 0, 0, cl ); print(' y_dims = {} '.format(y_dims))
-y[np.isnan(y)] = 0.  # Special treatment.
-z, z_dims = read1DVariableFromDataset( zname ,ds, paramList, 0, 0, cl ) # Exclude the first value.
 
-'''
-Read in the velocity components.
-PALM netCDF4: 
-  u(time, zu_3d, y, xu)
-  v(time, zu_3d, yv, x)
-  w(time, zw_3d, y, x)
-'''
+dataDict = read3dDataFromNetCDF( filename , nameDict, cl )
+v = dataDict['v']
+x = dataDict['x']; y = dataDict['y']; z = dataDict['z']
+time = dataDict['time']
 
-v0, v0_dims = read3DVariableFromDataset( varName , ds, varList, 0, 0, 0, cl ) # All values.
 
 infoStr = '''
  Coord. range:
  min(x)={0} ... max(x)={1}, nx = {2}
  min(y)={3} ... max(y)={4}, ny = {5}
  min(z)={6} ... max(z)={7}, nz = {8}
-'''.format(np.min(x), np.max(x), len(x), \
+'''.format(\
+  np.min(x), np.max(x), len(x),\
   np.min(y), np.max(y), len(y),\
-    np.min(z), np.max(z), len(z))
-
+  np.min(z), np.max(z), len(z) )
 print(infoStr)
-ixyz = input(" Enter ids: ix, iy, iz = ")
-if( len(ixyz) != 3 ):
+
+ixyz1 = input(" (1) Enter starting indices: ix, iy, iz = ")
+ixyz2 = input(" (2) Enter final indices:    ix, iy, iz = ")
+
+if( len(ixyz1) != 3  or len(ixyz2) != 3 ):
   sys.exit(' Error! You must provide 3 values for ix, iy and iz. Exiting ...')
+ixyz1 = sensibleIds( np.array( ixyz1 ), x, y, z )
+ixyz2 = sensibleIds( np.array( ixyz2 ), x, y, z )
 
-ix = np.minimum( ixyz[0] , len(x)-1 ); ix = np.maximum( ix , 0 )
-iy = np.minimum( ixyz[1] , len(y)-1 ); iy = np.maximum( iy , 0 )
-iz = np.minimum( ixyz[2] , len(z)-1 ); iz = np.maximum( iz , 0 )
+ixL = np.arange(ixyz1[0],ixyz2[0]+1)
+iyL = np.arange(ixyz1[1],ixyz2[1]+1)
+izL = np.arange(ixyz1[2],ixyz2[2]+1)
+stride = max( (izL[-1]-izL[0])/5 , 2 )
 
-v = v0[:,int(iz),int(iy),int(ix)]
+fig = None
 
-nterms  = np.shape(v) # Number of variables in the file, number of entries in the data. 
-print(' Number of terms in the data series, Nv = {}'.format(nterms))
+for i in ixL:
+  for j in iyL:
+    for k in izL[::stride]:
+      vt = v[:,int(k),int(j),int(i)]
+      vName = nameDict['varname']+'(z={} m)'.format(z[k])
+      fig = spectraAnalysis(fig, vt, time, vName, Nbins, mode, normalize)
 
-# Determine the sampling frequency.
-samplingFreq   = samplingFrequency( time, None )
-print(' sampling frequency = {}'.format(samplingFreq))
-
-DeltaT = (time[-1]-time[0])
-vw     = applyTapering( v , DeltaT , samplingFreq  )
-
-# Evaluate, Power (P), power spectral energy (E), and power spectral density (S).
-P, E, S, freqs = evalSpectra( vw, samplingFreq, normalize )
-
-
-Sbin, fbin = frequencyBins( S , freqs, Nbins )
-Ebin, fbin = frequencyBins( E , freqs, Nbins )
-Pbin, fbin = frequencyBins( P , freqs, Nbins )
-
-Refbin = 1.E-1 * fbin[Nbins/2:]**(-5./3.)
-
-
-
-if( normalize ):
-  labelStr = 'Normalized Power Spectral Density '
-  plotStr  = [ labelStr ," Frequency [Hz] "," f*S/$sigma^2$ "] 
-else:
-  labelStr = ' Power Spectral Density: $\Phi(f)$ '
-  plotStr  = [ labelStr ," Frequency [Hz] "," $\Phi(f)$ "] 
-
-fig1 = plt.figure(num=1, figsize=(12.,10.))
-fig1 = addToPlot(fig1, fbin, Sbin, labelStr, plotStr, logOn=True)
-fig1 = addToPlot(fig1, fbin[Nbins/2:], np.nanmean(Sbin)*Refbin , ' Model -5/3 curve', plotStr, logOn=True)
 plt.legend(loc=0)
-
-
-fig2 = plt.figure(num=2, figsize=(12.,10.))
-labelStr = ' Energy Spectrum: E(f) '
-plotStr  = [" Energy Spectrum "," Frequency [Hz] "," E(f) "] 
-fig2 = addToPlot(fig2, fbin, Ebin, labelStr, plotStr, logOn=True)
-fig2 = addToPlot(fig2, fbin[Nbins/2:], np.nanmean(Ebin)*Refbin , ' Model -5/3 curve', plotStr, logOn=True)
-plt.legend(loc=0)
-
-
-fig3 = plt.figure(num=3, figsize=(12.,10.))
-labelStr = ' Power Spectrum: P(f) '
-plotStr  = [" Power Spectrum "," Frequency [Hz] "," P(f) "] 
-fig3 = addToPlot(fig3, fbin, Pbin, labelStr, plotStr, logOn=True)
-fig3 = addToPlot(fig3, fbin[Nbins/2:], np.nanmean(Pbin)*Refbin , ' Model -5/3 curve', plotStr, logOn=True)
-plt.legend(loc=0)
-
 plt.show()

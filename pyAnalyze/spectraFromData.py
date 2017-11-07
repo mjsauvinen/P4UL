@@ -3,8 +3,7 @@ import sys
 import numpy as np
 import argparse
 import matplotlib.pyplot as plt
-from plotTools import addToPlot
-from spectraTools import *
+from spectraTools import timeSeriesFromFiles, spectraAnalysis
 from utilities import filesFromList
 
 '''
@@ -15,25 +14,31 @@ about the expected ensemple mean, and \sigma^{2}_{\alpha}, the ensemble variance
 '''
 #==========================================================#
 parser = argparse.ArgumentParser()
-parser.add_argument("fileKey", help="Search string for collecting files.", default=None)
-parser.add_argument("-iv", "--icolv", help="Column index for analyzed signal (first = 0).",\
-  nargs='?', type=int, default=1)
-
+parser.add_argument("fileKey", default=None,\
+  help="Search string for collecting files.")
+parser.add_argument("-iv", "--icolv", nargs='?', type=int, default=1,\
+  help="Column index for analyzed signal (first = 0).")
+parser.add_argument("-vn","--varname", type=str, default=None,\
+  help="Variable name to appear in the figures.")
+parser.add_argument("-m", "--mode", type=str, default='S', choices=['S', 'E', 'P'],\
+  help="Mode: 'S': power spectral density, 'E': energy spectrum, 'P': power spectrum.")
 # -- group for mutually exclusive entries -- #
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument("-it", "--icolt", type=int,\
   help="Opt 1: Column index for time in file (first = 0).")
-group.add_argument("-fs", "--samplingFreq", help="Opt 2: Sampling frequency in [Hz].", type=float)
+group.add_argument("-fs", "--samplingFreq", type=float,\
+  help="Opt 2: Sampling frequency in [Hz].")
 # ---    end group              ------------ #
 
-parser.add_argument("-nb", "--nbins", help="Number of frequency bins.", type=int, default=76)
-parser.add_argument("-n", "--normalize", help="Compute f*S/sigma^2.", action="store_true", \
-  default=False) 
-parser.add_argument("-p", "--printOn", help="Print the numpy array data.",\
-  action="store_true", default=False) 
-parser.add_argument("-pp", "--printOnly", help="Only print the numpy array data. Don't save.",\
-  action="store_true", default=False)
-args = parser.parse_args()    
+parser.add_argument("-nb", "--nbins", type=int, default=76,\
+  help="Number of frequency bins. Default=76")
+parser.add_argument("-n", "--normalize", action="store_true", default=False,\
+  help="Compute f*S/$\sigma^2$.")
+parser.add_argument("-p", "--printOn", action="store_true", default=False,\
+  help="Print the numpy array data.")
+parser.add_argument("-pp", "--printOnly", action="store_true", default=False,\
+  help="Only print the numpy array data. Don't save.")
+args = parser.parse_args()
 #==========================================================# 
 # Rename ...
 fileKey   = args.fileKey
@@ -41,6 +46,7 @@ jcolV     = args.icolv
 jcolT     = args.icolt
 normalize = args.normalize
 samplingFreqUser  = args.samplingFreq
+mode      = args.mode
 Nbins     = args.nbins
 #==========================================================# 
 
@@ -55,50 +61,8 @@ fileNos, fileList = filesFromList( '*'+fileKey+'*' )
 # Read and gather the time and variable arrays.
 time, v = timeSeriesFromFiles( fileNos, fileList, jcols )
 
-nterms  = np.shape(v) # Number of variables in the file, number of entries in the data. 
-print(' Number of terms in the data series, Nv = {}'.format(nterms))
+fig = None
+fig = spectraAnalysis(fig, v, time, varname, Nbins, mode, normalize)
 
-# Determine the sampling frequency.
-samplingFreq = samplingFrequency( time, samplingFreqUser )
-DeltaT       = timeInterval( time, v, samplingFreq )
-vw           = applyTapering( v , DeltaT , samplingFreq  )
-
-# Evaluate, Power (P), power spectral energy (E), and power spectral density (S).
-P, E, S, freqs = evalSpectra( vw, samplingFreq, normalize )
-
-Sbin, fbin = frequencyBins( S , freqs, Nbins )
-Ebin, fbin = frequencyBins( E , freqs, Nbins )
-Pbin, fbin = frequencyBins( P , freqs, Nbins )
-
-Refbin = 1.E-1 * fbin[Nbins/2:]**(-5./3.)
-
-
-if( normalize ):
-  labelStr = 'Normalized Power Spectral Density '
-  plotStr  = [ labelStr ," Frequency [Hz] "," f*S/$sigma^2$ "] 
-else:
-  labelStr = ' Power Spectral Density: $\Phi(f)$ '
-  plotStr  = [ labelStr ," Frequency [Hz] "," $\Phi(f)$ "] 
-
-fig1 = plt.figure(num=1, figsize=(12.,10.))
-fig1 = addToPlot(fig1, fbin, Sbin, labelStr, plotStr, logOn=True)
-fig1 = addToPlot(fig1, fbin[Nbins/2:], np.nanmean(Sbin)*Refbin , ' Model -5/3 curve', plotStr, logOn=True)
 plt.legend(loc=0)
-
-
-fig2 = plt.figure(num=2, figsize=(12.,10.))
-labelStr = ' Energy Spectrum: E(f) '
-plotStr  = [" Energy Spectrum "," Frequency [Hz] "," E(f) "] 
-fig2 = addToPlot(fig2, fbin, Ebin, labelStr, plotStr, logOn=True)
-fig2 = addToPlot(fig2, fbin[Nbins/2:], np.nanmean(Ebin)*Refbin , ' Model -5/3 curve', plotStr, logOn=True)
-plt.legend(loc=0)
-
-
-fig3 = plt.figure(num=3, figsize=(12.,10.))
-labelStr = ' Power Spectrum: P(f) '
-plotStr  = [" Power Spectrum "," Frequency [Hz] "," P(f) "] 
-fig3 = addToPlot(fig3, fbin, Pbin, labelStr, plotStr, logOn=True)
-fig3 = addToPlot(fig3, fbin[Nbins/2:], np.nanmean(Pbin)*Refbin , ' Model -5/3 curve', plotStr, logOn=True)
-plt.legend(loc=0)
-
 plt.show()

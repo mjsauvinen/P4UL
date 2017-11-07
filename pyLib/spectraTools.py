@@ -2,7 +2,9 @@
 import sys
 import glob
 import numpy as np
+import matplotlib.pyplot as plt
 import scipy.signal as scs
+from plotTools import addToPlot
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
@@ -48,7 +50,7 @@ def timeSeriesFromFiles( fileNos, fileList, cols ):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def samplingFrequency(time, sfreqUser ):
-  if( time != None ):
+  if( time is not None ):
     dt   = (time[1]-time[0])
     sfreq = 1./dt
   else:
@@ -111,6 +113,7 @@ def evalSpectra( v, sfreq, normalizeOn=False ):
   
   E = 2.*P[ids]/nv**2    # Power spectral energy (e.g. Stull p.313) [units of variance]
   S = E/df
+  P = P[ids]
   '''
   Power spectral density [variance per frequency interval]
   Integration over all frequencies gives variance. 
@@ -140,13 +143,65 @@ def frequencyBins( Q , freqs, Nbins ):
   Qbin = np.zeros(Nbins); Qbin[:] = None
   for i in xrange(Nbins-1):
     ieff = (freqs>freqBins[i]) * (freqs<=freqBins[i+1])
-    if( any(ieff) ): Qbin[i] = np.nanmean( Q[ ieff ] )
+    if( any(ieff) ):
+      #print('{}: N of ieff = {} '.format(i,np.count_nonzero(ieff)))
+      Qbin[i] = np.nanmean( Q[ ieff ] )
     fbin[i] = ( freqBins[i]+freqBins[i+1] )/2.
 
   return Qbin, fbin
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def spectraAnalysis(fig, v , time, vName, Nbins, mode, normalize=False ):
+      
+  nterms  = np.shape(v) # Number of variables in the file, number of entries in the data. 
+  print(' Number of terms in the {} data series, N = {}'.format(vName, nterms))
+
+  # Determine the sampling frequency.
+  samplingFreq   = samplingFrequency( time, None )
+  print(' sampling frequency = {}'.format(samplingFreq))
+
+  deltaT = (time[-1]-time[0])
+  vw     = applyTapering( v , deltaT , samplingFreq )
+
+  # Evaluate, Power (P), power spectral energy (E), and power spectral density (S).
+  P, E, S, freqs = evalSpectra( vw, samplingFreq, normalize )
+
+  
+  if(mode == 'S'): 
+    Sbin, fbin = frequencyBins( S , freqs, Nbins )
+    Vbin = Sbin
+  if(mode == 'E'): 
+    Ebin, fbin = frequencyBins( E , freqs, Nbins )
+    Vbin = Ebin
+  if(mode == 'P'): 
+    Pbin, fbin = frequencyBins( P , freqs, Nbins )
+    Vbin = Pbin
+
+  Refbin = 1.E-1 * fbin[Nbins/2:]**(-5./3.)
+
+
+  if( mode == 'S' ):
+    if( normalize ):
+      labelStr = "{}, normalized power spectral density".format(vName)
+      plotStr  = [ "Normalized power spectral density","Frequency [Hz]","f*S/$\sigma^2$ "] 
+    else:
+      labelStr = "{}, power spectral density: $\Phi(f)$".format(vName)
+      plotStr  = ["Power spectral density" ,"Frequency [Hz]","$\Phi(f)$"] 
+  elif( mode == 'E' ):
+    labelStr = "{}, energy spectrum: E(f)".format(vName)
+    plotStr  = ["Energy spectrum","Frequency [Hz]","E(f)"]
+  else:
+    labelStr = "{}, power spectrum: P(f)".format(vName)
+    plotStr  = ["Power spectrum","Frequency [Hz]","P(f)"]
+
+    
+  if( fig is None ):
+    fig = plt.figure(num=1, figsize=(12.,10.))
+    fig = addToPlot(fig,fbin[Nbins/2:],np.nanmean(Sbin)*Refbin,"Model -5/3 curve",plotStr,logOn=True)
+  fig = addToPlot(fig, fbin, Vbin, labelStr, plotStr, logOn=True)
+  
+  return fig
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
