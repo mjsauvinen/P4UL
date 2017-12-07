@@ -37,28 +37,22 @@ about the expected ensemple mean, and \sigma^{2}_{\alpha}, the ensemble variance
 #==========================================================#
 sepStr = ' # = # = # = # = # = # = # = # = '
 parser = argparse.ArgumentParser()
-parser.add_argument("-f", "--filename", type=str,\
-  help="Name of the input NETCDF file.")
 parser.add_argument("fileKey", default=None,\
   help="Search string for collecting files.")
 parser.add_argument("-v", "--varname",  type=str, default='u',\
   help="Name of the variable in NETCDF file. Default='u' ")
-#parser.add_argument("-T", "--DeltaT", help="Length of period to be analyzed in seconds [s].",\
-#  type=float)
-parser.add_argument("-nb", "--nbins", type=int, default=76,\
-  help="Number of frequency bins. Default = 76")
-parser.add_argument("-m", "--mode", type=str, default='S', choices=['S', 'E', 'P'],\
-  help="Mode: 'S': power spectral density, 'E': energy spectrum, 'P': power spectrum.")
+parser.add_argument("-m", "--mode", type=str, default='mean', choices=['mean', 'std', 'var'],\
+  help="Mode: mean, std, or var.")
 parser.add_argument("-n", "--normalize", action="store_true", default=False,\
-  help="Compute f*S/sigma^2.")
-parser.add_argument("-xn", "--xname",type=str, default='x',\
-  help="Specify the x coordinate. e.g. xu or x. Default='x' ")
+  help="Normalize.")
+parser.add_argument("-xn", "--xname",type=str, default='xu',\
+  help="Specify the x coordinate. e.g. xu or x. Default='xu' ")
 parser.add_argument("-yn", "--yname",type=str, default='y',\
   help="Specify the y coordinate. e.g. yv or y. Default='y' ")
 parser.add_argument("-zn", "--zname",type=str, default='zu_3d',\
   help="Specify the z coordinate. e.g. zu_3d or zw_3d. Default='zu_3d' ")
 parser.add_argument("-p", "--printOn", action="store_true", default=False,\
-  help="Print the numpy array data.") 
+  help="Print the numpy array data.")
 parser.add_argument("-pp", "--printOnly", action="store_true", default=False,\
   help="Only print the numpy array data. Don't save.")
 parser.add_argument("-c", "--coarse", type=int, default=1,\
@@ -67,78 +61,69 @@ args = parser.parse_args()
 #==========================================================# 
 # Rename ...
 fileKey   = args.fileKey
-filename  = args.filename
 normalize = args.normalize
-Nbins     = args.nbins
-mode     = args.mode
+mode      = args.mode
 cl        = abs(args.coarse)
+xname     = args.xname
+yname     = args.yname
+zname     = args.zname
+varname   = args.varname
+
 
 #==========================================================# 
 # Create a dict that is passed into the function read3dDataFromNetCDF
 nameDict = dict()
-nameDict['xname'] = args.xname
-nameDict['yname'] = args.yname
-nameDict['zname'] = args.zname
-nameDict['varname'] = args.varname
+nameDict['xname']   = xname
+nameDict['yname']   = yname
+nameDict['zname']   = zname
+nameDict['varname'] = varname
 
 
 # Obtain a list of files to include.
 fileNos, fileList = filesFromList( fileKey+'*' )
 
 first = True
-fig   = None
+fig = plt.figure(num=1, figsize=(12,10))
 
 for fn in fileNos:
-  dataDict = read3dDataFromNetCDF( fileList[fn] , nameDict, cl )
-  v = dataDict['v']
-  x = dataDict['x']; y = dataDict['y']; z = dataDict['z']
-  time = dataDict['time']
-  
-  if( first ):
-    infoStr = '''
-    Coord. range:
-    min(x)={0} ... max(x)={1}, nx = {2}
-    min(y)={3} ... max(y)={4}, ny = {5}
-    min(z)={6} ... max(z)={7}, nz = {8}
-    '''.format(\
-      np.min(x), np.max(x), len(x),\
-      np.min(y), np.max(y), len(y),\
-      np.min(z), np.max(z), len(z) )
-    print(infoStr)
+  if('mag' not in varname):
+    dataDict = read3dDataFromNetCDF( fileList[fn] , nameDict, cl )
+    vr = dataDict['v']
+    x = dataDict['x']; y = dataDict['y']; z = dataDict['z']
+    time = dataDict['time']
+  else:
+    nameDict['varname'] = 'u'
+    nameDict['xname']   = 'x'; nameDict['yname'] = 'y'; nameDict['zname'] = 'z'
+    dataDict = read3dDataFromNetCDF( fileList[fn] , nameDict, cl )
+    u = dataDict['v']
+    x = dataDict['x']; y = dataDict['y']; z = dataDict['z']
+    nameDict['varname'] = 'v'
+    dataDict = read3dDataFromNetCDF( fileList[fn] , nameDict, cl )
+    v = dataDict['v']
     
-    ixyz1 = input(" (1) Enter starting indices: ix, iy, iz = ")
-    ixyz2 = input(" (2) Enter final indices:    ix, iy, iz = ")
-    if( len(ixyz1) != 3  or len(ixyz2) != 3 ):
-      sys.exit(' Error! You must provide 3 values for ix, iy and iz. Exiting ...')
-
-    ixyz1 = sensibleIds( np.array( ixyz1 ), x, y, z )
-    ixyz2 = sensibleIds( np.array( ixyz2 ), x, y, z )
-
-    ixL = np.arange(ixyz1[0],ixyz2[0]+1)
-    iyL = np.arange(ixyz1[1],ixyz2[1]+1)
-    izL = np.arange(ixyz1[2],ixyz2[2]+1)
-    try: 
-      Np = int( input(" Number of plots per interval (empty -> all), Np = ") )
-      stride = max( ((izL[-1]-izL[0])/Np)+1 , 2 )
-    except:
-      stride = 1
-    first = False
-
-  koff = groundOffset( v )
-  if( koff > 0 ):
-    print(' {}: koffset = {}'.format(fileList[fn], koff))
+    Umag = np.sqrt( u**2 + v**2 )
+    vr = Umag
+    
+    
+  dataDict = None
   
-  try:
-    for i in ixL:
-      for j in iyL:
-        for k in izL[::stride]:
-          vt = v[:,k+koff,j,i]
-          vName = nameDict['varname']+'(z={} m), {}'.format(z[k], fileList[fn].split('_NET')[0])
-          print(' Processing {} ...'.format(vName))
-          fig = spectraAnalysis(fig, vt, time, vName, Nbins, mode, normalize)
-  except:
-    print(' Failed to execute spectraAnalysis for {} ... '.format(fileList[fn]))
-    pass 
+  if( mode == 'mean'):
+    vp = np.mean( vr, axis=(0,2,3) ); zp = z
+    plotStr  = ["mean({}) vs z ".format(varname), varname ,"z"]
+  elif( mode == 'std'):
+    vp = np.std( vr, axis=(0,2,3) ); zp = z
+    N = len( vr[:,0,0,0] )
+    vmerr = vp/np.sqrt(N)
+    plotStr  = ["std. error of mean({}) vs z ".format(varname), varname ,"z"]
+    fig = addToPlot(fig, vmerr, zp,'{}({}), {}'.format('std error of mean',varname,fileList[fn]), plotStr, False )
+    
+    plotStr  = ["std({}) vs z ".format(varname), varname ,"z"]
+  elif( mode == 'var' ):
+    vp = np.var( vr, axis=(0,2,3) ); zp = z
+    plotStr  = ["var({}) vs z ".format(varname), varname ,"z"]
+  
+  fig = addToPlot(fig, vp, zp,'{}({}), {}'.format(mode,varname,fileList[fn]), plotStr, False )
+  
 
 plt.legend(loc=0)
 plt.show()

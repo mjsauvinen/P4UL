@@ -180,7 +180,6 @@ def spectraAnalysis(fig, v , time, vName, Nbins, mode, normalize=False ):
 
   Refbin = 1.E-1 * fbin[Nbins/2:]**(-5./3.)
 
-
   if( mode == 'S' ):
     if( normalize ):
       labelStr = "{}, normalized power spectral density".format(vName)
@@ -198,8 +197,9 @@ def spectraAnalysis(fig, v , time, vName, Nbins, mode, normalize=False ):
     
   if( fig is None ):
     fig = plt.figure(num=1, figsize=(12.,10.))
-    fig = addToPlot(fig,fbin[Nbins/2:],np.nanmean(Sbin)*Refbin,"Model -5/3 curve",plotStr,logOn=True)
+    fig = addToPlot(fig,fbin[Nbins/2:],np.nanmean(Vbin)*Refbin,"Model -5/3 curve",plotStr,logOn=True)
   fig = addToPlot(fig, fbin, Vbin, labelStr, plotStr, logOn=True)
+  
   
   return fig
 

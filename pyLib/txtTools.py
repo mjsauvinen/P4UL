@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import sys, fileinput
 
 def openIOFile( fileName , mode='r' ):
@@ -15,9 +14,9 @@ def openIOFile( fileName , mode='r' ):
 
   try:
     xfile=file(fileName, mode)
-    print " Opening file "+fileName+" for "+message
+    print(" Opening file {} for {}".format(fileName,message))
   except IndexError:
-    print " Error: "+fileName+" does not exist. Exiting ..."
+    print(" Error: "+fileName+" does not exist. Exiting ...")
     sys.exit(1)
 
   return xfile

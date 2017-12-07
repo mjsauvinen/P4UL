@@ -98,11 +98,12 @@ if( hmax ):
 
 Rdict['R'] = Rf; Rdict['GlobOrig'] = ROrig
 
+if( writeAscii ):
+  fx = open( 'TOPOGRAPHY_DATA' , 'w' )
+  np.savetxt(fx,np.round(Rf),fmt='%g')
+  fx.close()
+
 if( not args.printOnly ):
-  if( writeAscii ):
-    fx = open( 'TOPOGRAPHY_DATA' , 'w' )
-    np.savetxt(fx,np.round(Rf),fmt='%g')
-    fx.close()
   saveTileAsNumpyZ( fileOut, Rdict )
 
 if( args.printOn or args.printOnly ):

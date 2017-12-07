@@ -442,15 +442,31 @@ def addQuiver( X, Y, Ux, Uy , fc,  labelStr, titleStr=" " ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*  
 
-def addContourf( X, Y, Q, labelStr, titleStr=" " ):
+def addContourf( X, Y, Q, labelStr, titleStr=" ", cdict=None ):
   Xdims = np.array(X.shape)
   figDims = 12.*(Xdims[::-1].astype(float)/np.max(Xdims))
-  plt.figure(figsize=figDims)
+  fig = plt.figure(figsize=figDims)
+  #fig, ax = plt.subplots()
+  ax = fig.add_axes( [0.1, 0.08 , 0.9 , 0.85] ) #[left, up, width, height]
+  
+
+  cmap_x = None
+  N = 12
+  if( cdict is not None ):
+    dkeys = cdict.keys()
+    if( 'cmap' in dkeys ):
+      cmap_x = cdict['cmap']
+    if( 'N' in dkeys ):
+      N = cdict['N']
+
   #levels = [-1e-6, -1e-7, 0, 1e-7, 1e-6]
   #CO = plt.contourf(X,Y,Q, levels )
-  CO = plt.contourf(X,Y,Q, 20 )
-  plt.title( titleStr )
-  cbar = plt.colorbar(CO)
+  
+  try:    CO = ax.contourf(X,Y,Q, N,  cmap=cmap_x )
+  except: CO = ax.contourf(X,Y,Q, 10)
+  ax.set_title( titleStr )
+  
+  cbar = fig.colorbar(CO)
   cbar.ax.set_ylabel(labelStr)
   return CO
 

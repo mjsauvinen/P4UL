@@ -122,6 +122,12 @@ def removeEntriesFromList(L, delList):
     except: pass
   
   return L
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+def inputIfNone( iStr , qStr ):
+  if( not iStr ): iStr = raw_input(qStr)
+  if( not iStr ): sys.exit(" Error in inputIfNone. Exiting ...")
+  
+  return iStr
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 def reformatNumberInWord(word, separator):

@@ -3,10 +3,10 @@
 import sys
 import matplotlib.pyplot as plt
 import argparse
-from utilities import filesFromList
+from utilities import filesFromList, inputIfNone
 from plotTools import userLabels, plotXX
 ''' 
-Description: A script to plot files with data in [x, y1, y2, ..., yn] format.
+Description: A script to plot multiple files with data in [x, y1, y2, ..., yn] format.
 Run the script in the directory where you have the data files:
 $ uniplot.py <search string> [options]
 
@@ -18,32 +18,29 @@ Author: Mikko Auvinen
 '''
 #=======MAIN PROGRAM========================================#
 parser = argparse.ArgumentParser()
-parser.add_argument("strKey", help="Search string for collecting files.",\
-  nargs='?', default=None)
-parser.add_argument("--log", help="Logarithmic y-axis.", action="store_true",\
-  default=False)
-parser.add_argument("--labels", help="User specified labels.", action="store_true",\
-  default=False)
-parser.add_argument("-fx", "--factorX", help="Multiplication factor for x-values: fx*x",\
-  type=float, default=1.0)
-parser.add_argument("-fy", "--factorY", help="Multiplication factor for y-values: fy*y",\
-  type=float, default=1.0)
-parser.add_argument("-s", "--save", type=str, default=None, help="Name of the saved figure. Default=None")
+parser.add_argument("strKey", nargs='?', default=None,\
+  help="Search string for collecting files.")
+parser.add_argument("--log", action="store_true", default=False,\
+  help="Logarithmic y-axis.")
+parser.add_argument("--labels", action="store_true", default=False,\
+  help="User specified labels.")
+parser.add_argument("-fx", "--factorX", type=float, default=1.0,\
+  help="Multiplication factor for x-values: fx*x")
+parser.add_argument("-fy", "--factorY", type=float, default=1.0,\
+  help="Multiplication factor for y-values: fy*y")
+parser.add_argument("-s", "--save", type=str, default=None, \
+  help="Name of the saved figure. Default=None")
 args = parser.parse_args()
 #==========================================================#
-
+# Rename ...
 strKey  = args.strKey
-
 factorX = args.factorX
 factorY = args.factorY
 logOn   = args.log
 labelsOn= args.labels
 saveFig = args.save
 
-
-if( not strKey ): 
-  strKey = raw_input(" Enter search string: ")
-  if( not strKey ): sys.exit(1)
+strKey = inputIfNone( strKey , " Enter search string: " )
 
 plt.rc('xtick', labelsize=24); #plt.rc('ytick.major', size=10)
 plt.rc('ytick', labelsize=24); #plt.rc('ytick.minor', size=6)

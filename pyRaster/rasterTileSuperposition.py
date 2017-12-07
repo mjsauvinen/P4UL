@@ -75,12 +75,14 @@ dPc = max( dPx1, dPx2 )   # Coarser resolution.
 dPf = min( dPx1, dPx2 )   # Finer resolution.
 
 if( (R1Orig == R2Orig).all() ):
-  print ' Excellent! The origos match.'
+  print(' Excellent! The origos match.')
 else:
-  print ' The tiles do not have identical origos. Exiting.'
+  print(' The tiles do not have identical origos. Exiting.')
   sys.exit(1)
 
 maxDims = np.array([ max(R1dims[0],R2dims[0]) , max(R1dims[1],R2dims[1]) ]).astype(int)
+print(' maxDims = {}'.format(maxDims))
+
 
 # Compute resolution ratios (rr). One of the two is going to be 1.
 rr1 = int(dPc/dPx2)
@@ -92,8 +94,8 @@ i1/=rr1; j1/=rr1
 i2,j2 = np.ogrid[0:maxDims[0], 0:maxDims[1]]
 i2/=rr2; j2/=rr2
 
-print ' index dims 1: {}, {} '.format(np.max(i1),np.max(j1))
-print ' index dims 2: {}, {} '.format(np.max(i2),np.max(j2))
+print(' index dims 1: {}, {} '.format(np.max(i1),np.max(j1)))
+print(' index dims 2: {}, {} '.format(np.max(i2),np.max(j2)))
 
 # Initialize the new storage arrays which are of fine resolution.
 Rt1 = np.zeros( maxDims, float )
@@ -119,7 +121,7 @@ Rdict1['R'] = Rt; Rdict1['GlobOrig'] = R1Orig; Rdict1['dPx'] = np.array([dPf,dPf
 if( printOn or printOnly ):
   if( flt1.count(None) == 0):
     fg1 = plt.figure(num=figN, figsize=(9.,9.)); figN+=1
-    fg1 = addImagePlot(fg1, Rt2, args.file1, gridOn=True )
+    fg1 = addImagePlot(fg1, Rt1, args.file1, gridOn=True )
 
   if( flt2.count(None) == 0):
     fg2 = plt.figure(num=figN, figsize=(9.,9.)); figN+=1
@@ -132,7 +134,7 @@ if( not printOnly ):
 
 if( printOn or printOnly ):
   fig = plt.figure(num=figN, figsize=(9.,9.)); figN+=1
-  fig = addImagePlot( fig, Rt[::2,::2], args.file1+' + '+args.file2, gridOn=True )
+  fig = addImagePlot( fig, Rt, args.file1+' + '+args.file2, gridOn=True )
   plt.show()
 
 Rt = None; Rdict1 = None
