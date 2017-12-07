@@ -99,16 +99,15 @@ def quadrantAnalysis( v1, v2, qDict ):
 
 
   nTot = 0
-  nQTot= 0
-  nQ1  = 0  # q1: u'(+), w'(+), OutwardInteraction
-  nQ2  = 0  # q2: u'(-), w'(+), Ejection
-  nQ3  = 0  # q3: u'(-), w'(-), Inward Interaction
-  nQ4  = 0  # q4: u'(+), w'(-), Sweep
+  nQ   = np.zeros( 5, int )   # nQ[0] = nQTot
+  SQ   = np.zeros( 5, float ) # SQ[0] = STot
+  '''
+  Q1: u'(+), w'(+), OutwardInteraction
+  Q2: u'(-), w'(+), Ejection
+  Q3: u'(-), w'(-), Inward Interaction
+  Q4: u'(+), w'(-), Sweep
+  '''
   
-  SQ1 = 0.; SQ2 = 0.; SQ3 = 0.; SQ4 = 0. 
-  STot= 0.
-  
-  cf = 1.
   for i in iList:
     for j in jList:
       for k in kList[::stride]:
@@ -120,41 +119,36 @@ def quadrantAnalysis( v1, v2, qDict ):
         v2t = v2[:,k+k_off,j,i] 
         
         for l in xrange( len(vt) ):
-          STot += vt[l]; nTot += 1
+          SQ[0] += vt[l]; nTot += 1
           if( np.abs(vt[l]) > (holewidth*vt_mean) ): 
             n = np.minimum( int((v1t[l] - minLim)/dx) , npx )
             n = np.maximum( n , 0 )
             m = np.minimum( int((v2t[l] - minLim)/dx) , npx )
             m = np.maximum( m, 0 )
-            Qi[m,n] += 1.; nQTot += 1
+            Qi[m,n] += 1.; nQ[0] += 1
           
             if( v1t[l] > 0. and v2t[l] > 0. ):
-              nQ1 += 1; SQ1 += vt[l]
+              nQ[1] += 1; SQ[1] += vt[l]  # Outward Interaction
             elif( v1t[l] < 0. and v2t[l] > 0. ):
-              nQ2 += 1; SQ2 += vt[l]  # Ejection
-            elif( v1t[l] > 0. and v2t[l] < 0. ):
-              nQ4 += 1; SQ4 += vt[l]  # Sweep
-            else:
-              nQ3 += 1; SQ3 += vt[l]
+              nQ[2] += 1; SQ[2] += vt[l]  # Ejection
+            elif( v1t[l] < 0. and v2t[l] < 0. ):
+              nQ[3] += 1; SQ[3] += vt[l]  # Inward Interaction
+            else:#( v1t[l] > 0 and v2t[l] < 0. ):
+              nQ[4] += 1; SQ[4] += vt[l]  # Sweep
 
   v = None; v1 = None; v2 = None
-  Qi /= (np.float(nQTot)*dx**2)  # Obtain the PDF
+  Qi /= (np.float(nQ[0])*dx**2)  # Obtain the PDF
   
   if( weighted ):
     Qi *= np.abs(X*Y)
   
-  STot /= np.float(nTot)
-  SQ1 /= np.float(nQTot); SQ2 /= np.float(nQTot)
-  SQ3 /= np.float(nQTot); SQ4 /= np.float(nQTot)
-  
+  SQ[0] /= np.float(nTot) # Total contribution
+  SQ[1:] /= nQ[1:].astype(float)
   
   # Assemble the result dict 
   rDict = dict()
-  rDict['STot'] = STot
-  rDict['nQ1']  = nQ1; rDict['SQ1'] = SQ1
-  rDict['nQ2']  = nQ2; rDict['SQ2'] = SQ2   # Ejection
-  rDict['nQ3']  = nQ3; rDict['SQ3'] = SQ3
-  rDict['nQ4']  = nQ4; rDict['SQ4'] = SQ4   # Sweep
+  rDict['nQ'] = nQ
+  rDict['SQ'] = SQ
   #rDict['klims']= np.array([ kList[0], kList[-1] ])
   
   return Qi, X, Y, rDict

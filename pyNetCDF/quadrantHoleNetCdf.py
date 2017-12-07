@@ -143,11 +143,8 @@ qaDict['weighted']   = weighted  # covariance integrand
 Q, X, Y, resDict = quadrantAnalysis( v1, v2, qaDict )
 
 # Extract the results 
-nQ1 = resDict['nQ1']; SQ1 = resDict['SQ1']
-nQ2 = resDict['nQ2']; SQ2 = resDict['SQ2'] # Ejection
-nQ3 = resDict['nQ3']; SQ3 = resDict['SQ3']
-nQ4 = resDict['nQ4']; SQ4 = resDict['SQ4'] # Sweep
-STot = resDict['STot']
+nQ = resDict['nQ']  # Number of quadrant hits (nQ[0] := Ntotal)
+SQ = resDict['SQ']  # Quadrant contributions (e.g. Reynolds stress)
 #klims         = resDict['klims']
 
 # === Plot quadrant analysis output === #
@@ -163,8 +160,9 @@ CO.ax.spines['bottom'].set_position('zero')
 #CO.ax.set_xlabel(r"$u'/sigma_u$")
 #plt.clabel(CO, CO.levels[:-2:3], inline=False, fontsize=10)
 
-print(' nQ2 (Ejections) = {}, nQ4 (Sweeps) = {} '.format(nQ2,nQ4))
-print(' nQ1 (Outward Interactions)  = {}, nQ3 (Inward Interactions) = {} '.format(nQ1,nQ3))
+cn = 100./nQ[0]
+print(' Ejections (%) = {}, Sweeps (%) = {} '.format(cn*nQ[2],cn*nQ[4]))
+print(' Outward Interactions (%)  = {}, Inward Interactions (%) = {} '.format(cn*nQ[1],cn*nQ[3]))
 #plt.legend(loc=0)
 
 if( saveFig ):
@@ -177,9 +175,10 @@ CO = None
 
 # Write/append the results to file 
 if( ofile is not None ):
-  fwo = openIOFile( ofile, 'a')
+  Sa = np.abs(SQ[0])
+  Smag = np.sqrt( np.sum(SQ[1:]**2) )
   zm = 0.5*(z[ijk1[2]]+z[ijk2[2]])
-  Sa = np.abs(STot)
-  Smag = np.sqrt(SQ1**2 + SQ2**2 + SQ3**2 +SQ4**2)
-  fwo.write("{} {} {} {} {} {}\n".format(zm, SQ1/Smag, SQ2/Smag, SQ3/Smag, SQ4/Smag, STot))
-  fwo.close()
+  for i in range(1,5):
+    fwo = openIOFile('{}_Q{}.dat'.format(ofile,i) , 'a')
+    fwo.write("{}\t{}\n".format(zm, SQ[i]))
+    fwo.close()
