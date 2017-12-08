@@ -47,7 +47,7 @@ def checkAndReplace( iLine , checkStr , aidStr , replaceStr ):
 def replaceEntry( fileName, oldStr , newStr ):
   for line in fileinput.FileInput(fileName , inplace=True):
     line = line.replace(oldStr , newStr )
-    print line.strip()
+    print(line.strip())
 
 # - - - - - - - - - - - - - - - - - - - - - - - #
 
@@ -56,6 +56,6 @@ def commentOutLine( fileName, keyDict ):
     for key in keyDict:
       if( key in line and keyDict[key] in line):
         line=line.replace(line, "!*"+line)
-    print line,
+    print( line, )
 
 # - - - - - - - - - - - - - - - - - - - - - - - #

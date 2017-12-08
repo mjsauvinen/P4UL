@@ -5,11 +5,13 @@ import argparse
 import matplotlib.pyplot as plt
 from plotTools import addContourf
 from analysisTools import sensibleIds, groundOffset, quadrantAnalysis
-from netcdfTools import read3dDataFromNetCDF
+from netcdfTools import read3dDataFromNetCDF, netcdfOutputDataset, \
+  createNetcdfVariable, netcdfWriteAndClose
 from utilities import filesFromList
 from txtTools import openIOFile
 ''' 
 Description: A script to perform quadrant analysis on velocity data stored in a NETCDF file.
+The analysis is performed for all points along a z-direction.
 In case of PALM-generated results (featuring staggered grid), the velocity data must first be
 interpolated onto cell-centers (i.e. scalar grid) with groupVectorDataNetCdf.py script.
 
@@ -23,6 +25,8 @@ sepStr = ' # = # = # = # = # = # = # = # = '
 parser = argparse.ArgumentParser()
 parser.add_argument("-f", "--filename", type=str,\
   help="Name of the input NETCDF file.")
+parser.add_argument("-fo", "--fileout", type=str, default="out.nc", \
+  help="Name of the output NETCDF file. Default=out.nc")
 parser.add_argument("-v", "--varname",  type=str, nargs=2, default=['u','w'],\
   help="Name of the variables in NETCDF file. Default=[u, w]")
 parser.add_argument("-xn", "--xname",type=str,  default='x',\
@@ -39,29 +43,24 @@ parser.add_argument("-l", "--axisLim",type=float, default=4.,\
   help="Limit (mag of max and min) of the plot axes. Default=4.")
 parser.add_argument("-hw", "--holewidth",type=float, default=0.,\
   help="Width of the 'hole' in the quadrant analysis. Default=0.")
-parser.add_argument("-i1", "--ijk1",type=int, nargs=3, default=[0,0,0],\
-  help="Starting indices (ix, iy, iz) of the considered data. Default=[0,0,0].")
-parser.add_argument("-i2", "--ijk2",type=int, nargs=3, default=[0,0,1],\
-  help="Final indices (ix, iy, iz) of the considered data. Default=[0,0,1].")
+parser.add_argument("-i1", "--ijk1",type=int, nargs=3,\
+  help="Starting indices (ix, iy, iz) of the considered data. Required.")
+parser.add_argument("-i2", "--ijk2",type=int, nargs=3,\
+  help="Final indices (ix, iy, iz) of the considered data. Required.")
 parser.add_argument("-us", "--ustar",type=float, default=None,\
   help="Normalize by given friction velocity (u* or ustar) value.")
-parser.add_argument("-s", "--save", type=str, default=None, \
-  help="Name of the saved figure. Default=None")
 parser.add_argument("-of", "--outputToFile", type=str, default=None, \
   help="Name of the file to output analysis results. Default=None")
 parser.add_argument("-w", "--weighted", action="store_true", default=False,\
   help="Plot weighted joint PDF (i.e. covariance integrand).")
 parser.add_argument("-p", "--printOn", action="store_true", default=False,\
   help="Print the numpy array data.")
-parser.add_argument("-c", "--coarse", type=int, default=1,\
-  help="Coarsening level. Int > 1.")
 args = parser.parse_args()    
 #==========================================================# 
 # Rename ...
 filename  = args.filename
-cl        = abs(args.coarse)
+fileout   = args.fileout
 varname   = args.varname
-saveFig   = args.save
 ijk1      = args.ijk1
 ijk2      = args.ijk2
 axisLim   = args.axisLim
@@ -73,8 +72,11 @@ npixels   = args.npixels
 ofile     = args.outputToFile
 printOn   = args.printOn
 #==========================================================# 
-first = True
-fig   = None
+'''
+Establish two boolean variables which indicate whether the created variable is an
+independent or dependent variable in function createNetcdfVariable().
+'''
+parameter = True;  variable  = False
 
 
 # Create a dict that is passed into the function read3dDataFromNetCDF
@@ -85,6 +87,7 @@ nameDict['zname'] = args.zname
 
 # First fluctuation component
 nameDict['varname'] = varname[0]
+cl = 1
 ncDict = read3dDataFromNetCDF( filename , nameDict, cl )
 v1 = ncDict['v']   # 'v' is a generic name for a variable in ncDict
 
@@ -107,7 +110,7 @@ infoStr = '''
     np.min(x), np.max(x), len(x),\
     np.min(y), np.max(y), len(y),\
     np.min(z), np.max(z), len(z) )
-print(infoStr)
+#print(infoStr)
 
 # Now check whether the given indices make sense 
 ijk1 = sensibleIds( np.array( ijk1 ), x, y, z )
@@ -115,6 +118,7 @@ ijk2 = sensibleIds( np.array( ijk2 ), x, y, z )
 print(' Check (1): i, j, k = {}'.format(ijk1))
 print(' Check (2): i, j, k = {}'.format(ijk2))
 
+# = = = = = = = = = = = = =
 # Mean and variance
 v1mean = np.mean(v1, axis=(0)); v2mean = np.mean(v2, axis=(0))
 
@@ -132,53 +136,61 @@ else:
 
 # Assemble the quadrant analysis dict 
 qaDict = dict()
-qaDict['ijk1'] = ijk1
-qaDict['ijk2'] = ijk2
 qaDict['nkpoints']  = nkpoints
 qaDict['npixels']   = npixels
 qaDict['axisLim']   = axisLim
 qaDict['holewidth'] = holewidth
 qaDict['weighted']   = weighted  # covariance integrand
 
-Q, X, Y, resDict = quadrantAnalysis( v1, v2, qaDict )
+# = = = = = = = = = = = = = = =
+xa = np.linspace(-axisLim,axisLim,npixels+1)
+ya = xa.copy() 
+dx = (2.*axisLim)/(npixels)
+Xa,Ya = np.meshgrid(xa,ya)
+ka    = np.arange(ijk1[2],ijk2[2]+1)
+dims  = list(np.shape(ka))  
+dims.extend(list(np.shape( Xa )))
+Qa  = np.zeros( dims, float )
+print(' Qa.shape={}'.format(np.shape(Qa)))
 
-# Extract the results 
-nQ = resDict['nQ']  # Number of quadrant hits (nQ[0] := Ntotal)
-SQ = resDict['SQ']  # Quadrant contributions (e.g. Reynolds stress)
-#klims         = resDict['klims']
+ix1 = ijk1.copy(); ix2 = ijk2.copy()
+for kt in xrange(len(ka)):
+  ix1[2] = ka[kt]
+  ix2[2] = ka[kt]+1
+  qaDict['ijk1'] = ix1; qaDict['ijk2'] = ix2
+  
+  Q, X, Y, resDict = quadrantAnalysis( v1, v2, qaDict )
 
-# === Plot quadrant analysis output === #
-cDict = dict() 
-cDict['cmap'] = plt.cm.gist_yarg  # Include the colormap info within a dict
-cDict['N'] = 12                   # Number of levels in contour plot
-titleStr = "Quadrant Analysis\n{}:  z={}-{} m".format(filename, z[ijk1[2]],z[ijk2[2]])
-labelStr = "JPDF"
-CO = addContourf( X, Y, Q, " JPDF ", titleStr, cDict )
-CO.ax.spines['left'].set_position('zero')
-CO.ax.spines['bottom'].set_position('zero')
-#CO.ax.set_ylabel(r"$w'/\sigma_w$")
-#CO.ax.set_xlabel(r"$u'/sigma_u$")
-#plt.clabel(CO, CO.levels[:-2:3], inline=False, fontsize=10)
+  # Extract the results 
+  nQ = resDict['nQ']  # Number of quadrant hits (nQ[0] := Ntotal)
+  SQ = resDict['SQ']  # Quadrant contributions (e.g. Reynolds stress)
 
-cn = 100./nQ[0]
-print(' Ejections (%) = {}, Sweeps (%) = {} '.format(cn*nQ[2],cn*nQ[4]))
-print(' Outward Interactions (%)  = {}, Inward Interactions (%) = {} '.format(cn*nQ[1],cn*nQ[3]))
-#plt.legend(loc=0)
+  cn = 100./nQ[0]
+  print(' Ejections (%) = {}, Sweeps (%) = {} '.format(cn*nQ[2],cn*nQ[4]))
+  print(' Outward Interactions (%)  = {}, Inward Interactions (%) = {} '.format(cn*nQ[1],cn*nQ[3]))
 
-if( saveFig ):
-  plt.savefig( saveFig, format='jpg', dpi=300)
+  # Write/append the results to file 
+  if( ofile is not None ):
+    Sa = np.abs(SQ[0])
+    Smag = np.sqrt( np.sum(SQ[1:]**2) )
+    zm = z[ix1[2]]
+    for i in xrange(1,5):
+      fwo = openIOFile('{}_Q{}.dat'.format(ofile,i) , 'a')
+      fwo.write("{}\t{}\n".format(zm, SQ[i]))
+      fwo.close()
+  
+  print(' Qa[kt,:,:].shape = {}, Q.shape = {}'.format(np.shape(Qa[kt,:,:]), np.shape(Q)))
+  Qa[kt,:,:] = Q.copy()
 
-if( printOn ):
-  plt.show()
 
-CO = None
 
-# Write/append the results to file 
-if( ofile is not None ):
-  Sa = np.abs(SQ[0])
-  Smag = np.sqrt( np.sum(SQ[1:]**2) )
-  zm = 0.5*(z[ijk1[2]]+z[ijk2[2]])
-  for i in range(1,5):
-    fwo = openIOFile('{}_Q{}.dat'.format(ofile,i) , 'a')
-    fwo.write("{}\t{}\n".format(zm, SQ[i]))
-    fwo.close()
+# = = output file = = = = =
+# Create a NETCDF output dataset (dso) for writing out the data.
+dso = netcdfOutputDataset( fileout )
+xv = createNetcdfVariable( dso, xa  , 'x'   , len(xa)   , 'm', 'f4', ('x',)   , parameter )
+yv = createNetcdfVariable( dso, ya  , 'y'   , len(ya)   , 'm', 'f4', ('y',)   , parameter )
+zv = createNetcdfVariable( dso, ka  , 'z'   , len(ka)   , 'm', 'f4', ('z',)   , parameter )
+Qv = createNetcdfVariable( dso, Qa, 'Q', dims[0], 'm-2', 'f4',('z','y','x',) , variable )
+
+# - - - - Done , finalize the output - - - - - - - - - -
+netcdfWriteAndClose( dso )

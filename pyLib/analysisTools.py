@@ -53,7 +53,7 @@ def groundOffset( vx ):
 #==========================================================#
 
 def quadrantAnalysis( v1, v2, qDict ):
-  debug = True
+  debug = False
   
   # Extract data from dict. Using dict makes future modifications easy.
   ijk1     = dataFromDict('ijk1',     qDict, allowNone=False )
@@ -88,7 +88,7 @@ def quadrantAnalysis( v1, v2, qDict ):
 
   # Determine if some grid points are under the ground level.
   k_off = max( groundOffset( v1 ), groundOffset( v2 ) )
-  if( k_off > 0 ):
+  if( k_off > 0 and debug ):
     print(' {}: ground offset (k_off) = {}'.format(filename, k_off))
 
   x = np.linspace(minLim,maxLim,npx+1)
@@ -143,7 +143,7 @@ def quadrantAnalysis( v1, v2, qDict ):
     Qi *= np.abs(X*Y)
   
   SQ[0] /= np.float(nTot) # Total contribution
-  SQ[1:] /= nQ[1:].astype(float)
+  SQ[1:] /= nQ[1:].astype(float)  # Average contributions
   
   # Assemble the result dict 
   rDict = dict()
