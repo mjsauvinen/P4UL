@@ -6,34 +6,20 @@ import matplotlib.pyplot as plt
 from plotTools import addToPlot
 from spectraTools import spectraAnalysis
 from netcdfTools import read3dDataFromNetCDF
+from analysisTools import sensibleIds, groundOffset
 from utilities import filesFromList
+''' 
+Description: A script to perform quadrant analysis on velocity data stored in a NETCDF file.
+The analysis is performed for all points along a z-direction.
+In case of PALM-generated results (featuring staggered grid), the velocity data must first be
+interpolated onto cell-centers (i.e. scalar grid) with groupVectorDataNetCdf.py script.
 
-#==========================================================#
-def sensibleIds( ixyz, x, y, z ):
-  ixyz[0] = np.minimum( ixyz[0] , len(x)-1 ); ixyz[0] = np.maximum( ixyz[0], 0 )
-  ixyz[1] = np.minimum( ixyz[1] , len(y)-1 ); ixyz[1] = np.maximum( ixyz[1], 0 )
-  ixyz[2] = np.minimum( ixyz[2] , len(z)-1 ); ixyz[2] = np.maximum( ixyz[2], 0 )
-  
-  return ixyz
-#==========================================================#
-def groundOffset( vx ):
-  koffset = 0
-  while 1:
-    idNz = (vx[:,koffset,1,1] > 0.)
-    if( any( idNz ) ):
-      break
-    else:
-      koffset += 1
-
-  return koffset
-#==========================================================#
-
+Author: Mikko Auvinen
+        mikko.auvinen@helsinki.fi 
+        University of Helsinki &
+        Finnish Meteorological Institute
 '''
-Kaimal & Finnigan:
-The requirements for averaging time T with T >> Tau_{\alpha} can then be expressed
-in terms of \sigma^{2}_{\bar{\alpha}}, the variance of the measured time mean \bar{\alpha}
-about the expected ensemple mean, and \sigma^{2}_{\alpha}, the ensemble variance of \alpha.
-'''
+#==========================================================#
 #==========================================================#
 sepStr = ' # = # = # = # = # = # = # = # = '
 parser = argparse.ArgumentParser()
@@ -80,18 +66,13 @@ nameDict['varname'] = varname
 
 
 # Obtain a list of files to include.
-fileNos, fileList = filesFromList( fileKey+'*' )
+fileNos, fileList = filesFromList( '*'+fileKey+'*' )
 
 first = True
 fig = plt.figure(num=1, figsize=(12,10))
 
 for fn in fileNos:
-  if('mag' not in varname):
-    dataDict = read3dDataFromNetCDF( fileList[fn] , nameDict, cl )
-    vr = dataDict['v']
-    x = dataDict['x']; y = dataDict['y']; z = dataDict['z']
-    time = dataDict['time']
-  else:
+  if('mag' in varname):
     nameDict['varname'] = 'u'
     nameDict['xname']   = 'x'; nameDict['yname'] = 'y'; nameDict['zname'] = 'z'
     dataDict = read3dDataFromNetCDF( fileList[fn] , nameDict, cl )
@@ -104,6 +85,11 @@ for fn in fileNos:
     Umag = np.sqrt( u**2 + v**2 )
     vr = Umag
     
+  else:
+    dataDict = read3dDataFromNetCDF( fileList[fn] , nameDict, cl )
+    vr = dataDict['v']
+    x = dataDict['x']; y = dataDict['y']; z = dataDict['z']
+    time = dataDict['time']
     
   dataDict = None
   

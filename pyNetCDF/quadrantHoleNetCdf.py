@@ -44,7 +44,7 @@ parser.add_argument("-i1", "--ijk1",type=int, nargs=3, default=[0,0,0],\
 parser.add_argument("-i2", "--ijk2",type=int, nargs=3, default=[0,0,1],\
   help="Final indices (ix, iy, iz) of the considered data. Default=[0,0,1].")
 parser.add_argument("-us", "--ustar",type=float, default=None,\
-  help="Normalize by given friction velocity (u* or ustar) value.")
+  help="Normalize by friction velocity, u_* or ustar.")
 parser.add_argument("-s", "--save", type=str, default=None, \
   help="Name of the saved figure. Default=None")
 parser.add_argument("-of", "--outputToFile", type=str, default=None, \
@@ -173,12 +173,3 @@ if( printOn ):
 
 CO = None
 
-# Write/append the results to file 
-if( ofile is not None ):
-  Sa = np.abs(SQ[0])
-  Smag = np.sqrt( np.sum(SQ[1:]**2) )
-  zm = 0.5*(z[ijk1[2]]+z[ijk2[2]])
-  for i in range(1,5):
-    fwo = openIOFile('{}_Q{}.dat'.format(ofile,i) , 'a')
-    fwo.write("{}\t{}\n".format(zm, SQ[i]))
-    fwo.close()

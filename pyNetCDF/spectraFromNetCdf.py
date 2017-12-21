@@ -6,39 +6,22 @@ import matplotlib.pyplot as plt
 from plotTools import addToPlot
 from spectraTools import spectraAnalysis
 from netcdfTools import read3dDataFromNetCDF
+from analysisTools import sensibleIds, groundOffset
 from utilities import filesFromList
+''' 
+Description: A script to perform spectral analysis on velocity data stored in a NETCDF file. 
+This script adopts most of its content from old Matlab scripts that circled around the 
+atmospheric science department.
 
-#==========================================================#
-def sensibleIds( ixyz, x, y, z ):
-  ixyz[0] = np.minimum( ixyz[0] , len(x)-1 ); ixyz[0] = np.maximum( ixyz[0], 0 )
-  ixyz[1] = np.minimum( ixyz[1] , len(y)-1 ); ixyz[1] = np.maximum( ixyz[1], 0 )
-  ixyz[2] = np.minimum( ixyz[2] , len(z)-1 ); ixyz[2] = np.maximum( ixyz[2], 0 )
-  
-  return ixyz
-#==========================================================#
-def groundOffset( vx ):
-  koffset = 0
-  while 1:
-    idNz = (vx[:,koffset,1,1] > 0.)
-    if( any( idNz ) ):
-      break
-    else:
-      koffset += 1
-
-  return koffset
-#==========================================================#
-
+Author: Mikko Auvinen
+        mikko.auvinen@helsinki.fi 
+        University of Helsinki &
+        Finnish Meteorological Institute
 '''
-Kaimal & Finnigan:
-The requirements for averaging time T with T >> Tau_{\alpha} can then be expressed
-in terms of \sigma^{2}_{\bar{\alpha}}, the variance of the measured time mean \bar{\alpha}
-about the expected ensemple mean, and \sigma^{2}_{\alpha}, the ensemble variance of \alpha.
-'''
+#==========================================================#
 #==========================================================#
 sepStr = ' # = # = # = # = # = # = # = # = '
 parser = argparse.ArgumentParser()
-parser.add_argument("-f", "--filename", type=str,\
-  help="Name of the input NETCDF file.")
 parser.add_argument("fileKey", default=None,\
   help="Search string for collecting files.")
 parser.add_argument("-v", "--varname",  type=str, default='u',\
@@ -57,6 +40,10 @@ parser.add_argument("-yn", "--yname",type=str, default='y',\
   help="Specify the y coordinate. e.g. yv or y. Default='y' ")
 parser.add_argument("-zn", "--zname",type=str, default='zu_3d',\
   help="Specify the z coordinate. e.g. zu_3d or zw_3d. Default='zu_3d' ")
+parser.add_argument("-i1", "--ijk1",type=int, nargs=3,\
+  help="Starting indices (ix, iy, iz) of the considered data. Required.")
+parser.add_argument("-i2", "--ijk2",type=int, nargs=3,\
+  help="Final indices (ix, iy, iz) of the considered data. Required.")
 parser.add_argument("-p", "--printOn", action="store_true", default=False,\
   help="Print the numpy array data.") 
 parser.add_argument("-pp", "--printOnly", action="store_true", default=False,\
@@ -67,10 +54,11 @@ args = parser.parse_args()
 #==========================================================# 
 # Rename ...
 fileKey   = args.fileKey
-filename  = args.filename
+ijk1      = args.ijk1
+ijk2      = args.ijk2
 normalize = args.normalize
 Nbins     = args.nbins
-mode     = args.mode
+mode      = args.mode
 cl        = abs(args.coarse)
 
 #==========================================================# 
@@ -105,21 +93,16 @@ for fn in fileNos:
       np.min(y), np.max(y), len(y),\
       np.min(z), np.max(z), len(z) )
     print(infoStr)
-    
-    ixyz1 = input(" (1) Enter starting indices: ix, iy, iz = ")
-    ixyz2 = input(" (2) Enter final indices:    ix, iy, iz = ")
-    if( len(ixyz1) != 3  or len(ixyz2) != 3 ):
-      sys.exit(' Error! You must provide 3 values for ix, iy and iz. Exiting ...')
 
-    ixyz1 = sensibleIds( np.array( ixyz1 ), x, y, z )
-    ixyz2 = sensibleIds( np.array( ixyz2 ), x, y, z )
+    ijk1 = sensibleIds( np.array( ijk1 ), x, y, z )
+    ijk2 = sensibleIds( np.array( ijk2 ), x, y, z )
 
-    ixL = np.arange(ixyz1[0],ixyz2[0]+1)
-    iyL = np.arange(ixyz1[1],ixyz2[1]+1)
-    izL = np.arange(ixyz1[2],ixyz2[2]+1)
+    iList = np.arange(ijk1[0],ijk2[0]+1)
+    jList = np.arange(ijk1[1],ijk2[1]+1)
+    kList = np.arange(ijk1[2],ijk2[2]+1)
     try: 
       Np = int( input(" Number of plots per interval (empty -> all), Np = ") )
-      stride = max( ((izL[-1]-izL[0])/Np)+1 , 2 )
+      stride = max( ((kList[-1]-kList[0])/Np)+1 , 2 )
     except:
       stride = 1
     first = False
@@ -129,9 +112,9 @@ for fn in fileNos:
     print(' {}: koffset = {}'.format(fileList[fn], koff))
   
   try:
-    for i in ixL:
-      for j in iyL:
-        for k in izL[::stride]:
+    for i in iList:
+      for j in jList:
+        for k in kList[::stride]:
           vt = v[:,k+koff,j,i]
           vName = nameDict['varname']+'(z={} m), {}'.format(z[k], fileList[fn].split('_NET')[0])
           print(' Processing {} ...'.format(vName))

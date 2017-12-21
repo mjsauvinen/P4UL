@@ -115,6 +115,7 @@ def filesFromList( searchStr , allFiles=False):
   return fileNos, fileList
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def removeEntriesFromList(L, delList):
   for entry in delList:
@@ -123,6 +124,8 @@ def removeEntriesFromList(L, delList):
   
   return L
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
 def inputIfNone( iStr , qStr ):
   if( not iStr ): iStr = raw_input(qStr)
   if( not iStr ): sys.exit(" Error in inputIfNone. Exiting ...")
@@ -130,6 +133,8 @@ def inputIfNone( iStr , qStr ):
   return iStr
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
 def reformatNumberInWord(word, separator):
   '''
   Search for number in the given string and change its format
@@ -152,6 +157,7 @@ def reformatNumberInWord(word, separator):
   return word_new
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def extractMatchingTerms( trialList , targetList , verbose=False ):
     xList = []
@@ -164,6 +170,21 @@ def extractMatchingTerms( trialList , targetList , verbose=False ):
     if( len(xList) == 0 and verbose ): print "Returning an empty list"
     return xList
 
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def dataFromDict( keyStr, dataDict, allowNone=True ):
+  data = None
+  if( keyStr in dataDict.keys() ):
+    data = dataDict[keyStr]
+  elif( not allowNone ):
+    sys.exit(' Error in dataFromDict: {} not found. Exiting ...'.format(keyStr))
+  else:
+    pass
+  
+  return data 
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def basicAnalysis( x, xStr, xRef, printOn ):

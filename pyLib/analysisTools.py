@@ -12,19 +12,6 @@ Author: Mikko Auvinen
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 #==========================================================#
-
-def dataFromDict( keyStr, dataDict, allowNone=True ):
-  data = None
-  if( keyStr in dataDict.keys() ):
-    data = dataDict[keyStr]
-  elif( not allowNone ):
-    sys.exit(' Error in dataFromDict: {} not found. Exiting ...'.format(keyStr))
-  else:
-    pass
-  
-  return data 
-
-#==========================================================#
 def sensibleIds( ijk, x, y, z ):
   '''
   Check whether the chosen i,j,k indices make sense for given x, y, z coords.
@@ -53,6 +40,8 @@ def groundOffset( vx ):
 #==========================================================#
 
 def quadrantAnalysis( v1, v2, qDict ):
+  from utilities import dataFromDict
+  
   debug = False
   
   # Extract data from dict. Using dict makes future modifications easy.
@@ -152,3 +141,50 @@ def quadrantAnalysis( v1, v2, qDict ):
   #rDict['klims']= np.array([ kList[0], kList[-1] ])
   
   return Qi, X, Y, rDict
+
+#==========================================================#
+def discreteWaveletAnalysis( vx , wDict ):
+  from utilities import dataFromDict
+  import pywt
+  
+  # nlevel = 4
+  order = 'freq'  # "normal"
+  wavelet = dataFromDict('wavelet', wDict, allowNone=False )
+  nlevel  = dataFromDict('nlevel',  wDict, allowNone=False )
+  if( wavelet in pywt.wavelist() ):
+    try:
+      wp = pywt.WaveletPacket( vx , wavelet, 'sym', maxlevel=nlevel)
+    except:
+      print(" Wrong wavelet type given. Reverting to default 'db2'. ")
+      wavelet = 'db2'
+      wp = pywt.WaveletPacket( vx , wavelet, 'sym', maxlevel=nlevel)
+  
+  nodes = wp.get_level(nlevel, order=order)
+  labels = [n.path for n in nodes]
+  values = np.array([n.data for n in nodes], 'd')
+  values = abs(values)
+  
+  return values, labels
+
+#==========================================================#
+
+def continuousWaveletAnalysis( vx, wDict ):
+  from utilities import dataFromDict
+  import pywt
+  
+  wavelet = dataFromDict('wavelet', wDict, allowNone=False )
+  nfreqs  = dataFromDict('nfreqs', wDict, allowNone=False )
+  dt      = dataFromDict('dt', wDict, allowNone=False )
+  linearFreq = dataFromDict('linearFreq', wDict, allowNone=True )
+  if( linearFreq ):
+    scales  = 1./np.arange(1,nfreqs)
+  else:
+    scales = np.arange(1,nfreqs)
+  
+  cfs,freq = pywt.cwt(vx,scales,wavelet,dt)
+    
+  return cfs, freq
+
+#==========================================================#
+
+
