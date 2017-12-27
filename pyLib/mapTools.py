@@ -495,12 +495,18 @@ def applyFilter(Rx, filterInfo ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def labelRaster(R):
+def labelRaster(R, maskId=None):
   import scipy.ndimage.measurements as snms
-  R, shapeCount = snms.label(R) # this might be slow for unfiltered data
+  if( maskId is not None ):
+    Rtmp = R.copy()
+    Rtmp[~(R==maskId)] = 0.   # Set other mask values to zero
+  else:
+    Rtmp = R
+    
+  Rl, shapeCount = snms.label(Rtmp) # this might be slow for unfiltered data
   print(' Found {} shapes from the data.'.format(shapeCount))
 
-  return R, shapeCount
+  return Rl, shapeCount
 
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*

@@ -314,7 +314,7 @@ def read3dDataFromNetCDF( fname, nameDict, cl=1 ):
   '''
   print(' Extracting {} from dataset ... '.format( nameDict['varname'] ))
   v, v_dims = read3DVariableFromDataset(nameDict['varname'], ds, varList, 0, 0, 0, cl) # All values.
-  print(' Done! {}_dims = {}'.format(nameDict['varname'], v_dims ))
+  print(' {}_dims = {}\n Done!'.format(nameDict['varname'], v_dims ))
   
   dataDict = dict()
   dataDict['v'] = v

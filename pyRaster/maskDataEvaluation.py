@@ -41,7 +41,7 @@ def maskFromData(Ri, mlist, mxN=20):
 def totalArea( Rdims, dx, fname ):
   Npx  = np.prod( Rdims ) # Number of pixels
   At = Npx*np.abs(np.prod(dx))
-  print('\n Total area of {} domain:\n Atot = {} m^2 \n'.format(fname,At))
+  print('\n Total area of {} domain:\n Atot = {:.4g} m^2 \n'.format(fname,At))
   return At
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
@@ -64,15 +64,21 @@ def frontalAreas( Ri ):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
 
 def maskMeanValues(Rm, Ri, mlist):
-  mvals = np.zeros(np.shape(mlist))
+  dims = np.shape(mlist)
+  
+  m_mean = np.zeros(dims)
+  m_var  = np.zeros(dims)
+  m_std  = np.zeros(dims)
   j = 0
   for im in mlist:
     idm = (Rm == im)
-    mvals[j] = np.mean( Ri[idm] )
-    print(' Mask {} mean value = {} '.format(im, mvals[j]))
+    m_mean[j] = np.mean( Ri[idm] )
+    m_var[j]  = np.var( Ri[idm] )
+    m_std[j]  = np.std( Ri[idm] ) 
+    print(' Mask {} mean, var, std = {:.2f}, {:.2f}, {:.2f} '.format(im, m_mean[j], m_var[j], m_std[j]))
     j += 1
   
-  return mvals
+  return m_mean, m_var, m_std
   
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
 
@@ -82,12 +88,36 @@ def planAreaFractions( Ri, mlist ):
   j = 0
   for im in mlist:
     r[j] = np.count_nonzero( Ri == im )/float( Npx )
-    print(' Mask {} plan area fraction = {} '.format(im, r[j]))
+    print(' Mask {} plan area fraction = {:.2f} '.format(im, r[j]))
     j += 1
     
   return r
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+def histogram( Rm, Ri, mlist ):
+  
+  maxv  = int(np.ceil(np.max(Ri)))
+  zbins = np.zeros( (len(mlist), maxv) )
+  
+  j = 0
+  for im in mlist:
+    LR, labelCount = labelRaster(Rm, im)
+    Np = float(np.count_nonzero( (LR > 0) ))#; print('Np={}'.format(Np)) 
+
+    for l in xrange(1,labelCount+1):
+      idx = (LR==l)
+      w   = np.count_nonzero(idx)/Np#; print('w={}'.format(w)) 
+      kh  = Ri[idx].astype(int)
+      for k in kh:
+        zbins[j,kh] += 1./Np
+    
+    j += 1
+    
+  return zbins
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
 
 #==========================================================#
 parser = argparse.ArgumentParser(prog='maskDataEvaluation.py')
@@ -149,7 +179,7 @@ else:
 # Compute frontal area fractions
 if( filedata and Fafb ):
   AE, AN = frontalAreas( Rt )
-  print('\n Frontal area fractions of {}:\n Ae/Atot = {}, An/Atot = {}\n'\
+  print('\n Frontal area fractions of {}:\n Ae/Atot = {:.2f}, An/Atot = {:.2f}\n'\
     .format(filedata, AE/Atot, AN/Atot)) 
 
 
@@ -166,12 +196,16 @@ elif( filemask ):
 else:
   sys.exit(' Nothing to do. Exiting ...')
 
+zbins = histogram( Rxm, Rt, mskList )
+np.savetxt('mask_height_histogram.dat', \
+  np.c_[np.arange(1,len(zbins[0,:])+1), np.transpose(zbins) ])
+  
 
 # Create an empty mask id list
 if( Rxm is not None ):
   ratios = planAreaFractions( Rxm , mskList )
   if( Rt is not None ):
-    vm = maskMeanValues( Rxm, Rt, mskList )
+    vmeam, vvar, vstd = maskMeanValues( Rxm, Rt, mskList )
   
   if( printOn ):
     Rdims = np.array(Rxm.shape)
