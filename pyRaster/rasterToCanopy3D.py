@@ -5,8 +5,6 @@ import numpy as np
 from utilities import writeLog
 from mapTools import *
 from netcdfTools import *
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 
 
