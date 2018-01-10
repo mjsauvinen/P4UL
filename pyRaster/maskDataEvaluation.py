@@ -23,7 +23,7 @@ def maskFromClip( Ri, mclip, mlist ):
   idx = (Ri > mclip )
   Rm[idx] = 1
   mlist.append(1)
-  
+
   return Rm, mlist
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
@@ -33,87 +33,29 @@ def maskFromData(Ri, mlist, mxN=20):
     if( im in Ri ):
       #print(' Mask id = {} found in file.'.format(im))
       mlist.append(im)
-      
+
   return mlist
-  
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
 
-def totalArea( Rdims, dx, fname ):
-  Npx  = np.prod( Rdims ) # Number of pixels
-  At = Npx*np.abs(np.prod(dx))
-  print('\n Total area of {} domain:\n Atot = {:.4g} m^2 \n'.format(fname,At))
-  return At
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
-
-def frontalAreas( Ri ):
-  Ae = 0.
-  for i in xrange( Ri.shape[0] ):
-    ce = (Ri[i,1:] > Ri[i,:-1]).astype(float)
-    he = (Ri[i,1:]-Ri[i,:-1]); he[(he<4.)] = 0. # Height, clip out non-buildings
-    Ae += np.sum( ce * he )
-  
-  An = 0.
-  for j in xrange( Ri.shape[1] ):
-    cn = (Ri[1:,j] > Ri[:-1,j]).astype(float)
-    hn = (Ri[1:,j]-Ri[:-1,j]); hn[(hn<4.)] = 0. 
-    An += np.sum( cn* hn )
-    
-  return Ae, An
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
-
-def maskMeanValues(Rm, Ri, mlist):
-  dims = np.shape(mlist)
-  
-  m_mean = np.zeros(dims)
-  m_var  = np.zeros(dims)
-  m_std  = np.zeros(dims)
-  j = 0
-  for im in mlist:
-    idm = (Rm == im)
-    m_mean[j] = np.mean( Ri[idm] )
-    m_var[j]  = np.var( Ri[idm] )
-    m_std[j]  = np.std( Ri[idm] ) 
-    print(' Mask {} mean, var, std = {:.2f}, {:.2f}, {:.2f} '.format(im, m_mean[j], m_var[j], m_std[j]))
-    j += 1
-  
-  return m_mean, m_var, m_std
-  
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
-
-def planAreaFractions( Ri, mlist ):
-  Npx = np.prod( np.array(Ri.shape) )
-  r = np.zeros( np.shape(mlist) )
-  j = 0
-  for im in mlist:
-    r[j] = np.count_nonzero( Ri == im )/float( Npx )
-    print(' Mask {} plan area fraction = {:.2f} '.format(im, r[j]))
-    j += 1
-    
-  return r
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
 
 def histogram( Rm, Ri, mlist ):
-  
+
   maxv  = int(np.ceil(np.max(Ri)))
   zbins = np.zeros( (len(mlist), maxv) )
-  
+
   j = 0
   for im in mlist:
     LR, labelCount = labelRaster(Rm, im)
-    Np = float(np.count_nonzero( (LR > 0) ))#; print('Np={}'.format(Np)) 
+    Np = float(np.count_nonzero( (LR > 0) ))#; print('Np={}'.format(Np))
 
     for l in xrange(1,labelCount+1):
       idx = (LR==l)
-      w   = np.count_nonzero(idx)/Np#; print('w={}'.format(w)) 
+      w   = np.count_nonzero(idx)/Np#; print('w={}'.format(w))
       kh  = Ri[idx].astype(int)
       for k in kh:
         zbins[j,kh] += 1./Np
-    
+
     j += 1
-    
+
   return zbins
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
@@ -144,7 +86,7 @@ maskAbove = args.maskAbove
 Fafb      = args.Fafb # frontal area fraction
 printOn   = args.printOn
 
-# Set rasters to None 
+# Set rasters to None
 Rm = None; Rt = None
 
 
@@ -165,22 +107,24 @@ if( filedata ):
   dPxt = Rtdict['dPx']
   if( filemask and not all(Rtdims == Rmdims) ):
     sys.exit(' Error! Dimensions of topography and mask files do not agree. Exiting ...')
-    
+
 if( not (filemask or filedata) ):
   sys.exit(' No data files provided, Exiting ...')
 
 
 if( filemask ):
-  Atot = totalArea( Rmdims, dPxm, filemask )
+  Atot = totalArea( Rmdims, dPxm )
+  print('\n Total area of {} domain:\n Atot = {:.4g} m^2 \n'.format(filemask,Atot))
 else:
-  Atot = totalArea( Rtdims, dPxt, filedata )
+  Atot = totalArea( Rtdims, dPxt )
+  print('\n Total area of {} domain:\n Atot = {:.4g} m^2 \n'.format(filedata,Atot))
 
 
 # Compute frontal area fractions
 if( filedata and Fafb ):
   AE, AN = frontalAreas( Rt )
   print('\n Frontal area fractions of {}:\n Ae/Atot = {:.2f}, An/Atot = {:.2f}\n'\
-    .format(filedata, AE/Atot, AN/Atot)) 
+    .format(filedata, AE/Atot, AN/Atot))
 
 
 # Create an empty mask id list
@@ -199,14 +143,14 @@ else:
 zbins = histogram( Rxm, Rt, mskList )
 np.savetxt('mask_height_histogram.dat', \
   np.c_[np.arange(1,len(zbins[0,:])+1), np.transpose(zbins) ])
-  
+
 
 # Create an empty mask id list
 if( Rxm is not None ):
   ratios = planAreaFractions( Rxm , mskList )
   if( Rt is not None ):
     vmeam, vvar, vstd = maskMeanValues( Rxm, Rt, mskList )
-  
+
   if( printOn ):
     Rdims = np.array(Rxm.shape)
     figDims = 13.*(Rdims[::-1].astype(float)/np.max(Rdims))

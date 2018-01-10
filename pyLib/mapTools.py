@@ -141,18 +141,18 @@ def asciiTileToNumpyZ(filename):
 
   Rdict, idx = readAsciiGridHeader( filename )
   R = readAsciiGrid( filename )
-  
+
   Rdict['id'] = idx
   Rdict['ytlcorner'] = Rdict['yllcorner'] + Rdict['cellsize']* Rdict['nrows']
   Rdict['xtlcorner'] = Rdict['xllcorner']
-  
+
   # These are ofter used later.
   Rdict['GlobOrig'] = np.array([ Rdict['ytlcorner'], Rdict['xtlcorner']]) # [N,E]
   Rdict['dPx'] = np.array([ Rdict['cellsize'], Rdict['cellsize'] ])
   Rdict['R'] = R
-  
+
   saveTileAsNumpyZ( filename.strip('.asc'), Rdict )
-  
+
   return Rdict
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
@@ -243,7 +243,7 @@ def readNumpyZTileForMesh( filename ):
     gridRot = Rdict['gridRot'] = 0
 
   # N,E - coords, start from top left.
-  # Sometimes the dPx[0] is correctly negative, but sometimes not. 
+  # Sometimes the dPx[0] is correctly negative, but sometimes not.
   # Here, we need to make sure it's own sign is irrelevant
   dPN = np.abs(dPx[0]); dPE = np.abs(dPx[1])
   Rdict['rowCoords'] = np.arange(RxOrig[0],(RxOrig[0]-Rxdims[0]*dPN),-dPN) # N
@@ -299,21 +299,21 @@ def entry2Int( ax ):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def marginIds( Rxdims, Mw ):
-  
+
   Li = np.zeros(2, int); Ri = Li.copy(); Bi = Li.copy(); Ti = Li.copy()
-  
+
   Li[0]= 0
   Li[1]= max( int( np.ceil(Mw[0]*Rxdims[1]-1) ), 1 )  # These can never be -1.
-  
+
   Ri[0]= min( int((1.-Mw[1])*Rxdims[1]+1), Rxdims[1]-1 )
   Ri[1]= Rxdims[1]
-  
+
   Bi[0]= min( int((1.-Mw[2])*Rxdims[0]+1), Rxdims[0]-1 )
   Bi[1]= Rxdims[0]
-  
+
   Ti[0]= 0
   Ti[1]= max( int( np.ceil(Mw[3]*Rxdims[0]-1) ), 1 )  # These can never be -1.
-  
+
   return Li, Ri, Bi, Ti
 
 
@@ -330,10 +330,10 @@ def applyMargins( Rx, Mw, Mr, Mh ):
     T1 = T12[0]; T2 = T12[1]
     #print('Margin\nL:{},{},R:{},{},T:{},{},B:{},{}'.format(L1,L2,R1,R2,T1,T2,B1,B2))
 
-    if( not all( L12 == 0 ) ): Rx[:,L1:L2] = Mh[0] 
+    if( not all( L12 == 0 ) ): Rx[:,L1:L2] = Mh[0]
     if( not all( R12 == 0 ) ): Rx[:,R1:R2] = Mh[1]
     if( not all( T12 == 0 ) ): Rx[T1:T2,:] = Mh[3]
-    if( not all( B12 == 0 ) ): Rx[B1:B2,:] = Mh[2]    
+    if( not all( B12 == 0 ) ): Rx[B1:B2,:] = Mh[2]
 
 
   else:
@@ -346,33 +346,33 @@ def applyMargins( Rx, Mw, Mr, Mh ):
     print(' Ramp margins: L={}, R={}, B={}, T={}'.format(Mr[0],Mr[1],Mr[2],Mr[3]))
     dL  = int(Mr[0]*Rxdims[1]); dR = int(Mr[1]*Rxdims[1])
     dB  = int(Mr[2]*Rxdims[0]); dT = int(Mr[3]*Rxdims[0])
-    
+
     L11 = max(L2-1,0) ; L22 = L2+dL
     R11 = R1-dR       ; R22 = min(R1+1, Rxdims[1])
     B11 = B1-dB       ; B22 = min(B1+1, Rxdims[0])
     T11 = max(T2-1,0) ; T22 = T2+dT
     #print('Ramp\nL:{},{},R:{},{},T:{},{},B:{},{}'.format(L11,L22,R11,R22,T11,T22,B11,B22))
 
-    
+
     if( dL != 0 ):
       if( (Mw[0] is None) or (Mw[0] ==0.) ):
         Rx = applyRamp( Rx, L11, L22, 1, 0, Mh )
       else:
         Rx = applyRamp( Rx, L11, L22, 1, 0 )
-    
+
     if( dR != 0 ):
       if( (Mw[1] is None) or (Mw[1] ==0.) ):
         Rx = applyRamp( Rx, R11, R22, 1, 1, Mh )
       else:
         Rx = applyRamp( Rx, R11, R22, 1, 1 )
-        
-    if( dB != 0 ): 
+
+    if( dB != 0 ):
       if( (Mw[2] is None) or (Mw[2] ==0.) ):
         Rx = applyRamp( Rx, B11, B22, 0, 1, Mh )
       else:
         Rx = applyRamp( Rx, B11, B22, 0, 1 )
-        
-    if( dT != 0 ): 
+
+    if( dT != 0 ):
       if( (Mw[3] is None) or (Mw[3] ==0.) ):
         Rx = applyRamp( Rx, T11, T22, 0, 0, Mh )
       else:
@@ -389,9 +389,9 @@ def applyRamp( Rz, L1, L2, LeftRight, End, Mh=None ):
   w -= np.min(w); w /= np.max(w)
   w *= np.pi    ; w -= (np.pi/2.)
   w = np.sin(w)/2. + 0.5
-  
+
   if  ( LeftRight and not End ):      # Left
-    if( Mh is None ): Rm = Rz[:,L1] 
+    if( Mh is None ): Rm = Rz[:,L1]
     else:             Rm = Mh[0]
     #
   elif( LeftRight and End ):          # Right
@@ -400,7 +400,7 @@ def applyRamp( Rz, L1, L2, LeftRight, End, Mh=None ):
   elif( not LeftRight and End ):      # Bottom
     if( Mh is None ): Rm = Rz[L2,:]
     else:             Rm = Mh[2]
-  else:                               # Top 
+  else:                               # Top
     if( Mh is None ): Rm = Rz[L1,:]
     else:             Rm = Mh[3]
 
@@ -502,7 +502,7 @@ def labelRaster(R, maskId=None):
     Rtmp[~(R==maskId)] = 0.   # Set other mask values to zero
   else:
     Rtmp = R
-    
+
   Rl, shapeCount = snms.label(Rtmp) # this might be slow for unfiltered data
   print(' Found {} shapes from the data.'.format(shapeCount))
 
@@ -562,11 +562,69 @@ def canopyBetaFunction(height,dpz,alpha,beta,lai):
   z_col=np.arange(0.,height+dpz[2],dpz[2])  # BUG HERE: np.arange(0.,height/dpz[2],dpz[2])
   z_col=np.divide(z_col,height) # z/H
   #print(' z_col (2) = {}'.format(z_col))
-  
+
   lad_d = betadist.pdf(z_col,alpha,beta)/height
   #print(' lad_d = {}'.format(lad_d))
   lad=np.multiply(lad_d,lai)
   return lad
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def totalArea( Rdims, dx ):
+  #Calculate total area of the domain
+  Npx  = np.prod( Rdims ) # Number of pixels
+  At = Npx*np.abs(np.prod(dx))
+  return At
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def frontalAreas( Ri ):
+  # Calculate frontal areas of the domain
+  Ae = 0.
+  for i in xrange( Ri.shape[0] ):
+    ce = (Ri[i,1:] > Ri[i,:-1]).astype(float)
+    he = (Ri[i,1:]-Ri[i,:-1]); he[(he<4.)] = 0. # Height, clip out non-buildings
+    Ae += np.sum( ce * he )
+
+  An = 0.
+  for j in xrange( Ri.shape[1] ):
+    cn = (Ri[1:,j] > Ri[:-1,j]).astype(float)
+    hn = (Ri[1:,j]-Ri[:-1,j]); hn[(hn<4.)] = 0.
+    An += np.sum( cn* hn )
+
+  return Ae, An
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def maskMeanValues(Rm, Ri, mlist):
+  dims = np.shape(mlist)
+
+  m_mean = np.zeros(dims)
+  m_var  = np.zeros(dims)
+  m_std  = np.zeros(dims)
+  j = 0
+  for im in mlist:
+    idm = (Rm == im)
+    m_mean[j] = np.mean( Ri[idm] )
+    m_var[j]  = np.var( Ri[idm] )
+    m_std[j]  = np.std( Ri[idm] )
+    print(' Mask {} mean, var, std = {:.2f}, {:.2f}, {:.2f} '.format(im, m_mean[j], m_var[j], m_std[j]))
+    j += 1
+
+  return m_mean, m_var, m_std
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def planAreaFractions( Ri, mlist ):
+  Npx = np.prod( np.array(Ri.shape) )
+  r = np.zeros( np.shape(mlist) )
+  j = 0
+  for im in mlist:
+    r[j] = np.count_nonzero( Ri == im )/float( Npx )
+    print(' Mask {} plan area fraction = {:.2f} '.format(im, r[j]))
+    j += 1
+
+  return r
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*

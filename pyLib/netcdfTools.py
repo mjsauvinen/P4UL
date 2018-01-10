@@ -287,13 +287,13 @@ def read3dDataFromNetCDF( fname, nameDict, cl=1 ):
   independent or dependent variable in function createNetcdfVariable().
   '''
   parameter = True;  variable  = False
-  
+
   '''
   Create a NETCDF input dataset (ds), and its associated lists of dependent (varList)
   and independent (dimList) variables.
   '''
   ds, varList, paramList = netcdfDataset(fname)
-  
+
   '''
   Read cell center coordinates and time.
   Create the output independent variables right away and empty memory.
@@ -303,11 +303,11 @@ def read3dDataFromNetCDF( fname, nameDict, cl=1 ):
   y, y_dims = read1DVariableFromDataset(nameDict['yname'], ds, paramList, 0, 0, cl )
   z, z_dims = read1DVariableFromDataset(nameDict['zname'] ,ds, paramList, 0, 0, cl )
   x[np.isnan(x)] = 0.  # Clear away NaNs
-  y[np.isnan(y)] = 0.  # 
+  y[np.isnan(y)] = 0.  #
   z[np.isnan(z)] = 0.  #
   '''
   Read in the velocity components.
-  PALM netCDF4: 
+  PALM netCDF4:
   u(time, zu_3d, y, xu)
   v(time, zu_3d, yv, x)
   w(time, zw_3d, y, x)
@@ -315,14 +315,14 @@ def read3dDataFromNetCDF( fname, nameDict, cl=1 ):
   print(' Extracting {} from dataset ... '.format( nameDict['varname'] ))
   v, v_dims = read3DVariableFromDataset(nameDict['varname'], ds, varList, 0, 0, 0, cl) # All values.
   print(' {}_dims = {}\n Done!'.format(nameDict['varname'], v_dims ))
-  
+
   dataDict = dict()
   dataDict['v'] = v
   dataDict['x'] = x
   dataDict['y'] = y
   dataDict['z'] = z
   dataDict['time'] = time
-  
+
   return dataDict
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
