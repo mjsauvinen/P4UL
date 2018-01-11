@@ -84,8 +84,8 @@ Loop through horizontal grid and use slices to fill the z grid.
 '''
 if (mask):
   topo = fillTopographyArray(Rtopo, Rdims, Rdpx, int)
-  topovar = createNetcdfVariable(dso, topo, args.varname, 0, '', int32, ('z', 'y', 'x',), variable, args.compress)
+  topovar = createNetcdfVariable(dso, topo, args.varname, 0, 'm', int32, ('z', 'y', 'x',), variable, args.compress)
   topovar.lod = 2
 else:
-  topovar = createNetcdfVariable(dso, Rtopo, args.varname, 0, '', float32, ('y', 'x',), variable, args.compress)
+  topovar = createNetcdfVariable(dso, Rtopo, args.varname, 0, 'm', float32, ('y', 'x',), variable, args.compress)
 netcdfWriteAndClose(dso)

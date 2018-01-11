@@ -570,6 +570,64 @@ def canopyBetaFunction(height,dpz,alpha,beta,lai):
   return lad
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def totalArea( Rdims, dx ):
+  #Calculate total area of the domain
+  Npx  = np.prod( Rdims ) # Number of pixels
+  At = Npx*np.abs(np.prod(dx))
+  return At
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def frontalAreas( Ri ):
+  # Calculate frontal areas of the domain
+  Ae = 0.
+  for i in xrange( Ri.shape[0] ):
+    ce = (Ri[i,1:] > Ri[i,:-1]).astype(float)
+    he = (Ri[i,1:]-Ri[i,:-1]); he[(he<4.)] = 0. # Height, clip out non-buildings
+    Ae += np.sum( ce * he )
+
+  An = 0.
+  for j in xrange( Ri.shape[1] ):
+    cn = (Ri[1:,j] > Ri[:-1,j]).astype(float)
+    hn = (Ri[1:,j]-Ri[:-1,j]); hn[(hn<4.)] = 0.
+    An += np.sum( cn* hn )
+
+  return Ae, An
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def maskMeanValues(Rm, Ri, mlist):
+  dims = np.shape(mlist)
+
+  m_mean = np.zeros(dims)
+  m_var  = np.zeros(dims)
+  m_std  = np.zeros(dims)
+  j = 0
+  for im in mlist:
+    idm = (Rm == im)
+    m_mean[j] = np.mean( Ri[idm] )
+    m_var[j]  = np.var( Ri[idm] )
+    m_std[j]  = np.std( Ri[idm] )
+    print(' Mask {} mean, var, std = {:.2f}, {:.2f}, {:.2f} '.format(im, m_mean[j], m_var[j], m_std[j]))
+    j += 1
+
+  return m_mean, m_var, m_std
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def planAreaFractions( Ri, mlist ):
+  Npx = np.prod( np.array(Ri.shape) )
+  r = np.zeros( np.shape(mlist) )
+  j = 0
+  for im in mlist:
+    r[j] = np.count_nonzero( Ri == im )/float( Npx )
+    print(' Mask {} plan area fraction = {:.2f} '.format(im, r[j]))
+    j += 1
+
+  return r
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
