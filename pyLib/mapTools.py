@@ -211,8 +211,9 @@ def saveTileAsNumpyZ( filename, Rdict):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def readNumpyZTile( filename, dataOnly=False ):
-  print(' Read filename {} '.format(filename))
+def readNumpyZTile( filename, dataOnly=False, verbose=True):
+  if (verbose):
+    print(' Read filename {} '.format(filename))
   # dat must be closed to avoid leaking file descriptors.
   dat = np.load(filename)
   Rdict = dict(dat)

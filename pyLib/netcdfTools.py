@@ -269,11 +269,11 @@ def vectorPrimeComponent(vc, vm):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, zlib=False):
+def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, zlib=False, fill_value=None):
 
   if(parameter):
     dso.createDimension(vName, vLen)
-  var = dso.createVariable(vName, vType, vTuple, zlib=zlib)
+  var = dso.createVariable(vName, vType, vTuple, zlib=zlib, fill_value=fill_value)
   var.units = vUnits
   var[:] = v
   v = None
@@ -296,7 +296,7 @@ def createCoordinateAxis(dso, Rdims, Rdpx, axis, varname, formatstr, unit, param
     # dpx is in [N,E], see getGeoTransform() in gdalTools.py
     arr[i] = i * Rdpx[axis]
   axvar = createNetcdfVariable(dso, arr, varname, len(
-      arr), varname, formatstr, (varname,), parameter, zlib)
+      arr), unit, formatstr, (varname,), parameter, zlib)
   arr = None
   return axvar
 
@@ -319,3 +319,78 @@ def fillTopographyArray(Rtopo, Rdims, Rdpx, datatype):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def read3dDataFromNetCDF( fname, nameDict, cl=1 ):
+  '''
+  Establish two boolean variables which indicate whether the created variable is an
+  independent or dependent variable in function createNetcdfVariable().
+  '''
+  parameter = True;  variable  = False
+
+  '''
+  Create a NETCDF input dataset (ds), and its associated lists of dependent (varList)
+  and independent (dimList) variables.
+  '''
+  ds, varList, paramList = netcdfDataset(fname)
+
+  '''
+  Read cell center coordinates and time.
+  Create the output independent variables right away and empty memory.
+  '''
+  time, time_dims = read1DVariableFromDataset('time', ds, paramList, 0, 0, 1 ) # All values.
+  x, x_dims = read1DVariableFromDataset(nameDict['xname'], ds, paramList, 0, 0, cl )
+  y, y_dims = read1DVariableFromDataset(nameDict['yname'], ds, paramList, 0, 0, cl )
+  z, z_dims = read1DVariableFromDataset(nameDict['zname'] ,ds, paramList, 0, 0, cl )
+  x[np.isnan(x)] = 0.  # Clear away NaNs
+  y[np.isnan(y)] = 0.  #
+  z[np.isnan(z)] = 0.  #
+  '''
+  Read in the velocity components.
+  PALM netCDF4:
+  u(time, zu_3d, y, xu)
+  v(time, zu_3d, yv, x)
+  w(time, zw_3d, y, x)
+  '''
+  print(' Extracting {} from dataset ... '.format( nameDict['varname'] ))
+  v, v_dims = read3DVariableFromDataset(nameDict['varname'], ds, varList, 0, 0, 0, cl) # All values.
+  print(' {}_dims = {}\n Done!'.format(nameDict['varname'], v_dims ))
+
+  dataDict = dict()
+  dataDict['v'] = v
+  dataDict['x'] = x
+  dataDict['y'] = y
+  dataDict['z'] = z
+  dataDict['time'] = time
+
+  return dataDict
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+def setPIDSGlobalAtrributes(ds, globalAttributes):
+  import netCDF4
+  # Set PIDS global attributes to data set file
+  ds.Conventions = globalAttributes['conventions']
+  ds.palm_version = globalAttributes['palm_version']
+  ds.title = globalAttributes['title']
+  ds.acronym = globalAttributes['acronym']
+  ds.campaign = globalAttributes['campaign']
+  ds.institution = globalAttributes['institution']
+  ds.author = globalAttributes['author']
+  ds.contact_person = globalAttributes['contact_person']
+  ds.licence = globalAttributes['licence']
+  ds.history = globalAttributes['history']
+  ds.keywords = globalAttributes['keywords']
+  ds.references = globalAttributes['references']
+  ds.comment = globalAttributes['comment']
+  ds.data_content = globalAttributes['data_content']
+  ds.source = globalAttributes['source']
+  ds.dependencies = globalAttributes['dependencies']
+  ds.location = globalAttributes['location']
+  ds.site = globalAttributes['site']
+  ds.origin_x = float(globalAttributes['origin_x'])
+  ds.origin_y = float(globalAttributes['origin_y'])
+  ds.origin_z = float(globalAttributes['origin_z'])
+  ds.origin_lat = float(globalAttributes['origin_lat'])
+  ds.origin_lon = float(globalAttributes['origin_lon'])
+  ds.rotation_angle = float(globalAttributes['rotation_angle'])
+  ds.origin_time = float(globalAttributes['origin_time'])
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
