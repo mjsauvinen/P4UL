@@ -22,6 +22,7 @@ parser.add_argument("-vn","--varname", type=str, default=None,\
   help="Variable name to appear in the figures.")
 parser.add_argument("-m", "--mode", type=str, default='S', choices=['S', 'E', 'P'],\
   help="Mode: 'S': power spectral density, 'E': energy spectrum, 'P': power spectrum.")
+
 # -- group for mutually exclusive entries -- #
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument("-it", "--icolt", type=int,\

@@ -36,6 +36,7 @@ def maskFromData(Ri, mlist, mxN=20):
 
   return mlist
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
 
 def histogram( Rm, Ri, mlist ):
 
@@ -49,10 +50,9 @@ def histogram( Rm, Ri, mlist ):
 
     for l in xrange(1,labelCount+1):
       idx = (LR==l)
-      w   = np.count_nonzero(idx)/Np#; print('w={}'.format(w))
-      kh  = Ri[idx].astype(int)
-      for k in kh:
-        zbins[j,kh] += 1./Np
+      w  = np.count_nonzero(idx) #; print('w={}'.format(w))
+      k  = int( np.mean( Ri[idx] ) )
+      zbins[j,k] += w/Np
 
     j += 1
 
@@ -73,6 +73,8 @@ parser.add_argument("-mx", "--maxMaskNo",type=int, default=20,\
   help="Maximum mask id value. Default=20")
 parser.add_argument("-ma", "--maskAbove", help="Mask all above given value.",\
   type=int, default=None)
+parser.add_argument("-eff", "--effArea", help="Consider the effective area (excluding zero buffers) only.",\
+  action="store_true", default=False)
 parser.add_argument("-p", "--printOn", help="Print the numpy array data.",\
   action="store_true", default=False)
 args = parser.parse_args()
@@ -84,7 +86,9 @@ filedata  = args.filedata
 maxMaskNo = args.maxMaskNo
 maskAbove = args.maskAbove
 Fafb      = args.Fafb # frontal area fraction
+effArea   = args.effArea
 printOn   = args.printOn
+
 
 # Set rasters to None
 Rm = None; Rt = None
@@ -110,6 +114,25 @@ if( filedata ):
 
 if( not (filemask or filedata) ):
   sys.exit(' No data files provided, Exiting ...')
+
+ix = 0
+if( effArea ):
+  if( filemask ):
+    for i in xrange( len(Rm[0,:]) ):
+      nz = np.count_nonzero( Rm[:,i] )
+      if( nz > 0 ): 
+        ix = i; break
+    
+    Rm = Rm[:,ix:].copy(); Rmdims = np.array(np.shape(Rm))
+    
+  if( filedata ):
+    if( ix == 0 ):
+      for i in xrange( len(Rt[0,:]) ):
+        nz = np.count_nonzero( Rt[:,i] )
+        if( nz > 0 ): 
+          ix = i; break
+    Rt = Rt[:,ix:].copy(); Rtdims = np.array(np.shape(Rt))
+    #print(' ix = {}, shape = {}'.format(ix, Rtdims))
 
 
 if( filemask ):
@@ -142,7 +165,8 @@ else:
 
 zbins = histogram( Rxm, Rt, mskList )
 np.savetxt('mask_height_histogram.dat', \
-  np.c_[np.arange(1,len(zbins[0,:])+1), np.transpose(zbins) ])
+  np.c_[np.arange(1,len(zbins[0,:])+1), 100.*np.transpose(zbins) ])
+#print(' sum = {} '.format( np.sum(zbins[0,:])))
 
 
 # Create an empty mask id list

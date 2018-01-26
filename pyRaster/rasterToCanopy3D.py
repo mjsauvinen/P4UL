@@ -15,26 +15,43 @@ Writes PLANT_CANOPY_DATA_3D for PALM from input raster data.
 
 #==========================================================#
 parser = argparse.ArgumentParser(prog='rasterToCanopy3D.py', description='''Writes PLANT_CANOPY_DATA_3D for PALM from input raster data.''')
-parser.add_argument("-f","--filename", type=str, help="Name of the input raster data file.")
-parser.add_argument("-fo", "--fileout", type=str, help="Name of the output 3D data file.", \
-  default='PLANT_CANOPY_DATA_3D')
-parser.add_argument("-dz", "--dZ", type=float, help="Resolution of the z axis. Defaults to resolution of N axis.")
-parser.add_argument("-a", "--alpha", type=float, help="Dimensionless coefficient required for constructing the leaf area density (LAD) profile, using beta probability density function (Markkanen et al., 2003, BLM 106, 437-459).")
-parser.add_argument("-b", "--beta", type=float, help="Dimensionless coefficient required for constructing the leaf area density (LAD) profile, using beta probability density function.")
-parser.add_argument("-l", "--lai", type=float, help="Leaf area index LAI value. LAI is the vertical integral over the LAD profile.")
-parser.add_argument("-am", "--asmask", type=str, default=None, help="Output a 3D array mask instead of a text file formatted for PALM. The argument is a file type, use nc for NetCDF4 output and npz for Numpy Z array.")
-parser.add_argument("-t", "--threshold", type=float, default=0.0, help="Threshold LAD value to be used when generating a 3D mask. Grid points with a LAD value over the threshold will be set to 1 while the rest is set to 0. Effective only if --asmaks is set.")
+parser.add_argument("-f","--filename", type=str, \
+  help="Name of the input raster data file.")
+parser.add_argument("-fo", "--fileout", type=str, default='PLANT_CANOPY_DATA_3D', \
+  help="Name of the output 3D data file. Default='PLANT_CANOPY_DATA_3D'. ")
+parser.add_argument("-dz", "--dz", type=float, default=None, \
+  help="Resolution of the z axis. Defaults to resolution of N axis.")
+parser.add_argument("-m", "--method", type=str, default='const', choices=['prof', 'const'],\
+  help="Method for LAD distribution. Opt 'prof': Alfa-beta profile in z-direction. Opt 'const': Constant value per cell.")
+parser.add_argument("-a", "--alpha", type=float, default=None, \
+  help="Method 'prof': Dimensionless coefficient required for constructing the leaf area density (LAD) profile, using beta probability density function (Markkanen et al., 2003, BLM 106, 437-459).")
+parser.add_argument("-b", "--beta", type=float, default=None, \
+  help="Method 'prof': Dimensionless coefficient required for constructing the leaf area density (LAD) profile, using beta probability density function.")
+parser.add_argument("-l", "--lai", type=float, default=6.,\
+  help="Leaf area index LAI value. Method 'prof': LAI is the vertical integral over the LAD profile. Method 'const': Reference LAI, which will be used to evaluate constant <LAD>_z = LAI_ref/(zref[1]-zref[0]), where zref[0] and zref[1] refer to the values given also as input. Default=6.")
+parser.add_argument("-zr", "--zref", type=float, nargs=2, metavar=('ZREF[0]','ZREF[1]'), default=[4.,20.],\
+  help="Method 'const':  The starting height of the foliage and the total height, respectively, of the reference tree whose LAI is given as input. Default=[4,20].")
+parser.add_argument("-am", "--asmask", type=str, default=None, \
+  help="Output a 3D array mask instead of a text file formatted for PALM. The argument is a file type, use nc for NetCDF4 output and npz for Numpy Z array.")
+parser.add_argument("-t", "--threshold", type=float, default=0.0, \
+  help="Threshold LAD value to be used when generating a 3D mask. Grid points with a LAD value over the threshold will be set to 1 while the rest is set to 0. Effective only if --asmaks is set.")
 args = parser.parse_args()
 writeLog(parser, args)
 
 #==========================================================#
-
+# Renaming ... that's all 
 filename = args.filename
+method   = args.method
 alpha    = args.alpha
 beta     = args.beta
 lai      = args.lai
-dZ       = args.dZ
+dz       = args.dz
 fileout  = args.fileout
+zref     = args.zref
+
+constantLAD = ( method == 'const' )
+profileLAD  = ( method == 'prof'  )
+
 
 Rdict = readNumpyZTile( filename )
 R = Rdict['R']
@@ -43,8 +60,8 @@ dPx = Rdict['dPx']
 
 # Calculate the shape of the new 3D array, use largest in-canopy value
 nPx3D = nPx; dPx3D = dPx
-if ( dZ ):
-  dPx3D = np.append(dPx, args.dZ)
+if ( dz ):
+  dPx3D = np.append(dPx, dz)
 else:
   dPx3D = np.append(dPx, dPx[0])
 
@@ -52,26 +69,43 @@ nPx3D = np.append(nPx3D, int(np.floor(np.amax(R)/dPx3D[2])+1))
 
 # Fill the 3D canopy array
 canopy = np.zeros([nPx3D[1], nPx3D[0], nPx3D[2]])
-nPx3D=[nPx3D[1], nPx3D[0], nPx3D[2]]
-print(" 3D grid array dimensions [x,y,z]: {}, {}, {}".format(*nPx3D))
-print(" Calculating vertical profiles of leaf area densities...")
+nPc=[nPx3D[1], nPx3D[0], nPx3D[2]]
+dPc=[dPx3D[1], dPx3D[0], dPx3D[2]]
+print(" 3D grid array dimensions [x,y,z]: {}, {}, {}".format(*nPc))
+print(" Generating vertical distributions of leaf area densities ...")
+
+
+# Compute <LAD>_z and starting index of the foliage using reference values
+if( constantLAD ):
+  lad_const = lai/(zref[1]-zref[0]) * dPc[2]
+  istart    = int( np.round(zref[0]/float(dPc[2])) )
+
+Rry = R[::-1,:]
+print(' Rry shape = {} '.format(Rry.shape))
 
 # Calculate leaf area density profiles for each horizontal grid tile and fill array vertically
-for iy in xrange(nPx3D[0]):
-  for ix in xrange(nPx3D[1]):
+for iy in xrange(nPc[1]):
+  for ix in xrange(nPc[0]):
     # Reverse the y-axis because of the top-left origo in raster
-    canopyHeight = R[-iy - 1, ix]
+    canopyHeight = Rry[iy,ix]
     # Check if there is canopy at all in the vertical column
     if (canopyHeight == 0.0):
       continue
-    nind = int(np.floor(canopyHeight / float(dPx3D[2])))+1 # Number of layers
-    if( nind > 3 ):
+    
+    # Number of layers
+    nind = int(np.floor(canopyHeight / float(dPc[2]))) + 1 
+
+    if( profileLAD and (nind > 3) ):
       # Calculate LAD profile
-      lad = canopyBetaFunction(canopyHeight,dPx3D, alpha, beta, lai)
-      # BUG: canopy[ix,iy,0:nind-1] = lad
+      lad = canopyBetaFunction(canopyHeight,dPc, alpha, beta, lai)
       iend = min( nind, len(lad) )
       canopy[ix,iy,0:iend] = lad[0:iend] #  Grid point at canopy top level gets value 0
-print(" ...done.")
+    elif( constantLAD ):
+      iend = int(np.ceil(canopyHeight/dPc[2]))
+      iend = min( iend, nPc[2] )
+      canopy[ix,iy,istart:iend] = lad_const
+
+print(" ... done.")
 
 # Write output data file
 print(" Writing output file...")
@@ -88,9 +122,9 @@ if (args.asmask):
     # Maybe someday PALM can read canopy data from NetCDF4
     dso = netcdfOutputDataset(args.fileout)
     # Create dimensions
-    xv = createCoordinateAxis(dso, nPx3D, dPx3D, 1, 'x', 'f4', 'm', parameter=True)
-    yv = createCoordinateAxis(dso, nPx3D, dPx3D, 0, 'y', 'f4', 'm', parameter=True)
-    zv = createCoordinateAxis(dso, nPx3D, dPx3D, 2, 'z', 'f4', 'm', parameter=True)
+    xv = createCoordinateAxis(dso, nPc, dPc, 1, 'x', 'f4', 'm', parameter=True)
+    yv = createCoordinateAxis(dso, nPc, dPc, 0, 'y', 'f4', 'm', parameter=True)
+    zv = createCoordinateAxis(dso, nPc, dPc, 2, 'z', 'f4', 'm', parameter=True)
     # Due to a bug Paraview cannot read x,y,z correctly so rolling to z,y,x
     canopymask=np.rollaxis(canopymask,2)
     canopymask=np.swapaxes(canopymask,1,2)
@@ -100,10 +134,10 @@ if (args.asmask):
 else:
   fx = open( fileout, 'w')
   # The first row of the file is number of vertical canopy layers
-  fx.write(str(nPx3D[2])+"\n")
+  fx.write(str(nPc[2])+"\n")
   # Loop through the verical canopy columns
-  for x in xrange(nPx3D[1]):
-    for y in xrange(nPx3D[0]):
+  for x in xrange(nPc[0]):
+    for y in xrange(nPc[1]):
       if (np.all(canopy[x,y,:]==0)):
         # There is no need to write empty columns
         continue
