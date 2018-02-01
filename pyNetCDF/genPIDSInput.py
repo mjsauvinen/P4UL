@@ -38,6 +38,10 @@ del globalAttributes['__name__']
 for attr, val in globalAttributes.iteritems():
   print("{}: {}".format(attr,val))
 
+'''
+Topography configuration data
+'''
+
 print("\nTopography configuration:")
 topoConfig = config._sections['Topography']
 del topoConfig['__name__']
@@ -66,6 +70,10 @@ print("buildings_lod: {}".format(buildLOD))
 if (buildNPx[0:2] != oroNPx):
   raise ValueError("Horizontal dimensionality of buildings array doesn't match the orography: the shape of orography array is {} while the shape of buildings array is {}.".format(oroNPx, buildNPx))
 
+'''
+Surface classification data
+'''
+
 print("\nSurface configuration:")
 surfConfig = config._sections['Surface']
 del surfConfig['__name__']
@@ -80,6 +88,8 @@ for attr, val in surfConfig.iteritems():
 
 if (buildIDNPx != oroNPx):
   raise ValueError("Dimensionality of building ID array doesn't match the orography: the shape of the orography array is {} while the shape of the building ID array is {}.".format(oroNPx, buildIDNPx))
+
+
 
 '''
 Open the output netCDF files and write global attributes to them.
@@ -102,7 +112,7 @@ if (bMask):
   zvStatic.long_name = "distance to origin in z-direction"
 
 '''
-Write variables into PIDS_STATIC
+Write minimum required data into PIDS_STATIC
 '''
 oroR = np.swapaxes(oroR,0,1) # [x,y] -> [y,x]
 oroNCVar = createNetcdfVariable(pidsStaticDS, oroR, 'orography_2D', 0, 'm', 'f4', ('y','x'), False, False, fill_value=-9999.9)
@@ -119,6 +129,12 @@ buildNCVar.lod = int(buildLOD)
 
 buildIDNCVar = createNetcdfVariable(pidsStaticDS, buildIDR, 'building_id', 0, 'm', 'i4', ('y','x'), False, False, fill_value=-9999)
 buildIDNCVar.long_name= "building_id"
+
+'''
+Write optional variables into PIDS_STATIC
+'''
+
+
 
 '''
 Close all datasets.
