@@ -99,7 +99,7 @@ while 1:
           else:          
             labelStr  = ' {0}(time={1:.0f} s, {2})'.format(varList[iy],time[j],xStr)
         
-          idy = (y[j,:-1] < 1.e+9)
+          idy = (y[j,:] < 1.e+9); idy[:-1] = False  # Set last false to skip it
           if( np.count_nonzero(idy) > (len(idy)/3)):
             plotTxt   = [labelStr, xStr, varList[iy]]
             fig = addToPlot(fig, xdict[xStr][idy], y[j,idy], labelStr, plotTxt, logOn)
