@@ -21,9 +21,13 @@ parser = argparse.ArgumentParser(prog='plotNetCdf1D.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of the input NETCDF file.")
 parser.add_argument("--log", help="Logarithmic y-axis.", action="store_true",\
   default=False)
+parser.add_argument("--tavg", help="Time-averaged values (if applicable).", action="store_true",\
+  default=False)
+parser.add_argument("-ts", "--timeskip",type=int, default=0, \
+  help="Number of skipped time instances (if applicable).")
 parser.add_argument("--labels", help="User specified labels.", action="store_true",\
   default=False)
-parser.add_argument("-wa", "--writeAscii", help="Write X, Y[-1,:] data to an ascii file.",\
+parser.add_argument("-wa", "--writeAscii", help="Write X, Y[-1,:] (or time averaged Y) data to an ascii file.",\
   action="store_true", default=False)
 parser.add_argument("-waa", "--writeAllAscii", help="Write X, Y data to an ascii file.",\
   action="store_true", default=False)
@@ -32,8 +36,10 @@ args = parser.parse_args()
 # Initial renaming operations and variable declarations
 
 filename = args.filename
+tskip    = args.timeskip
 labelsOn = args.labels
 logOn    = args.log
+timeAverageOn = args.tavg
 writeAscii = args.writeAscii or args.writeAllAscii
 writeAll   = args.writeAllAscii
 
@@ -81,30 +87,45 @@ while 1:
     elif(len(np.shape(y)) == 2):
       time  = xdict['time']
       xList = xdict.keys(); xList.remove('time') # remove time ...
-      xStr = xList[0]                            # and take what is left.
-      # Plot each time instance of the profile
-      for j in xrange(len(time)):
-        if( time[j] == None ): 
-          labelStr  = ' {}({})'.format(varList[iy],xStr)
-        else:          
-          labelStr  = ' {0}(time={1:.0f} s, {2})'.format(varList[iy],time[j],xStr)
-        
-        idy = (y[j,:] < 1.e+9)
-        if( np.count_nonzero(idy) > (len(idy)/3)):
-          plotTxt   = [labelStr, xStr, varList[iy]]
-          fig = addToPlot(fig, xdict[xStr][idy], y[j,idy], labelStr, plotTxt, logOn)
-        else:
-          pass
+      xStr = xList[0]                            # and take what is left ... z-something, typically
+      tskip = min(tskip, len(time)-1)
       
+      
+      # Plot profiles for chosen time instances
+      if( not timeAverageOn ):
+        for j in xrange(tskip, len(time)):
+          if( time[j] == None ): 
+            labelStr  = ' {}({})'.format(varList[iy],xStr)
+          else:          
+            labelStr  = ' {0}(time={1:.0f} s, {2})'.format(varList[iy],time[j],xStr)
+        
+          idy = (y[j,:-1] < 1.e+9)
+          if( np.count_nonzero(idy) > (len(idy)/3)):
+            plotTxt   = [labelStr, xStr, varList[iy]]
+            fig = addToPlot(fig, xdict[xStr][idy], y[j,idy], labelStr, plotTxt, logOn)
+          else:
+            pass
+      
+      else: # timeAverageOn
+        tskip = max( 1, tskip )  # The first should almost always be skipped.
+        labelStr  = '  <{}>_t({})'.format(varList[iy],xStr)
+        plotTxt   = [labelStr, xStr, varList[iy]]
+        fig = addToPlot(fig, xdict[xStr][:-1], np.nanmean(y[tskip:,:-1], axis=0), labelStr, plotTxt, logOn)
+        
+        
+        
       if( writeAscii ):
         print(' (2) Writing data to ascii file: {}.dat'.format(varList[iy]))
         print(' x.shape = {} vs y.shape = {}'.format(np.shape(xdict[xStr]), np.shape(y)))
         if(writeAll):
           hStr = ' {} at times = {}'.format(varList[iy], time )
-          np.savetxt(varList[iy]+'.dat', np.c_[xdict[xStr], np.transpose(y)], header=hStr )
+          np.savetxt(varList[iy]+'.dat', np.c_[xdict[xStr], np.transpose(y[tskip:,:-1])], header=hStr )
         else:
           hStr = ' {} at times = {}'.format(varList[iy], time[-1] )
-          np.savetxt(varList[iy]+'.dat', np.c_[xdict[xStr], np.transpose(y[-1,:])], header=hStr )
+          if( timeAverageOn):
+            np.savetxt(varList[iy]+'_tavg.dat', np.c_[xdict[xStr][:-1], np.transpose(np.nanmean(y[tskip:,:-1], axis=0))], header=hStr)
+          else:   
+            np.savetxt(varList[iy]+'.dat', np.c_[xdict[xStr][:-1], np.transpose(y[-1,:-1])], header=hStr )
     
     else:
       sys.exit(' Plotting of profiles with more than one spatial dimension not supported.')
