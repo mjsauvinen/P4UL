@@ -22,13 +22,19 @@ args = parser.parse_args()
 writeLog(parser, args)
 
 #==========================================================#
+# Renaming ...
+parentFile = args.parent 
+childFile  = args.child
+
+
 
 # Read grid information from both files
-RdictParent = readNumpyZTile(args.parent)
-nPxParent = np.shape(RdictParent['R'])
+RdictParent = readNumpyZTile(parentFile)
+nPxParent   = np.shape(RdictParent['R'])
 ROrigParent = RdictParent['GlobOrig']
-dPxParent = RdictParent['dPx']
-if( 'gridRot' in RdictParent.keys()): gridRot = RdictParent['gridRot'] # Grid rotation may not be present in the dictionary
+dPxParent   = RdictParent['dPx']
+# Grid rotation may not be present in the dictionary
+if( 'gridRot' in RdictParent.keys()): gridRot = RdictParent['gridRot'] 
 RdictParent = None
 
 print(' Global origo: [N,E] = [{}, {}]'.format(*ROrigParent))
@@ -36,10 +42,10 @@ print(' Size: [N,E] = [{}, {}]'.format(*nPxParent))
 print(' Resolution: [dPy,dPx] = [{}, {}]'.format(*dPxParent))
 print(' Grid rotation: [deg] = {}'.format(gridRot / (np.pi / 180.))); print('')
 
-RdictChild = readNumpyZTile(args.child)
-nPxChild = np.shape(RdictChild['R'])
+RdictChild = readNumpyZTile(childFile)
+nPxChild   = np.shape(RdictChild['R'])
 ROrigChild = RdictChild['GlobOrig']
-dPxChild = RdictChild['dPx']
+dPxChild   = RdictChild['dPx']
 if( 'gridRot' in RdictChild.keys()): gridRotChild = RdictChild['gridRot']
 RdictChild = None
 
@@ -53,14 +59,17 @@ if (gridRot != gridRotChild):
 
 # Calculate bottom left origos
 ROrigParentBL = ROrigParent.copy()
-ROrigChildBL = ROrigChild.copy()
-
 ROrigParentBL[0] -= nPxParent[0] * dPxParent[0]
-ROrigChildBL = rotatePoint(ROrigParent, ROrigChildBL, -gridRot)
+
+ROrigChildBL = rotatePoint(ROrigParent, ROrigChild, -gridRot)
 ROrigChildBL[0] -= nPxChild[0] * dPxChild[0]
 
 # Offset of global origo coordinates
 OrigOffset = ROrigChildBL - ROrigParentBL
+
+# The true offset when raster values refer to cell centers requires correction 
+# due to the different resolutions
+OrigOffset[0] += ( dPxParent[0]/2. - dPxChild[0]/2. ) 
 print(' Bottom left origo offsets:')
 OrigOffsetLocal = OrigOffset / dPxParent
 print(' Parent domain\'s grid: [N,E] = [{}, {}]'.format(*OrigOffset))
