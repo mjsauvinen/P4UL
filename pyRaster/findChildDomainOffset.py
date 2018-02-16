@@ -69,7 +69,7 @@ OrigOffset = ROrigChildBL - ROrigParentBL
 
 # The true offset when raster values refer to cell centers requires correction 
 # due to the different resolutions
-OrigOffset[0] += ( dPxParent[0]/2. - dPxChild[0]/2. ) 
+OrigOffset += ( dPxParent/2. - dPxChild/2. ) 
 print(' Bottom left origo offsets:')
 OrigOffsetLocal = OrigOffset / dPxParent
 print(' Parent domain\'s grid: [N,E] = [{}, {}]'.format(*OrigOffset))
