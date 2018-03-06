@@ -276,6 +276,7 @@ def rotateGridAroundPivot( X, Y, xp, yp, theta, deg=True ):
 
   return XR, YR
 
+
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def rotatePoint(pivot, point, angle):

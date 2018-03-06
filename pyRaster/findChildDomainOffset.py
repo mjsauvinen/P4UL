@@ -31,16 +31,16 @@ childFile  = args.child
 # Read grid information from both files
 RdictParent = readNumpyZTile(parentFile)
 nPxParent   = np.shape(RdictParent['R'])
-ROrigParent = RdictParent['GlobOrig']
+ROrigParent = RdictParent['GlobOrig']  # Top left cell-center origin
 dPxParent   = RdictParent['dPx']
 # Grid rotation may not be present in the dictionary
 if( 'gridRot' in RdictParent.keys()): gridRot = RdictParent['gridRot'] 
 RdictParent = None
 
-print(' Global origo: [N,E] = [{}, {}]'.format(*ROrigParent))
+print(' Global origo (Top Left): [N,E] = [{}, {}]'.format(*ROrigParent))
 print(' Size: [N,E] = [{}, {}]'.format(*nPxParent))
 print(' Resolution: [dPy,dPx] = [{}, {}]'.format(*dPxParent))
-print(' Grid rotation: [deg] = {}'.format(gridRot / (np.pi / 180.))); print('')
+print(' Grid rotation: [deg] = {}\n'.format(gridRot / (np.pi / 180.)))
 
 RdictChild = readNumpyZTile(childFile)
 nPxChild   = np.shape(RdictChild['R'])
@@ -49,7 +49,7 @@ dPxChild   = RdictChild['dPx']
 if( 'gridRot' in RdictChild.keys()): gridRotChild = RdictChild['gridRot']
 RdictChild = None
 
-print(' Global origo: [N,E] = [{}, {}]'.format(*ROrigChild))
+print(' Global origo (Top Left): [N,E] = [{}, {}]'.format(*ROrigChild))
 print(' Size: [N,E] = [{}, {}]'.format(*nPxChild))
 print(' Resolution: [dPy,dPx] = [{}, {}]'.format(*dPxChild))
 print(' Grid rotation: [deg] = {}'.format(gridRotChild / (np.pi / 180.))); print('')
@@ -57,19 +57,25 @@ print(' Grid rotation: [deg] = {}'.format(gridRotChild / (np.pi / 180.))); print
 if (gridRot != gridRotChild):
   sys.exit('Rotations of parent and child domain don\'t match! Exiting...')
 
-# Calculate bottom left origos
+# Calculate bottom left corner origos
 ROrigParentBL = ROrigParent.copy()
-ROrigParentBL[0] -= nPxParent[0] * dPxParent[0]
+ROrigParentBL[0] -= ((nPxParent[0]-1) * dPxParent[0] + dPxParent[0]/2.)
+ROrigParentBL[1] -= dPxParent[1]/2.
 
-ROrigChildBL = rotatePoint(ROrigParent, ROrigChild, -gridRot)
-ROrigChildBL[0] -= nPxChild[0] * dPxChild[0]
 
-# Offset of global origo coordinates
+# We have to transform the child origin to align with the parents local N,E coords.
+# We effectively undo the rotation to XRTM, YTRM in extractDomainFromTile.py.
+ROrigChildT = rotatePoint(ROrigParent, ROrigChild, -gridRot)
+print(' Rotated ROrigChild = {}'.format( ROrigChildT )) 
+
+ROrigChildBL = ROrigChildT.copy()
+ROrigChildBL[0] -= ((nPxChild[0]-1) * dPxChild[0] + dPxChild[0]/2.)
+ROrigChildBL[1] -= dPxChild[1]/2.
+print(' Bottom Left Origos.\n Parent = {} vs.\n Child = {}'.format(ROrigParentBL,ROrigChildBL))
+
+# Offset of global bottom left origo coordinates
 OrigOffset = ROrigChildBL - ROrigParentBL
-
-# The true offset when raster values refer to cell centers requires correction 
-# due to the different resolutions
-OrigOffset += ( dPxParent/2. - dPxChild/2. ) 
+  
 print(' Bottom left origo offsets:')
 OrigOffsetLocal = OrigOffset / dPxParent
 print(' Parent domain\'s grid: [N,E] = [{}, {}]'.format(*OrigOffset))

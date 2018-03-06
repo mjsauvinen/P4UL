@@ -41,7 +41,8 @@ Rdict = readNumpyZTile( filename )
 R1 = Rdict['R']
 R1dims = np.array(np.shape(R1))
 R1Orig = Rdict['GlobOrig']
-dPx1 = Rdict['dPx']
+dPx1   = Rdict['dPx']
+gridRot1 = Rdict['gridRot']
 
 # Resolution ratio (rr).
 rr = 2**N
@@ -86,10 +87,26 @@ else:
     for l in xrange(maxDims[1]):
       R2[ n2[k], e2[l] ] +=  R1[ n1[k] ,e1[l] ]
 
+
+# NOTE! The global origin is the coordinate of the top left cell center. 
+# Therefore, it must be shifted by in accordance to the top left cc's new location.
 R1 = None
 R2 *= s2
+Rdict['R'] = R2
+
 dPx2 = dPx1/rr
-Rdict['R'] = R2; Rdict['GlobOrig'] = R1Orig; Rdict['dPx'] = dPx2
+dPm  = np.minimum( dPx1, dPx2 )
+dPm[1] *= -1.  # When coarsening, the offset should be negative in N and positive in E
+R2Orig = R1Orig.copy()
+R2Orig += np.sign(N)*(2.*np.abs(N) - 1.) * (dPm/2.)  # N<0 coarsens, N>0 refines
+
+# Rotate the newly shifted global origin to the global coord. system using the R1Orig as pivot.
+R2Orig = rotatePoint(R1Orig, R2Orig, gridRot1)
+
+print(' Old Origin = {} vs.\n New Origin = {}'.format(R1Orig, R2Orig))
+
+Rdict['GlobOrig'] = R2Orig
+Rdict['dPx'] = dPx2
 
 if( not args.printOnly ):
   fx = open( fileOut , 'w' )

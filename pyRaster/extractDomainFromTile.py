@@ -24,11 +24,11 @@ parser.add_argument("-fo", "--fileOut",type=str, help="Name of output Palm mesh 
   default="PalmTopo")
 parser.add_argument("-iP","--iPivot", help="Local pixel ids [N,E] for the pivot in the raster file.",\
   type=int,nargs=2,required=True)
-parser.add_argument("-N","--NxG", help="Number of points [Nx, Ny] in the 2D Palm grid.",\
-  type=int,nargs=2, default=[ 2048 , 1024])
-parser.add_argument("-dx","--dxG", help="Resolution [dx, dy] of the 2D Palm grid.",\
-  type=float,nargs=2, default=[ 2. , 2.])
-parser.add_argument("-r","--rLx", type=float,nargs=2, default=[ 0.9, 0.5],\
+parser.add_argument("-N","--NxG", type=int, nargs=2,\
+  help="Number of points [Nx, Ny] in the 2D Palm grid.")
+parser.add_argument("-dx","--dxG", type=float, nargs=2, default=[ 2. , 2.],\
+  help="Resolution [dx, dy] of the 2D Palm grid.")
+parser.add_argument("-r","--rLx", type=float,nargs=2, default=[ 0.5, 0.5],\
   help="Pivot location [rLx, rLy] as ratio of Lx & Ly of grid domain (top left origo).")
 parser.add_argument("-wd", "--windDir", type=float,default=270.0,\
   help="Wind direction (deg) --> Rotation angle around the pivot point. North wind = 0deg")
@@ -64,28 +64,30 @@ printOnly = args.printOnly
 dataOnly = False
 Rdict= readNumpyZTileForMesh( filename )
 R = Rdict['R']
-nY = Rdict['rowCoords']
-eX = Rdict['colCoords']
+rY = Rdict['rowCoords']   # Local (NOT global!) row coords.
+cX = Rdict['colCoords']   # Local (NOT global) column coords.
+
+
 if( verbose ): 
-  print(' [N] coords = {}...{}, [E] coords = {}...{}'\
-    .format(nY[0], nY[-1], eX[0], eX[-1] )) 
+  print(' Local: [N] coords = {}...{}, [E] coords = {}...{}'\
+    .format(rY[0], rY[-1], cX[0], cX[-1] )) 
 
 Rdims = np.array(np.shape(R))
 # Retain information about rotation
 try:
   gridRot = Rdict['gridRot']
 except:
-  gridRot = 0
+  gridRot = 0.
 ROrig = Rdict['GlobOrig']
 dPx = entry2Int( Rdict['dPx'] )
 if( verbose ): print(' dPx = {} '.format(dPx))
 
 
-# Pivot coordinates
-pY = nY[iPv[0]]; pX = eX[iPv[1]]
-print(' Origo in the Topography data: [N,E] = [{}, {}]'.format(ROrig[0],ROrig[1]))
-print(' Pivot Coords in Topography data: [N,E] = [{}, {}]'.format(pY,pX))
-#NY, EX = np.meshgrid(nY,eX)
+# Pivot coordinates in the local coord. system
+pY = rY[iPv[0]]; pX = cX[iPv[1]]
+print(' Origo in the input Topography data: [N,E] = [{}, {}]'.format(ROrig[0],ROrig[1]))
+print(' Pivot Coords in the input Topography data: [N,E] = [pY={}, pX={}]'.format(pY,pX))
+#NY, EX = np.meshgrid(rY,cX)
 
 '''
 Create Palm grid which obeys the X,Y-coordinate layout. This might cause confusion
@@ -94,29 +96,33 @@ so let's proceed carefully.
 NOTE:
 Even though the data is saved as raster array, the data points are now cell centers.
 '''
-xbegin = dxG[0]/2. # First cell-centers.
-ybegin = dxG[1]/2.
-xend = NxG[0]*dxG[0] - xbegin   # Last cell-center.
-yend = NxG[1]*dxG[1] - ybegin
+xbegin = 0. # dxG[0]/2. # First cell-centers.
+ybegin = 0. # dxG[1]/2.
+xend = (NxG[0]-1)*dxG[0] - xbegin   # Last cell-center.
+yend = (NxG[1]-1)*dxG[1] - ybegin
 
 XgridCoords = np.linspace(xbegin,xend, NxG[0])
 YgridCoords = np.linspace(ybegin,yend, NxG[1])
 #Xg, Yg = np.meshgrid( XgridCoords, YgridCoords )
 
 # Location of the pivot (indecies and coords) in the Palm grid. Not going into negative indices.
-iPGx = np.maximum(int(rLx[0]*NxG[0])-1,0)
-iPGy = np.maximum(int((1-rLx[1])*NxG[1])-1,0)
+# The -1 omitted in iPGy due to the computation of Irows (vs. Jcols) to preserve symmetry. 
+iPGx = np.maximum(int(    rLx[0] *(NxG[0]-1) ), 0)
+iPGy = np.maximum(int((1.-rLx[1])*(NxG[1]  ) ), 0)
+iPGy = np.minimum( iPGy , (NxG[1]-1) )
 
 pXG = XgridCoords[iPGx]
 pYG = YgridCoords[iPGy]
 
 if( verbose ):
-  print ' Palm grid pivot indices: iPGx = {}, iPGy = {}'.format( iPGx, iPGy )
-  print ' Palm grid pivot coords:   pXG = {},  pYG = {}'.format( pXG, pYG )
+  print(' Grid coords X = {} '.format( (XgridCoords[0], XgridCoords[-1]) ))
+  print(' Grid coords Y = {} '.format( (YgridCoords[0], YgridCoords[-1]) ))
+  print( ' Palm grid pivot indices: iPGx = {}, iPGy = {}'.format( iPGx, iPGy ))
+  print( ' Palm grid pivot coords:   pXG = {},  pYG = {}'.format( pXG, pYG ))
 
 
 '''
-From palm coordinates to underlying topography coordinates.
+From palm coordinates to underlying local topography coordinates.
 We use the pivot point which is known for both systems.
 '''
 
@@ -134,11 +140,11 @@ if(verbose):
     .format(np.min(XT), np.max(XT),np.min(YT), np.max(YT)))
 
 '''
-Rotate the new coordinates according to the wind direction:
+Rotate the new coordinates (within the local coordinate system) according to the wind direction:
 Coordinate transformations for counterclockwise rotation.
 '''
 # NOTE: At the pivot point XTR = pX
-XTM, YTM = np.meshgrid( XT, YT )
+XTM, YTM = np.meshgrid( XT, YT ); XT  = None; YT  = None
 if (noRotation):
   theta = 0.
 else:
@@ -157,7 +163,6 @@ Bottom Right :  XTRM[0,-1], YTRM[0,-1]
 Top Right    :  XTRM[-1,-1], YTRM[-1,-1])
 '''
 
-XT  = None; YT  = None
 XTM = None; YTM = None
 
 '''
@@ -168,6 +173,11 @@ located at the bottom left, which makes things a bit confusing here.
 
 Irow = ((ROrig[0]-YTRM)/dPx ).astype(int)
 Jcol = ((XTRM-ROrig[1])/dPx ).astype(int)
+
+if( verbose ):
+  print(' Irow = {}'.format( (Irow[0,0], Irow[-1,-1]) ))
+  print(' Jcol = {}'.format( (Jcol[0,0], Jcol[-1,-1]) ))
+
 
 # Make sure the indecies don't run beyond the allowable bounds.
 if (np.amin(Irow) < 0 or np.amin(Jcol) < 0):
@@ -181,20 +191,20 @@ Irow = np.minimum(Irow, Rdims[0]-1); Jcol = np.minimum(Jcol, Rdims[1]-1)
 #print " Jcol = {} ".format(Jcol[::4,::4] )
 Xdims = np.array( np.shape(XTRM) )
 PR = np.zeros( Xdims  , float)
-PR[::-1,:] = R[Irow,Jcol]    # The row order must be reversed.
+PR[::-1,:] = R[Irow,Jcol]    # The row order must be reversed to go back to raster format.
 R = None
 
 '''
- Reset the top left origo utilizing the NON-rotated coordinates. This
- allows the relative position of different raster maps (with identical
- coord. rotation) to be determined easily.
+ Reset the top left origo such that it lies in the global coordinate system.
+ This requires that we rotate the new local coordinates XTRM, YTRM to the original 
+ coord. system using the input raster's top left origin as pivot.
 '''
 theta2 = gridRot/(np.pi/180.)
 XTRM,YTRM = rotateGridAroundPivot(XTRM,YTRM, ROrig[1], ROrig[0],theta2, deg=True)
 PROrig = np.array([ YTRM[-1,0], XTRM[-1,0] ])  # Reset top left origo
 print(' Top left origo coords. (cell centers!): [N,E] = {}'.format(PROrig))
 rotation = (theta+theta2)*(np.pi/180.)
-print((theta+theta2)*(np.pi/180.))
+#print((theta+theta2)*(np.pi/180.))
 
 # Retain unused keys from original raster
 PRdict = Rdict.copy()
