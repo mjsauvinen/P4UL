@@ -18,7 +18,7 @@ Author: Mikko Auvinen
 #==========================================================#
 parser = argparse.ArgumentParser(prog='rasterToSTL.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of the .npz data file.")
-parser.add_argument("-fo", "--fileOut",type=str, help="Name of output STL file.",\
+parser.add_argument("-fo", "--fileout",type=str, help="Name of output STL file.",\
   default="topography.stl")
 parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
   action="store_true", default=False) 
@@ -29,7 +29,7 @@ writeLog( parser, args )
 #==========================================================#
 
 filename  = args.filename
-solidname = args.fileOut
+solidname = args.fileout
 
 
 Rdict = readNumpyZTile( filename )

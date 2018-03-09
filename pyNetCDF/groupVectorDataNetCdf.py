@@ -16,7 +16,7 @@ Author: Mikko Auvinen
 #==========================================================#
 parser = argparse.ArgumentParser(prog='groupVectorDataNetCDF.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of the input NETCDF file.")
-parser.add_argument("-fo", "--fileOut",type=str, help="Name of the output NETCDF file.", default="U-VECTOR.nc")
+parser.add_argument("-fo", "--fileout",type=str, help="Name of the output NETCDF file.", default="U-VECTOR.nc")
 parser.add_argument("-d", "--decomp", help="Decomposed into mean (V_m) and fluctuating (V^prime) components.",\
   action="store_true", default=False) 
 parser.add_argument("-dd", "--decompOnly", help="Output V_m and V^prime components only.",\
@@ -30,7 +30,7 @@ args = parser.parse_args()
 # Initial renaming operations and variable declarations
 
 filename = args.filename
-fileOut  = args.fileOut
+fileout  = args.fileout
 nt       = args.ntimeskip
 cl       = abs(int(args.coarse))
 
@@ -51,7 +51,7 @@ and independent (dimList) variables.
 ds, varList, paramList = netcdfDataset(filename)
 
 # Create a NETCDF output dataset (dso) for writing out the data.
-dso = netcdfOutputDataset( fileOut )
+dso = netcdfOutputDataset( fileout )
 
 
 '''

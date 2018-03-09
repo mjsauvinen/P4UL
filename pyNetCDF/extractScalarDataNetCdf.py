@@ -17,7 +17,7 @@ Author: Mikko Auvinen
 #==========================================================#
 parser = argparse.ArgumentParser(prog='extractScalarDataNetCDF.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of the input NETCDF file.")
-parser.add_argument("-fo", "--fileOut",type=str, help="Name of the output NETCDF file.", default="Scalar.nc")
+parser.add_argument("-fo", "--fileout",type=str, help="Name of the output NETCDF file.", default="Scalar.nc")
 parser.add_argument("-s", "--scalars",type=str, nargs='+', required=True,\
   help="Name of the NETCDF scalar in the file. e.g. e, p, pt")
 parser.add_argument("-d", "--decomp", help="Decomposed into mean (V_m) and fluctuating (V^prime) components.",\
@@ -32,7 +32,7 @@ args = parser.parse_args()
 # Initial renaming operations and variable declarations
 
 filename = args.filename
-fileOut  = args.fileOut
+fileout  = args.fileout
 cl       = abs(int(args.coarse))
 nt       = args.ntimeskip
 scalarNames = args.scalars
@@ -53,7 +53,7 @@ and independent (dimList) variables.
 ds, varList, paramList = netcdfDataset(filename)
 
 # Create a NETCDF output dataset (dso) for writing out the data.
-dso = netcdfOutputDataset( fileOut )
+dso = netcdfOutputDataset( fileout )
 
 '''
 Read cell center coordinates and time.

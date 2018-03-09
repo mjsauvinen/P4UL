@@ -50,7 +50,7 @@ if( ascii and npz ):
 # Initialize a list for directories
 dictList = []
 idc = 0
-fileOut = str()
+fileout = str()
 
 for filename in args.filenames:
   if( ascii ):
@@ -61,10 +61,10 @@ for filename in args.filenames:
   dictList.append( dataDict )
   dataDict = None
   fstr = filename.split('.')[0]
-  fileOut += fstr[-1]   # Gather the last character/number from the name.
+  fileout += fstr[-1]   # Gather the last character/number from the name.
 
 fstr = filename.split('.')[0]
-fileOut = fstr[:-1]+'_'+fileOut  # Complete the filename.
+fileout = fstr[:-1]+'_'+fileout  # Complete the filename.
 dPx = resolutionFromDicts( dictList )
 
 #print ' dictList = {} '.format(dictList)  
@@ -78,13 +78,13 @@ Rdict['GlobOrig'] = XOrig
 Rdict['dPx'] = dPx
 
 if(not args.printOnly ):
-  saveTileAsNumpyZ( fileOut, Rdict )
+  saveTileAsNumpyZ( fileout, Rdict )
 
 if( args.printOn or args.printOnly ):
   R = Rdict['R']
   figDims = 13.*(Rdims[::-1].astype(float)/np.max(Rdims))
   fig = plt.figure(num=1, figsize=figDims)
-  fig = addImagePlot( fig, R, 'Combined Tiles: '+fileOut )
+  fig = addImagePlot( fig, R, 'Combined Tiles: '+fileout )
   plt.show()
   R = None
 

@@ -20,7 +20,7 @@ Author: Mikko Auvinen
 #==========================================================#
 parser = argparse.ArgumentParser(prog='extractDomainFromTile.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of raster data file.")
-parser.add_argument("-fo", "--fileOut",type=str, help="Name of output Palm mesh file.",\
+parser.add_argument("-fo", "--fileout",type=str, help="Name of output Palm mesh file.",\
   default="PalmTopo")
 parser.add_argument("-iP","--iPivot", help="Local pixel ids [N,E] for the pivot in the raster file.",\
   type=int,nargs=2,required=True)
@@ -49,7 +49,7 @@ writeLog( parser, args, args.printOnly )
 
 # Renaming the argument variables for brevity and clarity:
 filename  = args.filename
-fileOut   = args.fileOut
+fileout   = args.fileout
 NxG       = args.NxG
 iPv       = args.iPivot
 dxG       = args.dxG
@@ -215,7 +215,7 @@ PRdict['gridRot'] = rotation
 PRdict['dPx'] = np.array([dxG[0],dxG[1]])
 
 if( not args.printOnly ):
-  saveTileAsNumpyZ( fileOut, PRdict)
+  saveTileAsNumpyZ( fileout, PRdict)
 
 
 # Print the raster map, first, in a coordinate system where x-axis is aligned with the windDir
@@ -223,7 +223,7 @@ if( not args.printOnly ):
 if( printOn or printOnly ):
   figDims = 13.*(Xdims[::-1].astype(float)/np.max(Xdims))
   fig = plt.figure(num=1, figsize=figDims)
-  fig = addImagePlot( fig, PR, args.fileOut )
+  fig = addImagePlot( fig, PR, args.fileout )
   CO = addContourf( XTRM, YTRM, PR[::-1,:], " Z(X,Y) ", "PALM DOMAIN ON MAP" )
   plt.show()
 

@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser(prog='replaceRasterValues.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of the input raster file.")
 parser.add_argument("-fr", "--filereplace",type=str,\
   help="(Optional) Name of raster file from which replacement values are obtained.", default=None)
-parser.add_argument("-fo", "--fileOut",type=str, help="Name of output raster file.")
+parser.add_argument("-fo", "--fileout",type=str, help="Name of output raster file.")
 parser.add_argument("-p1","--pixels1", help="Pixel ids [N,E] for the top left.",\
   type=int,nargs=2,default=[None,None])
 parser.add_argument("-p2","--pixels2", help="Pixel ids [N,E] for the bottom right.",\
@@ -48,7 +48,7 @@ gtval   = args.gt           # value greater than which will be replaced by [val]
 ltval   = args.lt           # value less than which will be replaced by [val]
 filename= args.filename
 filereplace = args.filereplace
-fileOut = args.fileOut
+fileout = args.fileout
 
 NonesExist = (p1.count(None) != 0) or (p2.count(None) != 0) 
 p1 = np.array( p1 ); p2 = np.array( p2 )
@@ -99,12 +99,12 @@ else:
 Rdict['R'] = R
 
 if( not args.printOnly ):
-  saveTileAsNumpyZ( fileOut, Rdict )
+  saveTileAsNumpyZ( fileout, Rdict )
 
 if( args.printOn or args.printOnly ):
   figDims = 13.*(Rdims[::-1].astype(float)/np.max(Rdims))
   fig = plt.figure(num=1, figsize=figDims)
-  fig = addImagePlot( fig, R, fileOut )
+  fig = addImagePlot( fig, R, fileout )
 
   plt.show()
 

@@ -39,7 +39,7 @@ def addBlocks( T, stride, Lx, h ):
 #==========================================================#
 parser = argparse.ArgumentParser(prog='addBlockMargin.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of the comp domain data file.")
-parser.add_argument("-fo", "--fileOut",type=str, help="Name of output Palm topography file.")
+parser.add_argument("-fo", "--fileout",type=str, help="Name of output Palm topography file.")
 parser.add_argument("-s","--stride", help="Stride lengths for the block arrangement. [N, E]",\
   type=int,nargs=2,default=[None,None])
 parser.add_argument("-L","--Lblocks", help="Block dimensions. [W, L]",\
@@ -61,7 +61,7 @@ writeLog( parser, args, args.printOnly )
 #==========================================================#
 
 filename   = args.filename
-fileOut    = args.fileOut
+fileout    = args.fileout
 mw         = args.mrgnW
 mh         = args.mrgnH
 stride     = args.stride
@@ -107,7 +107,7 @@ if( not all( B12 == 0 ) ): R[B1:B2,:] = addBlocks( R[B1:B2,:], stride, Lb, mh[3]
 
 if( not args.printOnly ):
   Rdict['R'] = R
-  saveTileAsNumpyZ( fileOut, Rdict )
+  saveTileAsNumpyZ( fileout, Rdict )
   if( writeAscii ):
     fx = open( 'TOPOGRAPHY_DATA_BLOCK' , 'w' )
     np.savetxt(fx,np.round(R),fmt='%g')

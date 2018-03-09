@@ -20,7 +20,7 @@ Author: Mikko Auvinen
 #==========================================================#
 parser = argparse.ArgumentParser(prog='processDomain.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of the comp domain data file.")
-parser.add_argument("-fo", "--fileOut",type=str, help="Name of output Palm topography file.")
+parser.add_argument("-fo", "--fileout",type=str, help="Name of output Palm topography file.")
 parser.add_argument("-i0","--iZero", help="Pixel ids [N,E] for the zero level.",\
   type=int,nargs=2,default=[None,None])
 parser.add_argument("-mw","--mrgnW", help="Zero or non-zero margin widths as ratios (0-1): [L,R,B,T]",\
@@ -48,7 +48,7 @@ writeLog( parser, args, args.printOnly )
 #==========================================================#
 
 filename= args.filename
-fileOut = args.fileOut
+fileout = args.fileout
 i0      = args.iZero    # Rename
 mw      = args.mrgnW
 mr      = args.mrgnR
@@ -104,13 +104,13 @@ if( writeAscii ):
   fx.close()
 
 if( not args.printOnly ):
-  saveTileAsNumpyZ( fileOut, Rdict )
+  saveTileAsNumpyZ( fileout, Rdict )
 
 if( args.printOn or args.printOnly ):
   figDims = 13.*(Rdims[::-1].astype(float)/np.max(Rdims))
   print('Sum = {}'.format(np.sum(Rf)))
   fig = plt.figure(num=1, figsize=figDims)
-  fig = addImagePlot( fig, Rf, fltStr+fileOut )
+  fig = addImagePlot( fig, Rf, fltStr+fileout )
 
   plt.show()
 

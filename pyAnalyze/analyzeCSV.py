@@ -10,8 +10,8 @@ from wave import waveInformation
 #==========================================================#
 
 def waveAnalysis( U , xc ):
-  t = 1.; Ulim = 0.2; fileOut = file('U-bundles.dat','w')
-  waveInformation(t, U , xc, Ulim, fileOut )
+  t = 1.; Ulim = 0.2; fileout = file('U-bundles.dat','w')
+  waveInformation(t, U , xc, Ulim, fileout )
   
 #==========================================================#
 sepStr = ' # = # = # = # = # = # = # = # = '

@@ -18,7 +18,7 @@ Author: Mikko Auvinen
 #==========================================================#
 parser = argparse.ArgumentParser(prog='refineTileResolution.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of the .npz data file.")
-parser.add_argument("-fo", "--fileOut",type=str, help="Name of output Palm/npz topography file.",\
+parser.add_argument("-fo", "--fileout",type=str, help="Name of output Palm/npz topography file.",\
   default="TOPOGRAPHY_MOD")
 parser.add_argument("-N","--refn", help="Refinement factor N in 2^N. Negative value coarsens.", type=float)
 parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
@@ -34,7 +34,7 @@ filename  = args.filename
 N         = args.refn
 printOn   = args.printOn
 printOnly = args.printOnly
-fileOut   = args.fileOut
+fileout   = args.fileout
 
 
 Rdict = readNumpyZTile( filename )
@@ -109,13 +109,13 @@ Rdict['GlobOrig'] = R2Orig
 Rdict['dPx'] = dPx2
 
 if( not args.printOnly ):
-  fx = open( fileOut , 'w' )
+  fx = open( fileout , 'w' )
   np.savetxt(fx,np.round(R2),fmt='%g')
   fx.close()
-  saveTileAsNumpyZ( fileOut, Rdict )
+  saveTileAsNumpyZ( fileout, Rdict )
 
 if( args.printOn or args.printOnly ):
   fig = plt.figure(num=1, figsize=(9.,9.))
-  fig = addImagePlot( fig, R2 , fileOut )
+  fig = addImagePlot( fig, R2 , fileout )
 
   plt.show()

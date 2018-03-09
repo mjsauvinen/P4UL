@@ -25,16 +25,16 @@ fps = args.framerate
 sx  = args.scale[0] # 1024
 sy  = args.scale[1] # 768
 fileIn = args.filename
-fileOut= args.output
+fileout= args.output
 
 if( args.mp4 ):
     # mencoder, MPG
     cmd = 'mencoder -fps {0} -vf scale={1}:{2} -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell:vbitrate=10000 -o {3}mp4 {4}gif'.format(\
-    fps,sx,sy,fileOut.rstrip('mp4'), fileIn.rstrip('gif') )
+    fps,sx,sy,fileout.rstrip('mp4'), fileIn.rstrip('gif') )
 else:
     # mencoder, AVI
     cmd = 'mencoder -fps {0} -vf scale={1}:{2} -ovc lavc -lavcopts vcodec=msmpeg4v2:autoaspect:vbitrate=10000 -o {3}avi {4}gif'.format(\
-    fps,sx,sy,fileOut.rstrip('avi'), fileIn.rstrip('gif') )
+    fps,sx,sy,fileout.rstrip('avi'), fileIn.rstrip('gif') )
     
 print( cmd )
 sb.call(cmd, shell=True)

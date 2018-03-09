@@ -37,7 +37,7 @@ parser.add_argument("-ft1","--filter1",type=str,nargs=2,default=[None,None],\
   help=helpFlt)
 parser.add_argument("-ft2","--filter2",type=str,nargs=2,default=[None,None],\
   help="See help for -ft1 above.")
-parser.add_argument("-fo", "--fileOut",type=str, help="Name of output .npz file.")
+parser.add_argument("-fo", "--fileout",type=str, help="Name of output .npz file.")
 parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
   action="store_true", default=False)
 parser.add_argument("-pp", "--printOnly", help="Only print the resulting data. Don't save.",\
@@ -130,7 +130,7 @@ if( printOn or printOnly ):
 Rt1 = Rt2 = None
 
 if( not printOnly ):
-  saveTileAsNumpyZ( args.fileOut, Rdict1 )
+  saveTileAsNumpyZ( args.fileout, Rdict1 )
 
 if( printOn or printOnly ):
   fig = plt.figure(num=figN, figsize=(9.,9.)); figN+=1

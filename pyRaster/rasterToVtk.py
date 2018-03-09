@@ -18,7 +18,7 @@ Author: Mikko Auvinen
 #==========================================================#
 parser = argparse.ArgumentParser(prog='rasterToSTL.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of the .npz data file.")
-parser.add_argument("-fo", "--fileOut",type=str, help="Name of output .vtk file.",\
+parser.add_argument("-fo", "--fileout",type=str, help="Name of output .vtk file.",\
   default="topography.vtk")
 parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
   action="store_true", default=False) 
@@ -30,7 +30,7 @@ writeLog( parser, args, args.printOnly )
 
 # Rename, that's all.
 filename  = args.filename
-fileout   = args.fileOut
+fileout   = args.fileout
 printOn   = args.printOn
 printOnly = args.printOnly 
 
