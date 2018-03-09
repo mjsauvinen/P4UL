@@ -20,8 +20,7 @@ Author: Mikko Auvinen
 #==========================================================#
 parser = argparse.ArgumentParser(prog='extractDomainFromTile.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of raster data file.")
-parser.add_argument("-fo", "--fileout",type=str, help="Name of output Palm mesh file.",\
-  default="PalmTopo")
+parser.add_argument("-fo", "--fileout",type=str, help="Name of output raster file.")
 parser.add_argument("-iP","--iPivot", help="Local pixel ids [N,E] for the pivot in the raster file.",\
   type=int,nargs=2,required=True)
 parser.add_argument("-N","--NxG", type=int, nargs=2,\

@@ -176,7 +176,7 @@ def plotXX( fig, fileStr, logOn, Cx=1., Cy=1. ):
   except: x = np.loadtxt(fileStr,delimiter=',')
   ax  = fig.add_axes( [0.15, 0.075 , 0.8 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
 
-  labelStr = fileStr.split(".")[0]
+  labelStr = fileStr.rsplit(".", 1)[0]
 
   # Print each column separately
   amax = 0.
