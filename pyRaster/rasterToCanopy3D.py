@@ -77,7 +77,7 @@ print(" Generating vertical distributions of leaf area densities ...")
 
 # Compute <LAD>_z and starting index of the foliage using reference values
 if( constantLAD ):
-  lad_const = lai/(zref[1]-zref[0]) * dPc[2]
+  lad_const = lai/(zref[1]-zref[0])
   istart    = int( np.round(zref[0]/float(dPc[2])) )
 
 Rry = R[::-1,:]
@@ -105,7 +105,7 @@ for iy in xrange(nPc[1]):
       iend = min( iend, nPc[2] )
       canopy[ix,iy,istart:iend] = lad_const
 
-print(" ... done.")
+print(" ... done.\n")
 
 # Write output data file
 print(" Writing output file...")
