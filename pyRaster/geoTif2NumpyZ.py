@@ -47,6 +47,8 @@ printRasterBandStatistics(rb)
 # Read the raster
 R = readAsNumpyArray( rb )
 
+print(' Number of non-zero values = {}'.format(np.count_nonzero(R)))
+
 # Construct the Raster dict 
 Rdict = dict()
 Rdict['dPx'] = dPx
