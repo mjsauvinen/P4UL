@@ -31,12 +31,6 @@ parser.add_argument("-m", "--mode", type=str, default='mean', choices=['mean', '
   help="Mode: mean, std, or var.")
 parser.add_argument("-n", "--normalize", action="store_true", default=False,\
   help="Normalize.")
-parser.add_argument("-xn", "--xname",type=str, default='xu',\
-  help="Specify the x coordinate. e.g. xu or x. Default='xu' ")
-parser.add_argument("-yn", "--yname",type=str, default='y',\
-  help="Specify the y coordinate. e.g. yv or y. Default='y' ")
-parser.add_argument("-zn", "--zname",type=str, default='zu_3d',\
-  help="Specify the z coordinate. e.g. zu_3d or zw_3d. Default='zu_3d' ")
 parser.add_argument("-p", "--printOn", action="store_true", default=False,\
   help="Print the numpy array data.")
 parser.add_argument("-pp", "--printOnly", action="store_true", default=False,\
@@ -50,49 +44,40 @@ fileKey   = args.fileKey
 normalize = args.normalize
 mode      = args.mode
 cl        = abs(args.coarse)
-xname     = args.xname
-yname     = args.yname
-zname     = args.zname
 varname   = args.varname
 
-
 #==========================================================# 
-# Create a dict that is passed into the function read3dDataFromNetCDF
-nameDict = dict()
-nameDict['xname']   = xname
-nameDict['yname']   = yname
-nameDict['zname']   = zname
-nameDict['varname'] = varname
-
 
 # Obtain a list of files to include.
-fileNos, fileList = filesFromList( '*'+fileKey+'*' )
+fileNos, fileList = filesFromList( fileKey+'*' )
 
-first = True
 fig = plt.figure(num=1, figsize=(12,10))
 
 for fn in fileNos:
   if('mag' in varname):
-    nameDict['varname'] = 'u'
-    nameDict['xname']   = 'x'; nameDict['yname'] = 'y'; nameDict['zname'] = 'z'
-    dataDict = read3dDataFromNetCDF( fileList[fn] , nameDict, cl )
+    
+    varname = 'u'
+    dataDict = read3dDataFromNetCDF( fileList[fn] , varname, cl )
     u = dataDict['v']
-    x = dataDict['x']; y = dataDict['y']; z = dataDict['z']
-    nameDict['varname'] = 'v'
-    dataDict = read3dDataFromNetCDF( fileList[fn] , nameDict, cl )
+    varname = 'v'
+    dataDict = read3dDataFromNetCDF( fileList[fn] , varname, cl )
     v = dataDict['v']
+    
+    x = dataDict['x']; y = dataDict['y']; z = dataDict['z']
     
     Umag = np.sqrt( u**2 + v**2 )
     vr = Umag
     
   else:
-    dataDict = read3dDataFromNetCDF( fileList[fn] , nameDict, cl )
+    dataDict = read3dDataFromNetCDF( fileList[fn] , varname, cl )
     vr = dataDict['v']
-    x = dataDict['x']; y = dataDict['y']; z = dataDict['z']
+    x  = dataDict['x']; y = dataDict['y']; z = dataDict['z']
     time = dataDict['time']
     
   dataDict = None
   
+  
+  # Process data v --> vp 
   if( mode == 'mean'):
     vp = np.mean( vr, axis=(0,2,3) ); zp = z
     plotStr  = ["mean({}) vs z ".format(varname), varname ,"z"]

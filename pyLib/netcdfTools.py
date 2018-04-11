@@ -56,11 +56,11 @@ def netcdfWriteAndClose(dso):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 
-def read1DVariableFromDataset(varStr, ds, checkList, iLOff=0, iROff=0, cl=1):
+def read1DVariableFromDataset(varStr, ds, iLOff=0, iROff=0, cl=1):
   # iLOff: left offset
   # iROff: right offset
   # cl   : coarsening level
-  if(varStr in checkList):
+  if(varStr in ds.variables.keys()):
 
     try:
       print(' Reading variable {} ... '.format(varStr))
@@ -82,20 +82,33 @@ def read1DVariableFromDataset(varStr, ds, checkList, iLOff=0, iROff=0, cl=1):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 
-def readVariableFromDataset(varStr, ds, checkList):
-  if(varStr in checkList):
-    vds = ds.variables[varStr]
-    dlist = asciiEncode(vds.dimensions, ' Variable dimensions ')
+def readVariableFromDataset(varStr, ds, cl=1 ):
+  if( varStr in ds.variables.keys() ):
+    
+    vdims = asciiEncode(ds.variables[varStr].dimensions, ' Variable dimensions ')
+    
+    if( len(vdims) == 4 ):
+      var = ds.variables[varStr][:,::cl,::cl,::cl] 
+    elif( len(vdims) == 3 and 'time' not in vdims ):
+      var = ds.variables[varStr][::cl,::cl,::cl]
+    elif( len(vdims) == 3 and 'time' in vdims ):
+      var = ds.variables[varStr][:,::cl,::cl]
+    elif( len(vdims) == 2 and 'time' not in vdims ):
+      var = ds.variables[varStr][::cl,::cl]
+    elif( len(vdims) == 2 and 'time' in vdims ):
+      var = ds.variables[varStr][:,::cl]
+    elif( len(vdims) == 1 and 'time' in vdims ):
+      var = ds.variables[varStr]
+    else:
+      var = ds.variables[varStr][::cl]
 
     # Load the independent variables and wrap them into a dict
     dDict = dict()
-    for dname in dlist:
+    for dname in vdims:
       dData = ds.variables[dname][:]
-      dDict[dname] = dData
+      if( 'time' in dname ): dDict[dname] = dData
+      else:                  dDict[dname] = dData[::cl]
       dData = None
-
-    # Then the dependent variable. When all is extracted, no need to know the shape
-    var = vds[:]
 
   else:
     sys.exit(' Variable {} not in list {}.'.format(varStr, checkList))
@@ -109,41 +122,61 @@ def read3DVariableFromDataset(varStr, ds, checkList, iTOff=0, iLOff=0, iROff=0, 
   # iLOff: left offset
   # iROff: right offset
   # cl   : coarsening level
-  if(varStr in checkList):
+  print(' Reading variable {} ... '.format(varStr))
+  var, dDict = readVariableFromDataset(varStr, ds, cl=1 )
+  print(' ... done.')
 
-    iL = 0 + iLOff
-    iR = abs(iROff)
-    iT = 0 + iTOff
-    try:
-      print(' Reading variable {} ... '.format(varStr))
-      if(iR == 0):
-        # Param list (time, z, y, x )
-        if(meanOn):
-          var = ds.variables[varStr][iL:, iL:, iL:]
-        else:
-          var = ds.variables[varStr][iT:, iL:, iL:, iL:]
-      else:
-        if(meanOn):
-          var = ds.variables[varStr][iL:-iR, iL:-iR, iL:-iR]
-        else:
-          var = ds.variables[varStr][iT:, iL:-iR, iL:-iR, iL:-iR]
-      print(' ... done.')
-    except:
-      print(' Cannot read the array of variable: {}.'.format(varStr))
-      sys.exit(1)
 
+  iL = 0 + int(iLOff/cl)
+  iR = int(abs(iROff/cl))
+  iT = 0 + int(iTOff)
+  if(iR == 0):
+    # Param list (time, z, y, x )
+    if(meanOn):
+      vo = var[iL:, iL:, iL:]
+    else:
+      vo = var[iT:, iL:, iL:, iL:]
   else:
-    print(' Variable {} not in list {}.'.format(varStr, checkList))
-    sys.exit(1)
-
-  if(meanOn):
-    vo = var[::cl, ::cl, ::cl]; vo_dims = np.shape(vo)
-  else:
-    vo = var[:, ::cl, ::cl, ::cl]; vo_dims = np.shape(vo)
-
+    if(meanOn):
+      vo = var[iL:-iR, iL:-iR, iL:-iR]
+    else:
+      vo = var[iT:, iL:-iR, iL:-iR, iL:-iR]
+    
   var = None
 
-  return vo, vo_dims
+  return vo, np.array(vo.shape)
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def read3dDataFromNetCDF( fname, varStr, cl=1 ):
+  '''
+  Establish two boolean variables which indicate whether the created variable is an
+  independent or dependent variable in function createNetcdfVariable().
+  '''
+  parameter = True;  variable  = False
+
+  '''
+  Create a NETCDF input dataset (ds), and its associated lists of dependent (varList)
+  and independent (dimList) variables.
+  '''
+  ds, varList, paramList = netcdfDataset(fname)
+  print(' Extracting {} from dataset in {} ... '.format( varStr, fname ))
+  var, dDict = readVariableFromDataset(varStr, ds, cl )
+  print(' {}_dims = {}\n Done!'.format(varStr, var.shape ))
+  
+  # Rename the keys in dDict to simplify the future postprocessing
+  for dstr in dDict.keys():
+    idNan = np.isnan(dDict[dstr]); dDict[dstr][idNan] = 0.
+    if( 'time' in dstr ):  dDict['time'] = dDict.pop( dstr )
+    elif( 'x' in dstr  ):  dDict['x']    = dDict.pop( dstr )
+    elif( 'y' in dstr  ):  dDict['y']    = dDict.pop( dstr ) 
+    elif( 'z' in dstr  ):  dDict['z']    = dDict.pop( dstr )
+    else: pass
+
+  # Append the variable into the dict. 
+  dDict['v'] = var 
+
+  return dDict
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
@@ -281,48 +314,3 @@ def fillTopographyArray(Rtopo, Rdims, Rdpx, datatype):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def read3dDataFromNetCDF( fname, nameDict, cl=1 ):
-  '''
-  Establish two boolean variables which indicate whether the created variable is an
-  independent or dependent variable in function createNetcdfVariable().
-  '''
-  parameter = True;  variable  = False
-
-  '''
-  Create a NETCDF input dataset (ds), and its associated lists of dependent (varList)
-  and independent (dimList) variables.
-  '''
-  ds, varList, paramList = netcdfDataset(fname)
-
-  '''
-  Read cell center coordinates and time.
-  Create the output independent variables right away and empty memory.
-  '''
-  time, time_dims = read1DVariableFromDataset('time', ds, paramList, 0, 0, 1 ) # All values.
-  x, x_dims = read1DVariableFromDataset(nameDict['xname'], ds, paramList, 0, 0, cl )
-  y, y_dims = read1DVariableFromDataset(nameDict['yname'], ds, paramList, 0, 0, cl )
-  z, z_dims = read1DVariableFromDataset(nameDict['zname'] ,ds, paramList, 0, 0, cl )
-  x[np.isnan(x)] = 0.  # Clear away NaNs
-  y[np.isnan(y)] = 0.  #
-  z[np.isnan(z)] = 0.  #
-  '''
-  Read in the velocity components.
-  PALM netCDF4:
-  u(time, zu_3d, y, xu)
-  v(time, zu_3d, yv, x)
-  w(time, zw_3d, y, x)
-  '''
-  print(' Extracting {} from dataset ... '.format( nameDict['varname'] ))
-  v, v_dims = read3DVariableFromDataset(nameDict['varname'], ds, varList, 0, 0, 0, cl) # All values.
-  print(' {}_dims = {}\n Done!'.format(nameDict['varname'], v_dims ))
-
-  dataDict = dict()
-  dataDict['v'] = v
-  dataDict['x'] = x
-  dataDict['y'] = y
-  dataDict['z'] = z
-  dataDict['time'] = time
-
-  return dataDict
-
-# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*

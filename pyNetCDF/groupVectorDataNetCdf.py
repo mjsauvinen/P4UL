@@ -17,6 +17,7 @@ Author: Mikko Auvinen
 parser = argparse.ArgumentParser(prog='groupVectorDataNetCDF.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of the input NETCDF file.")
 parser.add_argument("-fo", "--fileout",type=str, help="Name of the output NETCDF file.", default="U-VECTOR.nc")
+parser.add_argument("-sn", "--scalar",type=str, help="(Optional) Scalar to be included.", default=None)
 parser.add_argument("-d", "--decomp", help="Decomposed into mean (V_m) and fluctuating (V^prime) components.",\
   action="store_true", default=False) 
 parser.add_argument("-dd", "--decompOnly", help="Output V_m and V^prime components only.",\
@@ -29,10 +30,11 @@ args = parser.parse_args()
 #==========================================================#
 # Initial renaming operations and variable declarations
 
-filename = args.filename
-fileout  = args.fileout
-nt       = args.ntimeskip
-cl       = abs(int(args.coarse))
+filename   = args.filename
+fileout    = args.fileout
+scalarName = args.scalar 
+nt         = args.ntimeskip
+cl         = abs(int(args.coarse))
 
 # Boolean switch for the decomposition option.
 decompOn = args.decomp or args.decompOnly
@@ -58,21 +60,21 @@ dso = netcdfOutputDataset( fileout )
 Read cell center coordinates and time.
 Create the output independent variables right away and empty memory.
 '''
-time, time_dims = read1DVariableFromDataset('time', ds, paramList, nt, 0, 1 ) # All values.
+time, time_dims = read1DVariableFromDataset('time', ds, nt, 0, 1 ) # All values.
 tv = createNetcdfVariable( dso, time,'time', len(time),'s','f4',('time',), parameter )
 time = None  
 
-x, x_dims = read1DVariableFromDataset( 'x',ds, paramList, 0, 1, cl ) # Exclude the last value.
+x, x_dims = read1DVariableFromDataset( 'x',ds, 0, 1, cl ) # Exclude the last value.
 xv = createNetcdfVariable( dso, x   , 'x'   , len(x)   , 'm', 'f4', ('x',)   , parameter )
 x = None
 
-y, y_dims = read1DVariableFromDataset( 'y',ds, paramList, 0, 1, cl ) # Exclude the last value.
+y, y_dims = read1DVariableFromDataset( 'y',ds, 0, 1, cl ) # Exclude the last value.
 print(' y_dims = {} '.format(y_dims))
 y[np.isnan(y)] = 0.  # Special treatment.
 yv = createNetcdfVariable( dso, y   , 'y'   , len(y)   , 'm', 'f4', ('y',)   , parameter )
 y = None
 
-z, z_dims = read1DVariableFromDataset( 'zu_3d',ds, paramList, 1, 0, cl ) # Exclude the first value.
+z, z_dims = read1DVariableFromDataset( 'zu_3d',ds, 1, 0, cl ) # Exclude the first value.
 zv = createNetcdfVariable( dso, z   , 'z'   , len(z)   , 'm', 'f4', ('z',)   , parameter )
 z = None
 
@@ -143,6 +145,22 @@ if( decompOn ):
   wp = None 
   wmv = createNetcdfVariable( dso, wm, 'wm', cc_dims[0], 'm/s', 'f4',('z','y','x',) , variable )
   wm = None
+
+if( scalarName ):
+  s0, s0_dims = read3DVariableFromDataset( scalarName, ds, varList, nt, 0, 0, cl ) # All values.
+  sc_dims  = np.array( s0_dims )  # Change to numpy array for manipulation
+  sc_dims[1:] -= 1   # Reduce the coord. dimensions by one. Note: time = sc_dims[0].
+  sc = np.zeros( sc_dims )
+  sc, sm = interpolatePalmVectors( s0, s0_dims, 'i' , decompOn ); s0 = None
+  if( not args.decompOnly ):
+    sv = createNetcdfVariable( dso, sc, scalarName, sc_dims[0], ' ', 'f4',('time','z','y','x',) , variable )
+    if( not decompOn ): sc = None
+  if( decompOn ):
+    sp = vectorPrimeComponent( sc, sm ); sc = None
+    spv = createNetcdfVariable( dso, sp, scalarName+'p', sc_dims[0], ' ', 'f4',('time','z','y','x',) , variable )
+    sp = None
+    smv = createNetcdfVariable( dso, sm, scalarName+'m', sc_dims[0], ' ', 'f4',('z','y','x',) , variable )
+    sm = None
 
 # - - - - Done , finalize the output - - - - - - - - - -
 netcdfWriteAndClose( dso )
