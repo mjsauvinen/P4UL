@@ -109,10 +109,10 @@ def readVariableFromDataset(varStr, ds, cl=1 ):
       if( 'time' in dname ): dDict[dname] = dData
       else:                  dDict[dname] = dData[::cl]
       dData = None
-
+      
   else:
     sys.exit(' Variable {} not in list {}.'.format(varStr, checkList))
-
+  
   return var, dDict
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
@@ -165,12 +165,16 @@ def read3dDataFromNetCDF( fname, varStr, cl=1 ):
   print(' {}_dims = {}\n Done!'.format(varStr, var.shape ))
   
   # Rename the keys in dDict to simplify the future postprocessing
-  for dstr in dDict.keys():
-    idNan = np.isnan(dDict[dstr]); dDict[dstr][idNan] = 0.
-    if( 'time' in dstr ):  dDict['time'] = dDict.pop( dstr )
-    elif( 'x' in dstr  ):  dDict['x']    = dDict.pop( dstr )
-    elif( 'y' in dstr  ):  dDict['y']    = dDict.pop( dstr ) 
-    elif( 'z' in dstr  ):  dDict['z']    = dDict.pop( dstr )
+  for dn in dDict.keys():
+    idNan = np.isnan(dDict[dn]); dDict[dn][idNan] = 0.
+    if( 'time' in dn and 'time' != dn ):
+      dDict['time'] = dDict.pop( dn )
+    elif( 'x' == dn[0] and 'x' != dn ):
+      dDict['x'] = dDict.pop( dn )
+    elif( 'y' == dn[0] and 'y' != dn ):  
+      dDict['y'] = dDict.pop( dn ) 
+    elif( 'z' == dn[0] and 'z' != dn ):
+      dDict['z'] = dDict.pop( dn )
     else: pass
 
   # Append the variable into the dict. 
