@@ -66,7 +66,7 @@ while 1:
   fig = plt.figure(num=1, figsize=(12.,9.5))
   for iy in iyList:
     # Read data
-    y, xdict = readVariableFromDataset( varList[iy], ds, varList)
+    y, xdict = readVariableFromDataset( varList[iy], ds, 1)
     
     if('time' not in xdict.keys()): 
       print(' time not in dict = {} '.format(xdict.keys()))

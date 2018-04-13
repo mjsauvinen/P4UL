@@ -96,6 +96,7 @@ def readVariableFromDataset(varStr, ds, cl=1 ):
     elif( len(vdims) == 2 and 'time' not in vdims ):
       var = ds.variables[varStr][::cl,::cl]
     elif( len(vdims) == 2 and 'time' in vdims ):
+      print(' {} {} '.format(varStr, ds.variables[varStr][:].shape ))
       var = ds.variables[varStr][:,::cl]
     elif( len(vdims) == 1 and 'time' in vdims ):
       var = ds.variables[varStr]

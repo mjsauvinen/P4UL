@@ -44,6 +44,8 @@ ptname    = args.ptname
 fileNos, fileList = filesFromList( fileKey+'*' )
 
 fig = plt.figure(num=1, figsize=(12,10))
+fig2= plt.figure(num=2, figsize=(12,10))
+fig3= plt.figure(num=3, figsize=(12,10))
 
 for fn in fileNos:
   ds, varList, paramList = netcdfDataset(fileList[fn], verbose=False)
@@ -58,6 +60,9 @@ for fn in fileNos:
   if( len(veldict.keys()) == 4 ):
     umag = np.mean( umag, axis=(0,2,3) )
     pt   = np.mean( pt  , axis=(0,2,3) )
+  if( len(veldict.keys()) == 2 ):
+    umag = np.mean( umag, axis=(0) )
+    pt   = np.mean( pt  , axis=(0) )
 
   for dstr in veldict.keys():
     if( 'z' in dstr ): z = veldict[dstr]
@@ -68,11 +73,16 @@ for fn in fileNos:
   dptdz = (pt[1:]-pt[:-1])/(z[1:]-z[:-1])
   zm    = 0.5*(z[1:]+z[:-1])
   
-  Ri   = (9.81/np.mean(pt))*(dptdz)/(dudz)**2
+  Ri   = (9.81/np.mean(pt))*(dptdz)/(dudz**2+1e-9)  * ( dudz > 1e-3 ).astype(float)
   
   plotStr = ["Local Ri vs z ", "Ri" ,"z"]
   fig = addToPlot(fig, Ri, zm,'{}'.format(fileList[fn]), plotStr, False )
   
+  plotStr = ["dpt/dz vs z ", "dpt/dz" ,"z"]
+  fig2 = addToPlot(fig2, dptdz, zm,'{}'.format(fileList[fn]), plotStr, False )
+  
+  plotStr = ["du/dz vs z ", "du/dz" ,"z"]
+  fig3 = addToPlot(fig3, dudz, zm,'{}'.format(fileList[fn]), plotStr, False )
 
 plt.legend(loc=0)
 plt.show()
