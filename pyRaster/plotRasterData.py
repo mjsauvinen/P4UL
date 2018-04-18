@@ -19,8 +19,8 @@ Author: Mikko Auvinen
 
 #==========================================================#
 parser = argparse.ArgumentParser(prog='plotRasterData.py')
-parser.add_argument("rfile", type=str, nargs='?', default=None,\
-  help="Name of the comp domain data file.")
+parser.add_argument("-f","--filename", type=str, default=None,\
+  help="Name of the raster file.")
 parser.add_argument("-s", "--size", type=float, default=13.,\
   help="Size of the figure (length of the longer side). Default=13.")
 parser.add_argument("--lims", help="User specified limits.", action="store_true",\
@@ -39,7 +39,7 @@ args = parser.parse_args()
 #writeLog( parser, args )
 #==========================================================#
 # Renaming ... that's all.
-rasterfile  = args.rfile
+rasterfile  = args.filename
 size        = args.size
 limsOn      = args.lims
 gridOn      = args.grid
