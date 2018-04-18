@@ -74,7 +74,7 @@ def read1DVariableFromDataset(varStr, ds, iLOff=0, iROff=0, cl=1):
       sys.exit(1)
 
   else:
-    print(' Variable {} not in list {}.'.format(varStr, checkList))
+    print(' Variable {} not in list {}.'.format(varStr, ds.variables.keys()))
     sys.exit(1)
 
   return var[::cl], np.shape(var[::cl])
@@ -112,14 +112,14 @@ def readVariableFromDataset(varStr, ds, cl=1 ):
       dData = None
       
   else:
-    sys.exit(' Variable {} not in list {}.'.format(varStr, checkList))
+    sys.exit(' Variable {} not in list {}.'.format(varStr, ds.variables.keys()))
   
   return var, dDict
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 
-def read3DVariableFromDataset(varStr, ds, checkList, iTOff=0, iLOff=0, iROff=0, cl=1, meanOn=False):
+def read3DVariableFromDataset(varStr, ds, iTOff=0, iLOff=0, iROff=0, cl=1, meanOn=False):
   # iLOff: left offset
   # iROff: right offset
   # cl   : coarsening level

@@ -89,7 +89,7 @@ PALM netCDF4:
 '''
 
 # - - - - First, u-component - - - - - - - - - -
-u0, u0_dims = read3DVariableFromDataset( 'u', ds, varList, nt, 0, 0, cl ) # All values.
+u0, u0_dims = read3DVariableFromDataset( 'u', ds, nt, 0, 0, cl ) # All values.
 
 ''' 
 New, cell-center dimension lengths: 
@@ -114,7 +114,7 @@ if( decompOn ):
 
 # - - - - Second, v-component - - - - - - - - - -
 
-v0, v0_dims = read3DVariableFromDataset( 'v', ds, varList, nt, 0, 0, cl ) # All values.
+v0, v0_dims = read3DVariableFromDataset( 'v', ds, nt, 0, 0, cl ) # All values.
 
 vc = np.zeros( cc_dims )
 vc, vm = interpolatePalmVectors( v0, v0_dims, 'j' , decompOn ); v0 = None
@@ -131,7 +131,7 @@ if( decompOn ):
 
 # - - - - Third, w-component - - - - - - - - - -
 
-w0, w0_dims = read3DVariableFromDataset( 'w', ds, varList, nt, 0, 0, cl ) # All values.
+w0, w0_dims = read3DVariableFromDataset( 'w', ds, nt, 0, 0, cl ) # All values.
 
 wc = np.zeros( cc_dims )
 wc, wm = interpolatePalmVectors( w0, w0_dims, 'k' , decompOn ); w0 = None
@@ -147,7 +147,7 @@ if( decompOn ):
   wm = None
 
 if( scalarName ):
-  s0, s0_dims = read3DVariableFromDataset( scalarName, ds, varList, nt, 0, 0, cl ) # All values.
+  s0, s0_dims = read3DVariableFromDataset( scalarName, ds, nt, 0, 0, cl ) # All values.
   sc_dims  = np.array( s0_dims )  # Change to numpy array for manipulation
   sc_dims[1:] -= 1   # Reduce the coord. dimensions by one. Note: time = sc_dims[0].
   sc = np.zeros( sc_dims )

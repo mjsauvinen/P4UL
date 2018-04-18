@@ -59,20 +59,20 @@ dso = netcdfOutputDataset( fileout )
 Read cell center coordinates and time.
 Create the output independent variables right away and empty memory.
 '''
-time, time_dims = read1DVariableFromDataset('time', ds, paramList, nt, 0, 1 ) # All values.
+time, time_dims = read1DVariableFromDataset('time', ds, nt, 0, 1 ) # All values.
 print(' time_dims = {} '.format(time_dims))
 tv = createNetcdfVariable( dso, time,'time', len(time),'s','f4',('time',), parameter )
 time = None  
 
-x, x_dims = read1DVariableFromDataset( 'x',ds, paramList, 0, 1, cl ) # Exclude the last value.
+x, x_dims = read1DVariableFromDataset( 'x', ds, 0, 1, cl ) # Exclude the last value.
 xv = createNetcdfVariable( dso, x   , 'x'   , len(x)   , 'm', 'f4', ('x',)   , parameter )
 x = None
 
-y, y_dims = read1DVariableFromDataset( 'y',ds, paramList, 0, 1, cl ) # Exclude the last value.
+y, y_dims = read1DVariableFromDataset( 'y', ds, 0, 1, cl ) # Exclude the last value.
 yv = createNetcdfVariable( dso, y   , 'y'   , len(y)   , 'm', 'f4', ('y',)   , parameter )
 y = None
 
-z, z_dims = read1DVariableFromDataset( zname ,ds, paramList, 1, 0, cl ) # Exclude the first value.
+z, z_dims = read1DVariableFromDataset( zname, ds, 1, 0, cl ) # Exclude the first value.
 zv = createNetcdfVariable( dso, z   , 'z'   , len(z)   , 'm', 'f4', ('z',)   , parameter )
 z = None
 
@@ -80,7 +80,7 @@ z = None
 # - - - - Scalar components - - - - - - - - - -
 sv = []
 for sname in scalarNames:
-  s0, s0_dims = read3DVariableFromDataset( sname, ds, varList,  nt, 0, 0, cl ) # All values.
+  s0, s0_dims = read3DVariableFromDataset( sname, ds,  nt, 0, 0, cl ) # All values.
   print(' Ref: z.shape = {}, y.shape = {}, x.shape = {} '.format(z_dims,y_dims,x_dims) )
   print(' Orig: s0.shape = {} '.format(s0.shape) )
 
