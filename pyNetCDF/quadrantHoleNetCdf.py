@@ -23,14 +23,8 @@ sepStr = ' # = # = # = # = # = # = # = # = '
 parser = argparse.ArgumentParser()
 parser.add_argument("-f", "--filename", type=str,\
   help="Name of the input NETCDF file.")
-parser.add_argument("-v", "--varname",  type=str, nargs=2, default=['u','w'],\
+parser.add_argument("-v", "--varnames",  type=str, nargs=2, default=['u','w'],\
   help="Name of the variables in NETCDF file. Default=[u, w]")
-parser.add_argument("-xn", "--xname",type=str,  default='x',\
-  help="Specify the x coordinate. e.g. xu or x. Default='x' ")
-parser.add_argument("-yn", "--yname",type=str, default='y',\
-  help="Specify the y coordinate. e.g. yv or y. Default='y' ")
-parser.add_argument("-zn", "--zname",type=str, default='z',\
-  help="Specify the z coordinate. e.g. z, zu_3d or zw_3d. Default='z' ")
 parser.add_argument("-nk", "--nkpoints",type=int, default=None,\
   help="Number of data points used within iz1 -> iz2 interval. Default='All' ")
 parser.add_argument("-nx", "--npixels",type=int, default=40,\
@@ -60,7 +54,7 @@ args = parser.parse_args()
 # Rename ...
 filename  = args.filename
 cl        = abs(args.coarse)
-varname   = args.varname
+varnames  = args.varnames
 saveFig   = args.save
 ijk1      = args.ijk1
 ijk2      = args.ijk2
@@ -77,20 +71,12 @@ first = True
 fig   = None
 
 
-# Create a dict that is passed into the function read3dDataFromNetCDF
-nameDict = dict()
-nameDict['xname'] = args.xname
-nameDict['yname'] = args.yname
-nameDict['zname'] = args.zname
-
 # First fluctuation component
-nameDict['varname'] = varname[0]
-ncDict = read3dDataFromNetCDF( filename , nameDict, cl )
+ncDict = read3dDataFromNetCDF( filename , varnames[0], cl )
 v1 = ncDict['v']   # 'v' is a generic name for a variable in ncDict
 
 # Second fluctuation component
-nameDict['varname'] = varname[1]
-ncDict = read3dDataFromNetCDF( filename , nameDict, cl )
+ncDict = read3dDataFromNetCDF( filename , varnames[1], cl )
 v2 = ncDict['v']
 
 # Spatial coords and time

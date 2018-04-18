@@ -34,12 +34,6 @@ parser.add_argument("-m", "--mode", type=str, default='S', choices=['S', 'E', 'P
   help="Mode: 'S': power spectral density, 'E': energy spectrum, 'P': power spectrum.")
 parser.add_argument("-n", "--normalize", action="store_true", default=False,\
   help="Compute f*S/sigma^2.")
-parser.add_argument("-xn", "--xname",type=str, default='x',\
-  help="Specify the x coordinate. e.g. xu or x. Default='x' ")
-parser.add_argument("-yn", "--yname",type=str, default='y',\
-  help="Specify the y coordinate. e.g. yv or y. Default='y' ")
-parser.add_argument("-zn", "--zname",type=str, default='zu_3d',\
-  help="Specify the z coordinate. e.g. zu_3d or zw_3d. Default='zu_3d' ")
 parser.add_argument("-i1", "--ijk1",type=int, nargs=3,\
   help="Starting indices (ix, iy, iz) of the considered data. Required.")
 parser.add_argument("-i2", "--ijk2",type=int, nargs=3,\
@@ -60,15 +54,9 @@ normalize = args.normalize
 Nbins     = args.nbins
 mode      = args.mode
 cl        = abs(args.coarse)
+varname   = args.varname
 
 #==========================================================# 
-# Create a dict that is passed into the function read3dDataFromNetCDF
-nameDict = dict()
-nameDict['xname'] = args.xname
-nameDict['yname'] = args.yname
-nameDict['zname'] = args.zname
-nameDict['varname'] = args.varname
-
 
 # Obtain a list of files to include.
 fileNos, fileList = filesFromList( fileKey+'*' )
@@ -77,9 +65,11 @@ first = True
 fig   = None
 
 for fn in fileNos:
-  dataDict = read3dDataFromNetCDF( fileList[fn] , nameDict, cl )
+  dataDict = read3dDataFromNetCDF( fileList[fn] , varname, cl )
   v = dataDict['v']
-  x = dataDict['x']; y = dataDict['y']; z = dataDict['z']
+  x = dataDict['x']
+  y = dataDict['y']
+  z = dataDict['z']
   time = dataDict['time']
   
   if( first ):

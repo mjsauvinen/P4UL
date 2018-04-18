@@ -33,12 +33,6 @@ parser.add_argument("-fo", "--fileout", type=str, default="out.nc", \
   help="Name of the output NETCDF file. Default=out.nc")
 parser.add_argument("-v", "--varname",  type=str, default='u',\
   help="Name of the variable in NETCDF file. Default='u' ")
-parser.add_argument("-xn", "--xname",type=str,  default='xu',\
-  help="Specify the x coordinate. e.g. xu or x. Default='xu' ")
-parser.add_argument("-yn", "--yname",type=str, default='y',\
-  help="Specify the y coordinate. e.g. yv or y. Default='y' ")
-parser.add_argument("-zn", "--zname",type=str, default='zu_3d',\
-  help="Specify the z coordinate. e.g. z, zu_3d or zw_3d. Default='zu_3d' ")
 parser.add_argument("-nk", "--nkpoints",type=int, default=None,\
   help="Number of data points used within iz1 -> iz2 interval. Default='All' ")
 parser.add_argument("-k", "--kIndices",type=int, nargs=2,\
@@ -69,20 +63,16 @@ independent or dependent variable in function createNetcdfVariable().
 '''
 parameter = True;  variable  = False
 
-# Create a dict that is passed into the function read3dDataFromNetCDF
-nameDict = dict()
-nameDict['xname'] = args.xname
-nameDict['yname'] = args.yname
-nameDict['zname'] = args.zname
 
-# First fluctuation component
-nameDict['varname'] = varname[0]
+# Read data from NETCDF file
 cl = 1
-ncDict = read3dDataFromNetCDF( filename , nameDict, cl )
+ncDict = read3dDataFromNetCDF( filename , varname, cl )
 v = ncDict['v']   # 'v' is a generic name for a variable in ncDict
 
 # Spatial coords and time
-x = ncDict['x']; y = ncDict['y']; z = ncDict['z']
+x = ncDict['x']
+y = ncDict['y']
+z = ncDict['z']
 time = ncDict['time']
 
 # Plot coord. information. This aids the user in the beginning.

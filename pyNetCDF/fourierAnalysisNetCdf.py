@@ -17,12 +17,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-f","--filename", type=str, help="Name of input NETCDF data file.")
 parser.add_argument("-v", "--varname",  type=str, default='u',\
   help="Name of the variable in NETCDF file. Default='u' ")
-parser.add_argument("-xn", "--xname",type=str, default='x',\
-  help="Specify the x coordinate. e.g. xu or x. Default='x' ")
-parser.add_argument("-yn", "--yname",type=str, default='y',\
-  help="Specify the y coordinate. e.g. yv or y. Default='y' ")
-parser.add_argument("-zn", "--zname",type=str, default='zu_3d',\
-  help="Specify the z coordinate. e.g. zu_3d or zw_3d. Default='zu_3d' ")
 parser.add_argument("-p", "--printOn", action="store_true", default=False,\
   help="Print the numpy array data.") 
 parser.add_argument("-pp", "--printOnly", action="store_true", default=False,\
@@ -33,22 +27,13 @@ args = parser.parse_args()
 #==========================================================# 
 # Rename ...
 filename  = args.filename
-xname     = args.xname
-yname     = args.yname
-zname     = args.zname
 varname   = args.varname
 cl        = abs(args.coarse)
-
 #==========================================================# 
-# Create a dict that is passed into the function read3dDataFromNetCDF
-nameDict = dict()
-nameDict['xname']   = xname
-nameDict['yname']   = yname
-nameDict['zname']   = zname
-nameDict['varname'] = varname
+
 
 # Read in data dictionary
-dataDict = read3dDataFromNetCDF( filename , nameDict, cl )
+dataDict = read3dDataFromNetCDF( filename , varname, cl )
 vel = dataDict['v']
 x   = dataDict['x']
 y   = dataDict['y']

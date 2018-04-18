@@ -56,17 +56,15 @@ fig = plt.figure(num=1, figsize=(12,10))
 for fn in fileNos:
   if('mag' in varname):
     
-    varname = 'u'
-    dataDict = read3dDataFromNetCDF( fileList[fn] , varname, cl )
+    dataDict = read3dDataFromNetCDF( fileList[fn] , 'u', cl )
     u = dataDict['v']
-    varname = 'v'
-    dataDict = read3dDataFromNetCDF( fileList[fn] , varname, cl )
+    dataDict = read3dDataFromNetCDF( fileList[fn] , 'v', cl )
     v = dataDict['v']
     
     x = dataDict['x']; y = dataDict['y']; z = dataDict['z']
     
-    Umag = np.sqrt( u**2 + v**2 )
-    vr = Umag
+    # vr := Umag
+    vr = np.sqrt( u**2 + v**2 )
     
   else:
     dataDict = read3dDataFromNetCDF( fileList[fn] , varname, cl )
@@ -77,7 +75,7 @@ for fn in fileNos:
   dataDict = None
   
   
-  # Process data v --> vp 
+  # Process data vr --> vp 
   if( mode == 'mean'):
     vp = np.mean( vr, axis=(0,2,3) ); zp = z
     plotStr  = ["mean({}) vs z ".format(varname), varname ,"z"]
