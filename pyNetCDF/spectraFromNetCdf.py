@@ -106,7 +106,7 @@ for fn in fileNos:
       for j in jList:
         for k in kList[::stride]:
           vt = v[:,k+koff,j,i]
-          vName = nameDict['varname']+'(z={} m), {}'.format(z[k], fileList[fn].split('_NET')[0])
+          vName = varname+'(z={} m), {}'.format(z[k], fileList[fn].split('_NET')[0])
           print(' Processing {} ...'.format(vName))
           fig = spectraAnalysis(fig, vt, time, vName, Nbins, mode, normalize)
   except:
