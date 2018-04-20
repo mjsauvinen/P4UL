@@ -36,11 +36,10 @@ helpFlt = ''' Filter type and its associated number. Available filters:
 parser.add_argument("-ft","--filter",type=str,nargs=2,default=[None,None], help=helpFlt)
 parser.add_argument("-rx","--rmax", type=float, default=None,\
   help="Recover peaks (after filtering) above given value.")
-parser.add_argument("-hx","--hmax", help="Maximum allowable height.",type=float,default=None)
-parser.add_argument("-wa", "--writeAscii", help="Write 'TOPOGRAPHY_DATA' ascii file.",\
-  action="store_true", default=False)
-parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
-  action="store_true", default=False)
+parser.add_argument("-hx","--hmax", type=float, default=None,\ 
+  help="Maximum allowable height.")
+parser.add_argument("-p", "--printOn", action="store_true", default=False,\
+  help="Print the resulting raster data.")
 parser.add_argument("-pp", "--printOnly", help="Only print the resulting data. Don't save.",\
   action="store_true", default=False)
 args = parser.parse_args()
@@ -58,7 +57,6 @@ hmax    = args.hmax
 rmax    = args.rmax
 printOn    = args.printOn
 printOnly  = args.printOnly
-writeAscii = args.writeAscii
 
 # Test comment
 # Another one
@@ -98,18 +96,13 @@ if( hmax ):
 
 Rdict['R'] = Rf; Rdict['GlobOrig'] = ROrig
 
-if( writeAscii ):
-  fx = open( 'TOPOGRAPHY_DATA' , 'w' )
-  np.savetxt(fx,np.round(Rf),fmt='%g')
-  #np.savetxt(fx,Rf,fmt='%g')
-  fx.close()
 
 if( not args.printOnly ):
   saveTileAsNumpyZ( fileout, Rdict )
 
 if( args.printOn or args.printOnly ):
   figDims = 13.*(Rdims[::-1].astype(float)/np.max(Rdims))
-  print('Sum = {}'.format(np.sum(Rf)))
+  #print('Sum = {}'.format(np.sum(Rf)))
   fig = plt.figure(num=1, figsize=figDims)
   fig = addImagePlot( fig, Rf, fltStr+fileout )
 
@@ -117,13 +110,3 @@ if( args.printOn or args.printOnly ):
 
 
 R = Rf = None
-
-'''
-for e in np.arange(E1,E2):
-  n = int( Ab*(e-E1) + N1 )
-  R[n+dn,e+de] = 1
-
-fig = plt.figure(num=1, figsize=figDims)
-fig = addImagePlot( fig, R, 'HEL' ); plt.show()
-
-'''
