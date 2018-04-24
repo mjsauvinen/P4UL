@@ -171,7 +171,7 @@ def addToPlot(fig, x,y,labelStr, plotStr=["","",""], logOn=False):
   
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def plotXX( fig, fileStr, logOn, Cx=1., Cy=1. ):
+def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False ):
   try:    x = np.loadtxt(fileStr)
   except: x = np.loadtxt(fileStr,delimiter=',')
   ax  = fig.add_axes( [0.15, 0.075 , 0.8 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
@@ -187,17 +187,32 @@ def plotXX( fig, fileStr, logOn, Cx=1., Cy=1. ):
     else:
       labelXX = labelStr+'['+str(i)+']' 
     
-    if( logOn ):
-      #lines=ax.loglog(x[:,0],np.abs(x[:,i+1]),'o-', linewidth=1.3 , label=labelXX)
-      lines=ax.semilogy(Cx*x[:,0], Cy*np.abs(x[:,i+1]),'-', linewidth=1.1 , label=labelXX)
+    if( revAxes ):
+      yp = Cy*x[:,0];  xp = Cx*x[:,i+1]; dp = xp
     else:
-      lines=ax.plot(Cx*x[:,0], Cy*x[:,i+1],'-', linewidth=2.1, label=labelXX)
+      xp = Cx*x[:,0];  yp = Cy*x[:,i+1]; dp = yp
     
-    lmax = np.abs(np.max(x[:,i+1]))  # Local maximum
+    if( logOn ):
+      if( revAxes ): 
+        xp = np.abs( xp )
+        plotf = ax.semilogx 
+      else:
+        yp = np.abs( yp )
+        printf = ax.semilogy
+    else:
+      printf = ax.plot
+    
+    
+    lines = plotf( xp, yp,'-', linewidth=1.3 , label=labelXX)
+    
+    lmax = np.abs(np.max(dp))  # Local maximum
     if( lmax > amax ): amax = lmax
     
-  if(amax <1.e-3): ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
-    
+  if( amax <1.e-3 and revAxes): 
+    ax.xaxis.set_major_formatter(FormatStrFormatter('%.2e'))
+  else:
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
+  
   ax.set_xlabel(" X ")
   ax.set_ylabel(" Y ")
   return fig

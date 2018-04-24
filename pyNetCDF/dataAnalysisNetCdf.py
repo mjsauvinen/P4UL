@@ -35,16 +35,19 @@ parser.add_argument("-p", "--printOn", action="store_true", default=False,\
   help="Print the numpy array data.")
 parser.add_argument("-pp", "--printOnly", action="store_true", default=False,\
   help="Only print the numpy array data. Don't save.")
+parser.add_argument("-wa", "--writeAscii", action="store_true", default=False,\
+  help="Save profile data to an ascii file.")
 parser.add_argument("-c", "--coarse", type=int, default=1,\
   help="Coarsening level. Int > 1.")
 args = parser.parse_args()    
 #==========================================================# 
 # Rename ...
-fileKey   = args.fileKey
-normalize = args.normalize
-mode      = args.mode
-cl        = abs(args.coarse)
-varname   = args.varname
+fileKey    = args.fileKey
+normalize  = args.normalize
+mode       = args.mode
+cl         = abs(args.coarse)
+varname    = args.varname
+writeAscii = args.writeAscii
 
 #==========================================================# 
 
@@ -91,6 +94,16 @@ for fn in fileNos:
     vp = np.var( vr, axis=(0,2,3) ); zp = z
     plotStr  = ["var({}) vs z ".format(varname), varname ,"z"]
   
+
+  if( writeAscii ):
+    print(' (2) Writing data to ascii file: {}.dat'.format(varname))
+    print(' x.shape = {} vs y.shape = {}'.format(np.shape(zp), np.shape(vp)))
+    hStr = ' {} '.format(varname)
+    fstr = fileList[fn].split('_')[-1]
+    fstr = fstr.split('.')[0]
+    np.savetxt(varname+'_'+mode+'_'+fstr+'.dat', np.c_[zp, vp], header=hStr)
+
+
   fig = addToPlot(fig, vp, zp,'{}({}), {}'.format(mode,varname,fileList[fn]), plotStr, False )
   
 

@@ -76,13 +76,13 @@ for fn in fileNos:
   Ri   = (9.81/np.mean(pt))*(dptdz)/(dudz**2+1e-9)  * ( dudz > 1e-3 ).astype(float)
   
   plotStr = ["Local Ri vs z ", "Ri" ,"z"]
-  fig = addToPlot(fig, Ri, zm,'{}'.format(fileList[fn]), plotStr, False )
+  fig = addToPlot(fig, Ri[2:-4], zm[2:-4],'{}'.format(fileList[fn]), plotStr, False )
   
   plotStr = ["dpt/dz vs z ", "dpt/dz" ,"z"]
-  fig2 = addToPlot(fig2, dptdz, zm,'{}'.format(fileList[fn]), plotStr, False )
+  fig2 = addToPlot(fig2, dptdz[2:-4], zm[2:-4],'{}'.format(fileList[fn]), plotStr, False )
   
   plotStr = ["du/dz vs z ", "du/dz" ,"z"]
-  fig3 = addToPlot(fig3, dudz, zm,'{}'.format(fileList[fn]), plotStr, False )
+  fig3 = addToPlot(fig3, dudz[2:-4], zm[2:-4],'{}'.format(fileList[fn]), plotStr, False )
 
 plt.legend(loc=0)
 plt.show()

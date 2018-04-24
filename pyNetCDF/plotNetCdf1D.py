@@ -101,16 +101,16 @@ while 1:
         
           ieff = (y[j,:] < 1.e+9); ieff[-1] = False  # Set last false to skip it
           if( np.count_nonzero(ieff) > (len(ieff)/3)):
-            plotTxt   = [labelStr, xStr, varList[iy]]
-            fig = addToPlot(fig, xdict[xStr][ieff], y[j,ieff], labelStr, plotTxt, logOn)
+            plotTxt   = [labelStr, varList[iy], xStr]
+            fig = addToPlot(fig, y[j,ieff], xdict[xStr][ieff], labelStr, plotTxt, logOn)
           else:
             pass
       
       else: # timeAverageOn
         tskip = max( 1, tskip )  # The first should almost always be skipped.
         labelStr  = '  <{}>_t({})'.format(varList[iy],xStr)
-        plotTxt   = [labelStr, xStr, varList[iy]]
-        fig = addToPlot(fig, xdict[xStr][:-1], np.nanmean(y[tskip:,:-1], axis=0), labelStr, plotTxt, logOn)
+        plotTxt   = [labelStr, varList[iy], xStr]
+        fig = addToPlot(fig, np.nanmean(y[tskip:,:-1], axis=0), xdict[xStr][:-1], labelStr, plotTxt, logOn)
         
         
         

@@ -24,6 +24,8 @@ parser.add_argument("--log", action="store_true", default=False,\
   help="Logarithmic y-axis.")
 parser.add_argument("--labels", action="store_true", default=False,\
   help="User specified labels.")
+parser.add_argument("-rx","--revAxes", action="store_true", default=False,\
+  help="Reverse axes: X <--> Y.")
 parser.add_argument("-fx", "--factorX", type=float, default=1.0,\
   help="Multiplication factor for x-values: fx*x")
 parser.add_argument("-fy", "--factorY", type=float, default=1.0,\
@@ -36,6 +38,7 @@ args = parser.parse_args()
 strKey  = args.strKey
 factorX = args.factorX
 factorY = args.factorY
+revAxes = args.revAxes
 logOn   = args.log
 labelsOn= args.labels
 saveFig = args.save
@@ -51,7 +54,7 @@ while 1:
 
   pfig = plt.figure(num=1, figsize=(12.,9.5));
   for fn in fileNos:
-    pfig = plotXX( pfig, fileList[fn], logOn, factorX, factorY )
+    pfig = plotXX( pfig, fileList[fn], logOn, factorX, factorY, revAxes )
 
   if( labelsOn ):
     pfig = userLabels( pfig )
