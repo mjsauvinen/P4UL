@@ -198,9 +198,9 @@ def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False ):
         plotf = ax.semilogx 
       else:
         yp = np.abs( yp )
-        printf = ax.semilogy
+        plotf = ax.semilogy
     else:
-      printf = ax.plot
+      plotf = ax.plot
     
     
     lines = plotf( xp, yp,'-', linewidth=1.3 , label=labelXX)
@@ -209,9 +209,8 @@ def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False ):
     if( lmax > amax ): amax = lmax
     
   if( amax <1.e-3 and revAxes): 
-    ax.xaxis.set_major_formatter(FormatStrFormatter('%.2e'))
-  else:
-    ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
+    if( revAxes ): ax.xaxis.set_major_formatter(FormatStrFormatter('%.2e'))
+    else:          ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
   
   ax.set_xlabel(" X ")
   ax.set_ylabel(" Y ")
