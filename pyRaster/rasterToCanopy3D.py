@@ -28,9 +28,9 @@ parser.add_argument("-a", "--alpha", type=float, default=None, \
 parser.add_argument("-b", "--beta", type=float, default=None, \
   help="Method 'prof': Dimensionless coefficient required for constructing the leaf area density (LAD) profile, using beta probability density function.")
 parser.add_argument("-l", "--lai", type=float, default=6.,\
-  help="Leaf area index LAI value. Method 'prof': LAI is the vertical integral over the LAD profile. Method 'const': Reference LAI, which will be used to evaluate constant <LAD>_z = LAI_ref/(zref[1]-zref[0]), where zref[0] and zref[1] refer to the values given also as input. Default=6.")
+  help="Reference leaf area index (LAI) value. Method 'prof': Reference LAI is the vertical integral over the reference tree's LAD profile. Method 'const': Reference LAI, which will be used to evaluate constant <LAD>_z = LAI_ref/(zref[1]-zref[0]), where zref[0] and zref[1] refer to the values given also as input. Default=6.")
 parser.add_argument("-zr", "--zref", type=float, nargs=2, metavar=('ZREF[0]','ZREF[1]'), default=[4.,20.],\
-  help="Method 'const':  The starting height of the foliage and the total height, respectively, of the reference tree whose LAI is given as input. Default=[4,20].")
+  help=" The starting height of the foliage and the maximum height of the reference tree whose LAI is given as input. Default=[4,20].")
 parser.add_argument("-am", "--asmask", type=str, default=None, \
   help="Output a 3D array mask instead of a text file formatted for PALM. The argument is a file type, use nc for NetCDF4 output and npz for Numpy Z array.")
 parser.add_argument("-t", "--threshold", type=float, default=0.0, \
@@ -44,7 +44,7 @@ filename = args.filename
 method   = args.method
 alpha    = args.alpha
 beta     = args.beta
-lai      = args.lai
+laiRef   = args.lai
 dz       = args.dz
 fileout  = args.fileout
 zref     = args.zref
@@ -52,6 +52,9 @@ zref     = args.zref
 constantLAD = ( method == 'const' )
 profileLAD  = ( method == 'prof'  )
 
+if( profileLAD ):
+  if( (alpha is None) or (beta is None) ): 
+    sys.exit(' Error: alpha and/or beta is None. Exiting ...')
 
 Rdict = readNumpyZTile( filename )
 R = Rdict['R']
@@ -76,34 +79,36 @@ print(" Generating vertical distributions of leaf area densities ...")
 
 
 # Compute <LAD>_z and starting index of the foliage using reference values
-if( constantLAD ):
-  lad_const = lai/(zref[1]-zref[0])
-  istart    = int( np.round(zref[0]/float(dPc[2])) )
+lad_const = laiRef/(zref[1]-zref[0])
+k1        = int( np.round(zref[0]/float(dPc[2])) )  # starting k index
 
+# Reverse the y-axis because of the top-left origo in raster
 Rry = R[::-1,:]
 print(' Rry shape = {} '.format(Rry.shape))
 
 # Calculate leaf area density profiles for each horizontal grid tile and fill array vertically
-for iy in xrange(nPc[1]):
-  for ix in xrange(nPc[0]):
-    # Reverse the y-axis because of the top-left origo in raster
-    canopyHeight = Rry[iy,ix]
+for j in xrange(nPc[1]):
+  for i in xrange(nPc[0]):
+    Zi = Rry[j,i] # Zi := canopy height at [j,i] 
     # Check if there is canopy at all in the vertical column
-    if (canopyHeight == 0.0):
+    if (Zi <= zref[0]):
       continue
     
     # Number of layers
-    nind = int(np.floor(canopyHeight / float(dPc[2]))) + 1 
+    dZ   = Zi - zref[0]
+    nind = int(np.floor( dZ/float(dPc[2]) )) + 1 
 
     if( profileLAD and (nind > 3) ):
       # Calculate LAD profile
-      lad = canopyBetaFunction(canopyHeight,dPc, alpha, beta, lai)
-      iend = min( nind, len(lad) )
-      canopy[ix,iy,0:iend] = lad[0:iend] #  Grid point at canopy top level gets value 0
-    elif( constantLAD ):
-      iend = int(np.ceil(canopyHeight/dPc[2]))
-      iend = min( iend, nPc[2] )
-      canopy[ix,iy,istart:iend] = lad_const
+      lai = laiRef * (Zi-zref[0])/(zref[1]-zref[0])  # Linear scaling of reference LAI.
+      lad = canopyBetaFunction(dZ,dPc, alpha, beta, lai)
+      k2C = k1 + min( nind, len(lad) )
+      k2L = k2C - k1
+      canopy[i,j,k1:k2C] = lad[0:k2L] #  Grid point at canopy top level gets value 0
+    else:
+      k2 = int(np.ceil(Zi/dPc[2]))
+      k2 = min( k2, nPc[2] )
+      canopy[i,j,k1:k2] = lad_const
 
 print(" ... done.\n")
 

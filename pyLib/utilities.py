@@ -32,7 +32,7 @@ def writeLog( parser , args, skip=False ):
 
 def sortTimes(resultDir="./"):
   dirList = os.listdir(resultDir)         # Obtain the list of directories
-  #dirList.sort()                   # Sort the list - this won't work	properly for floats (in string format)
+  #dirList.sort()                   # Sort the list - this won't work properly for floats (in string format)
   # We need a more robust sorting which uses numerical values
   # This is accomplished by using tuples.
   dirTuple = []
@@ -53,7 +53,7 @@ def sortTimes(resultDir="./"):
 def selectFromList( L ):
     n = 0
     for entry in L:
-        print " # [{}]: {}".format(n,entry)
+        print(" # [{}]: {}".format(n,entry))
         n+=1
     
     #print "\n Enter the selection number(s): \n"
@@ -165,9 +165,9 @@ def extractMatchingTerms( trialList , targetList , verbose=False ):
         if ( x in targetList ):
             xList.append(x)
         else:
-            if( verbose ): print 'term = {} not present in the target list.'.format(x)
+            if( verbose ): print('term = {} not present in the target list.'.format(x))
         
-    if( len(xList) == 0 and verbose ): print "Returning an empty list"
+    if( len(xList) == 0 and verbose ): print("Returning an empty list")
     return xList
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
@@ -204,7 +204,7 @@ def basicAnalysis( x, xStr, xRef, printOn ):
     rms({0}) = {5}
     drms({0}-{0}Ref) = {6}
     '''.format(xStr, x_mean, x_max, x_min, x_std, x_rms, dx_rms)
-    print pStr
+    print(pStr)
     
   return x_mean, x_max, x_min, x_std, x_rms
 
@@ -225,9 +225,9 @@ def closeStlFile( fs, solidName ):
   solidName = solidName.split('.')[0]  # Take away the possible .stl
   footer = '\nendsolid {}\n'.format(solidName)
   fs.write(footer)
-  print ' Closing file {}.'.format(solidName)
+  print(' Closing file {}.'.format(solidName))
   fs.close()
-  print ' Done ! '
+  print(' Done ! ')
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 def writeStlFacet(fl, nv, v1, v2, v3 ):
@@ -258,12 +258,12 @@ def vtkWriteHeaderAndGridStructured2d( X, Y, Z, fileName, dataStr ):
     +'DIMENSIONS {}  {}  {}\n'.format(jcols, irows, 1)\
     +'POINTS {} float\n'.format( nPoints )
   
-  print ' Writing header for file {} ...'.format( fileName )
+  print(' Writing header for file {} ...'.format( fileName ))
   fileName = fileName.split('.vtk')[0]+'-2D.vtk'
   f = open(fileName, 'w')
   f.write( header )
 
-  print ' Writing mesh data for file {} ...'.format( fileName )
+  print(' Writing mesh data for file {} ...'.format( fileName ))
   for i in xrange(irows):
     for j in xrange(jcols):
       s = '{0:.1f}\t{1:.1f}\t{2:.1f}\n'.format( X[i,j], Y[i,j], Z[i,j] )
@@ -356,6 +356,6 @@ def vtkWriteUnsPointData( V, X, Y, Z, filename ):
       f.write(s)
   fx.write('\n')
   f.close()
-  print ' ... done!'
+  print(' ... done!')
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*

@@ -45,7 +45,7 @@ limsOn      = args.lims
 gridOn      = args.grid
 labels      = args.labels
 footprintOn = args.footprint
-save      = args.save
+save        = args.save
 
 plt.rc('xtick', labelsize=18); #plt.rc('ytick.major', size=10)
 plt.rc('ytick', labelsize=18); #plt.rc('ytick.minor', size=6)
