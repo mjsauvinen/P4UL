@@ -60,8 +60,14 @@ else:
 idk = selectFromList( z1 )
 
 for k1 in idk:
+  
   k2 = np.where(z2==z1[k1])[0] # This outputs a list 
-  k2 = k2[0]                  # Take always the first term
+  if( len(k2) == 0 ):
+    print(' Coordinate {} not in file {}. Skipping.'.format(z1[k1],filename2))
+    continue
+  else:
+    k2 = k2[0]    # Take always the first term
+  
   
   #Correct the scales to avoid systematic differences
   vm1 = np.mean( v1[0,k1,:,0] )  # Mean < >_y value at inlet 

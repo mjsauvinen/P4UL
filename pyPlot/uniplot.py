@@ -50,7 +50,7 @@ plt.rc('ytick', labelsize=24); #plt.rc('ytick.minor', size=6)
 
 while 1:
 
-  fileNos, fileList = filesFromList( "*"+strKey+"*" )
+  fileNos, fileList = filesFromList( strKey+"*" )
 
   pfig = plt.figure(num=1, figsize=(12.,9.5));
   for fn in fileNos:
