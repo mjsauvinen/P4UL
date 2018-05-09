@@ -5,10 +5,13 @@ import argparse
 import matplotlib.pyplot as plt
 from plotTools import addContourf
 from analysisTools import sensibleIds, groundOffset, discreteWaveletAnalysis
-from netcdfTools import read3dDataFromNetCDF, netcdfOutputDataset, \
-  createNetcdfVariable, netcdfWriteAndClose
+import timeSeries as ts
+from netcdfTools import read3dDataFromNetCDF
+#from netcdfTools import read3dDataFromNetCDF, netcdfOutputDataset, \
+#  createNetcdfVariable, netcdfWriteAndClose
 from utilities import filesFromList
 from txtTools import openIOFile
+from scipy import signal
 ''' 
 Description: A script to perform wavelet analysis on velocity data stored in a NETCDF file.
 
@@ -94,6 +97,23 @@ ijk2 = sensibleIds( np.array([0,0,kIds[1]]), x, y, z )
 print(' Check (1): i, j, k = {}'.format(ijk1))
 print(' Check (2): i, j, k = {}'.format(ijk2))
 
+
+
+#t = np.linspace(-1, 1, 2000, endpoint=False)
+freq=np.linspace(0.005,0.1,500,endpoint=False)
+
+#sig  = np.cos(2 * np.pi * 7 * t) + signal.gausspulse(t - 0.4, fc=2)
+sig  = v[:,kIds[0], ijk1[1], ijk1[0]] - np.mean( v[:,kIds[0], ijk1[1], ijk1[0]] )
+T1 = ts.timeSeries(sig,  time, f=freq )
+T1.MorletHisto(16)
+T1.PowerMorletSpectrogram()
+T1.PowerMorletScalogram()
+T1.SigMorletSpectrogram(ttype="real")
+T1.SigMorletScalogram(ttype="real")
+plt.show()
+
+'''
+
 # = = = = = = = = = = = = =
 # Mean and variance
 vmean = np.mean(v, axis=(0))
@@ -137,6 +157,8 @@ for kt in kList:
     plt.savefig( saveFig+'_{}m.jpg'.format(int(z[kt])), format='jpg', dpi=300)
     
   fig = None
+
+'''
 
 
 '''

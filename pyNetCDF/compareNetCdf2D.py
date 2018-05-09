@@ -17,8 +17,8 @@ parser.add_argument("-f1", "--filename1",type=str, help="Name of the first (1) i
 parser.add_argument("-f2", "--filename2",type=str, help="Name of the second (2) input NETCDF file.")
 parser.add_argument("-v", "--varname",  type=str, default='u',\
   help="Name of the variable in NETCDF file. Default='u' ")
-parser.add_argument("-r", "--relative", help="Compare relative differences: (v1-v2)/|v1|.",\
-  action="store_true", default=False)
+parser.add_argument("-m", "--mode", type=str, default='d', choices=['d', 'r', 's'],\
+  help="Diff mode: 'd': delta, 'r': relative, 's': scaled.")
 parser.add_argument("-p", "--printOn", help="Print the numpy array data.",\
   action="store_true", default=False)
 parser.add_argument("-pp", "--printOnly", action="store_true", default=False,\
@@ -32,7 +32,7 @@ args = parser.parse_args()
 f1       = args.filename1      # './DATA_2D_XY_AV_NETCDF_N02-1.nc'
 f2       = args.filename2      # './DATA_2D_XY_AV_NETCDF_N02-2.nc'
 varname  = args.varname
-relative = args.relative
+mode     = args.mode
 printOn  = args.printOn
 printOnly= args.printOnly
 limsOn   = args.lims
@@ -74,8 +74,10 @@ for k1 in idk:
   vm2 = np.mean( v2[0,k2,:,0] )
   f2  = vm1/vm2 
 
-  if( relative ):
+  if( mode == 'r' ):
     dv = (v1[0,k1,:,:] - f2 * v2[0,k2,:,:])/np.abs( v1[0,k1,:,:] )
+  elif( mode == 's' ):
+    dv = (v1[0,k1,:,:] - f2 * v2[0,k2,:,:])/ vm1
   else:
     dv = (v1[0,k1,:,:] - f2 * v2[0,k2,:,:])
 
@@ -84,5 +86,5 @@ for k1 in idk:
     xydims = dims1[2:]
     figDims = 13.*(xydims[::-1].astype(float)/np.max(xydims))
     fig = plt.figure(num=1, figsize=figDims)
-    fig = addImagePlot( fig, dv[:,:], 'dv', gridOn, limsOn )
+    fig = addImagePlot( fig, dv[::-1,:], 'dv', gridOn, limsOn )
     plt.show()
