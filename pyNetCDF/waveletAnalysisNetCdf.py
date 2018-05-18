@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import argparse
 import matplotlib.pyplot as plt
-from plotTools import addContourf
+from plotTools import addToPlot, addImagePlotDict
 from analysisTools import sensibleIds, groundOffset, discreteWaveletAnalysis
 import timeSeries as ts
 from netcdfTools import read3dDataFromNetCDF
@@ -11,7 +11,7 @@ from netcdfTools import read3dDataFromNetCDF
 #  createNetcdfVariable, netcdfWriteAndClose
 from utilities import filesFromList
 from txtTools import openIOFile
-from scipy import signal
+from scipy import signal, ndimage
 ''' 
 Description: A script to perform wavelet analysis on velocity data stored in a NETCDF file.
 
@@ -28,37 +28,40 @@ sepStr = ' # = # = # = # = # = # = # = # = '
 parser = argparse.ArgumentParser()
 parser.add_argument("-f", "--filename", type=str,\
   help="Name of the input NETCDF file.")
-parser.add_argument("-wt", "--wavelet", type=str,\
-  help="Name of the wavelet. See documentation of PyWavelet package.")
-parser.add_argument("-nl", "--nlevel", type=int, default=4,\
-  help="Number of levels in wavelet analysis. Default=4")
 parser.add_argument("-fo", "--fileout", type=str, default="out.nc", \
   help="Name of the output NETCDF file. Default=out.nc")
 parser.add_argument("-v", "--varname",  type=str, default='u',\
   help="Name of the variable in NETCDF file. Default='u' ")
-parser.add_argument("-nk", "--nkpoints",type=int, default=None,\
-  help="Number of data points used within iz1 -> iz2 interval. Default='All' ")
+parser.add_argument("-m", "--mode", type=str, default='spectro', choices=['histo', 'spectro', 'scalo'],\
+  help="Mode: histo-, spectro-, or scalo-gram.")
+parser.add_argument("-P", "--power", action="store_true", default=False,\
+  help="Plot power histo-, spectro- or scalo-gram.")
+parser.add_argument("-C", "--complex", action="store_true", default=False,\
+  help="Complex spectro- or scalo-gram.")
 parser.add_argument("-k", "--kIndices",type=int, nargs=2,\
   help="Starting and final index (k_start, k_final) of the considered data. Required.")
 parser.add_argument("-s", "--save", type=str, default=None, \
   help="Identifier (name) for the saved figures. Default=None")
 parser.add_argument("-of", "--outputToFile", type=str, default=None, \
   help="Name of the file to output analysis results. Default=None")
-parser.add_argument("-p", "--printOn", action="store_true", default=False,\
-  help="Print the numpy array data.")
+parser.add_argument("--gridOn", action="store_true", default=False,\
+  help="Grid on the figure.")
+parser.add_argument("--limsOn", action="store_true", default=False,\
+  help="User defined limits.")
 args = parser.parse_args()    
 #==========================================================# 
 # Rename ...
 filename  = args.filename
 fileout   = args.fileout
-wavelet   = args.wavelet
-nlevel    = args.nlevel
 varname   = args.varname
 kIds      = args.kIndices
-nkpoints  = args.nkpoints
+mode      = args.mode
+power     = args.power
+complexOn = args.complex 
 ofile     = args.outputToFile
 saveFig   = args.save
-printOn   = args.printOn
+gridOn   = args.gridOn
+limsOn   = args.limsOn
 #==========================================================# 
 '''
 Establish two boolean variables which indicate whether the created variable is an
@@ -97,19 +100,91 @@ ijk2 = sensibleIds( np.array([0,0,kIds[1]]), x, y, z )
 print(' Check (1): i, j, k = {}'.format(ijk1))
 print(' Check (2): i, j, k = {}'.format(ijk2))
 
+Nt = 4. 
+dtime = np.mean( time[1:] - time[:-1] )
+ltime = (time[-1] - time[0])/Nt
+f1    = 1./ltime
+f2    = 1./(2.*dtime)
+nsteps= int( (f2-f1)/f1 )
+freq  = np.linspace(f1,f2,nsteps,endpoint=False)
 
 
-#t = np.linspace(-1, 1, 2000, endpoint=False)
-freq=np.linspace(0.005,0.1,500,endpoint=False)
+print(' f1 = {}, f2 = {}, nsteps = {} '.format(f1,f2,nsteps))
+print(' freq = {} '.format( freq ))
 
-#sig  = np.cos(2 * np.pi * 7 * t) + signal.gausspulse(t - 0.4, fc=2)
+
 sig  = v[:,kIds[0], ijk1[1], ijk1[0]] - np.mean( v[:,kIds[0], ijk1[1], ijk1[0]] )
+fig1 = plt.figure()
+plotStr = [" Signal "," time "," v(time) "]
+fig1 = addToPlot(fig1, time, ndimage.gaussian_filter(sig, sigma=60.),'Filtered', plotStr )
+fig1 = addToPlot(fig1, time,sig,'Signal', plotStr )
+
+
+
 T1 = ts.timeSeries(sig,  time, f=freq )
-T1.MorletHisto(16)
-T1.PowerMorletSpectrogram()
-T1.PowerMorletScalogram()
-T1.SigMorletSpectrogram(ttype="real")
-T1.SigMorletScalogram(ttype="real")
+
+if( complexOn ):  tt = "complex"
+else:             tt = "real"
+
+
+if( mode == 'hist'):
+  T1.MorletHisto(16)
+
+else:
+  wDict  = dict()
+  exDict = T1.getBounds()
+  
+  if( mode == 'spectro' ):
+    if( power ): 
+      wDict['R'] = T1.PowerMorletSpectrogram()
+      wDict['title'] = ' Power Morlet Spectrogram '
+      bounds = exDict['freq']
+    else:
+      wDict['R'] = T1.SigMorletSpectrogram(ttype=tt)
+      wDict['title'] = ' {} Morlet Spectrogram '.format(tt.upper())
+      bounds = exDict['freq']
+      
+  elif( mode == 'scalo' ):
+    if( power ): 
+      wDict['R'] = T1.PowerMorletScalogram()
+      wDict['title'] = ' Power Morlet Scalogram '
+      bounds = exDict['scales']
+    else:
+      wDict['R'] = T1.SigMorletScalogram(ttype=tt)
+      wDict['title'] = ' {} Morlet Scalogram '.format(tt.upper())
+      bounds = exDict['scales']
+
+  wDict['extent'] = bounds
+  wDict['xlabel'] = 'time (s)'
+  wDict['ylabel'] = 'frequency (Hz)'
+  wDict['gridOn'] = gridOn; wDict['limsOn'] = limsOn
+  wDict['cmap'] = 'bwr'
+  
+  fig2 = plt.figure()
+  fig2 = addImagePlotDict(fig2, wDict )
+  
+  '''
+  # Set up the axes with gridspec
+  figx = plt.figure(figsize=(6, 6))
+  grid = plt.GridSpec(4, 4, hspace=0.2, wspace=0.2)
+  main_ax = figx.add_subplot(grid[:-1, 1:])
+  y_hist = figx.add_subplot(grid[:-1, 0], xticklabels=[], sharey=main_ax)
+  x_hist = figx.add_subplot(grid[-1, 1:], yticklabels=[], sharex=main_ax)
+
+  # scatter points on the main axes
+  main_ax.imshow(np.real(wDict['R']), aspect='auto')
+
+  # histogram on the attached axes
+  x_hist.hist(x, 40, histtype='stepfilled',
+            orientation='vertical', color='gray')
+  x_hist.invert_yaxis()
+
+  y_hist.hist(y, 40, histtype='stepfilled',
+            orientation='horizontal', color='gray')
+  y_hist.invert_xaxis()
+  '''
+
+
 plt.show()
 
 '''

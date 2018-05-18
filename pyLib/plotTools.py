@@ -2,8 +2,8 @@
 import sys
 import glob
 import numpy as np
-import pylab as pl
 import matplotlib.pyplot as plt
+from utilities import dataFromDict
 from  matplotlib.ticker import FormatStrFormatter
 
 # 08.04.2016:  Mona added an option for colorbar bounds to addImagePlot
@@ -82,6 +82,25 @@ def setColorbarLims( img ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def userColormapSettings( fig, im, Rmax=1. ):
+  uticks =None # User-defined ticks. <None> leads to default setting.
+  eformat=None
+  
+  im = setColorbarLims( im )
+  im = setColormap( im )
+    
+  try:
+    uticks=input(' Enter ticks separated by comma (empty=default):')
+  except:
+    uticks=None
+  
+  if(Rmax<1.e-3): eformat='%.2e'
+  cb = fig.colorbar(im, ticks=uticks, format=eformat)
+  
+  return cb
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
 def random_marker():
   markerList = ['x','s','p','h','d','*','o','+']
   nm = len(markerList)
@@ -122,27 +141,46 @@ def plotBar(fig, xb, yb, labelStr, plotStr=["","",""], wb=0.6, errb=0):
   return fig
   
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-def addImagePlot( fig, X, labelStr, gridOn=False, limsOn=False ):
+
+def addImagePlot( fig, R, titleStr, gridOn=False, limsOn=False ):
   global cmaps
   ax = fig.add_axes( [0.1, 0.075 , 0.875 , 0.81] ) #[left, up, width, height]
-  im = ax.imshow(X)       
+  im = ax.imshow(np.real(R), aspect='auto')       
 
-  ax.set_title(labelStr)
+  ax.set_title(titleStr)
   ax.grid(gridOn)
   
-  uticks =None # User-defined ticks. <None> leads to default setting.
-  eformat=None
   if(limsOn):
-    im = setColorbarLims( im )
-    im = setColormap( im )
-    
-    try:
-      uticks=input(' Enter ticks separated by comma (empty=default):')
-    except:
-      uticks=None
+    cbar = userColormapSettings( fig, im, np.max(R) )
+  else:
+    cbar = fig.colorbar(im)
   
-  if(np.max(X)<1.e-3): eformat='%.2e'
-  cbar = fig.colorbar(im, ticks=uticks, format=eformat)
+  return fig
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def addImagePlotDict(fig, RDict ):
+  global cmaps 
+  
+  R    = dataFromDict('R',      RDict, allowNone=False)
+  ex   = dataFromDict('extent', RDict, allowNone=True)
+  ttl  = dataFromDict('title',  RDict, allowNone=True)
+  xlbl = dataFromDict('xlabel', RDict, allowNone=True)
+  ylbl = dataFromDict('ylabel', RDict, allowNone=True)
+  gOn  = dataFromDict('gridOn', RDict, allowNone=False)
+  lOn  = dataFromDict('limsOn', RDict, allowNone=False)
+  cm   = dataFromDict('cmap',   RDict, allowNone=True)
+  
+  ax = fig.add_axes( [0.1, 0.075 , 0.875 , 0.81] ) #[left, top, width, height]
+  im = ax.imshow(np.real(R), extent=ex, aspect='auto', cmap=cm)
+  
+  ax.set_title(ttl); ax.set_xlabel(xlbl); ax.set_ylabel(ylbl)
+  ax.grid(gOn)
+  
+  if(lOn):
+    cbar = userColormapSettings( fig, im, np.max(R) )
+  else:
+    cbar = fig.colorbar(im)
   
   return fig
 
@@ -214,6 +252,68 @@ def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False ):
   
   ax.set_xlabel(" X ")
   ax.set_ylabel(" Y ")
+  return fig
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def plotCiXY( fig, pDict ):
+  fn      = dataFromDict('filename', pDict, allowNone=False)
+  Cx      = dataFromDict('Cx',       pDict, allowNone=True)
+  Cy      = dataFromDict('Cy',       pDict, allowNone=True)
+  logOn   = dataFromDict('logOn',    pDict, allowNone=True)
+  revAxes = dataFromDict('revAxes',  pDict, allowNone=True)
+  
+  labelStr = fn.rsplit(".", 1)[0]
+  
+  if( Cx is None ): Cx = 1.
+  if( Cy is None ): Cy = 1.
+  
+  try:    x = np.loadtxt(fn)
+  except: x = np.loadtxt(fn,delimiter=',')
+  
+  nrows, ncols = x.shape 
+  if( ncols < 4 ):
+    msg = '''
+    Error! ncols is less than 4. 
+    The data must be in [x, v, v_lower, v_upper, (possibly something else)] format. 
+    Exiting...'''
+    sys.exit(msg)
+  
+  # Copy values and clear memory
+  d = x[:,0]; v = x[:,1]; v_l = x[:,2]; v_u = x[:,3]
+  x = None 
+  
+  ax  = fig.add_axes( [0.15, 0.075 , 0.8 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
+  
+  if( revAxes ):
+    xp = Cx*v; yp = d
+    v_l *= Cx; v_u *= Cx
+    xlb = 'V(d)'; ylb = 'd'
+  else:
+    yp = Cy*v; xp = d
+    v_l *= Cy; v_u *= Cy
+    ylb = 'V(d)'; xlb = 'd'
+  
+  
+  if( logOn ):
+    if( revAxes ):
+      plotf  = ax.semilogx
+      fillbf = ax.fill_betweenx
+    else:
+      plotf = ax.semilogy
+      fillbf= ax.fill_between
+  else:
+    plotf = ax.plot
+    if( revAxes ):
+      fillbf = ax.fill_betweenx
+    else:
+      fillbf = ax.fill_between
+  
+  lines = plotf( xp, yp, lw=2, label=labelStr, color=color_stack())
+  linef = fillbf( d , v_u, v_l, facecolor='gray', alpha=0.25)
+  ax.set_xlabel(xlb)
+  ax.set_ylabel(ylb)
+
   return fig
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*

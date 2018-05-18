@@ -20,6 +20,26 @@ Author: Mikko Auvinen
         Finnish Meteorological Institute
 '''
 #==========================================================#
+
+def resample(X, n=None):
+  nt, nk, nj, ni = X.shape
+  Nn  = nt
+  if(n is None): n = Nn
+  else:          n = min( n, Nn )
+  
+  Xr = np.zeros( (n,nk,nj,ni) )
+  #print(' Resampled array size = {} '.format( Xr.shape ))
+  
+  for i in xrange(ni):
+    for j in xrange(nj):
+      for k in xrange(nk):
+        if(n is None): 
+          n = Nn
+        ix = np.floor(np.random.rand(n)*Nn).astype(int)
+        Xr[:,k,j,i] = X[ix,k,j,i]
+  
+  return Xr
+
 #==========================================================#
 sepStr = ' # = # = # = # = # = # = # = # = '
 parser = argparse.ArgumentParser()
@@ -29,8 +49,14 @@ parser.add_argument("-v", "--varname",  type=str, default='u',\
   help="Name of the variable in NETCDF file. Default='u' ")
 parser.add_argument("-m", "--mode", type=str, default='mean', choices=['mean', 'std', 'var'],\
   help="Mode: mean, std, or var.")
+parser.add_argument("-rs", "--resample", action="store_true", default=False,\
+  help="Include resampling of the time series.")
+parser.add_argument("-Ns", "--Nsample", type=int, default=None,\
+  help="Number of terms used in resampling. Default=None")
 parser.add_argument("-n", "--normalize", action="store_true", default=False,\
   help="Normalize.")
+parser.add_argument("-me", "--meanError", action="store_true", default=False,\
+  help="Plot std of mean error (with std option).")
 parser.add_argument("-p", "--printOn", action="store_true", default=False,\
   help="Print the numpy array data.")
 parser.add_argument("-pp", "--printOnly", action="store_true", default=False,\
@@ -42,14 +68,18 @@ parser.add_argument("-c", "--coarse", type=int, default=1,\
 args = parser.parse_args()    
 #==========================================================# 
 # Rename ...
-fileKey    = args.fileKey
-normalize  = args.normalize
-mode       = args.mode
-cl         = abs(args.coarse)
-varname    = args.varname
-writeAscii = args.writeAscii
+fileKey     = args.fileKey
+normalize   = args.normalize
+meanErrorOn = args.meanError
+mode        = args.mode
+resampleOn  = args.resample
+Ns          = args.Nsample
+cl          = abs(args.coarse)
+varname     = args.varname
+writeAscii  = args.writeAscii
 
-#==========================================================# 
+#==========================================================#
+
 
 # Obtain a list of files to include.
 fileNos, fileList = filesFromList( fileKey+'*' )
@@ -58,42 +88,61 @@ fig = plt.figure(num=1, figsize=(12,10))
 
 for fn in fileNos:
   if('mag' in varname):
-    
     dataDict = read3dDataFromNetCDF( fileList[fn] , 'u', cl )
     u = dataDict['v']
     dataDict = read3dDataFromNetCDF( fileList[fn] , 'v', cl )
     v = dataDict['v']
-    
-    x = dataDict['x']; y = dataDict['y']; z = dataDict['z']
-    
     # vr := Umag
     vr = np.sqrt( u**2 + v**2 )
     
   else:
     dataDict = read3dDataFromNetCDF( fileList[fn] , varname, cl )
     vr = dataDict['v']
-    x  = dataDict['x']; y = dataDict['y']; z = dataDict['z']
-    time = dataDict['time']
-    
-  dataDict = None
   
+  x  = dataDict['x']; y = dataDict['y']; z = dataDict['z']
+  time = dataDict['time']
+  dataDict = None
+  axs = (0,2,3)
+  axs = (0)
+
+  if( resampleOn ):
+    vr2 = resample( vr, Ns )
+  else:
+    vr2 = None
+
   
   # Process data vr --> vp 
   if( mode == 'mean'):
-    vp = np.mean( vr, axis=(0,2,3) ); zp = z
+    vp  = np.mean( vr, axis=axs ); zp = z
+    if( vr2 is not None ): vp2 = np.mean( vr2, axis=axs )
     plotStr  = ["mean({}) vs z ".format(varname), varname ,"z"]
+
   elif( mode == 'std'):
-    vp = np.std( vr, axis=(0,2,3) ); zp = z
-    N = len( vr[:,0,0,0] )
-    vmerr = vp/np.sqrt(N)
-    plotStr  = ["std. error of mean({}) vs z ".format(varname), varname ,"z"]
-    fig = addToPlot(fig, vmerr, zp,'{}({}), {}'.format('std error of mean',varname,fileList[fn]), plotStr, False )
+    vp  = np.std( vr, axis=axs ); zp = z
+    if( vp2 is not None ): vp2 = np.std( vr2, axis=axs ) 
     
+    if(meanErrorOn):
+      N = len( vr[:,0,0,0] )
+      vmerr = vp/np.sqrt(N)
+      if( len(vmerr.shape)  == 3 ): vmerr  = vmerr[:,0,0]
+      plotStr  = ["std. error of mean({}) vs z ".format(varname), varname ,"z"]
+      fig = addToPlot(fig, vmerr, zp,'{}({}), {}'\
+        .format('std error of mean',varname,fileList[fn].split('_')[-1]), plotStr, False )
+    
+      '''
+      N2 = len( vr2[:,0,0,0] )
+      vmerr2 = vp2/np.sqrt(N2)
+      if( len(vmerr2.shape) == 3 ): vmerr2 = vmerr2[:,0,0]
+      fig = addToPlot(fig, vmerr2, zp,'{}({}), {}'\
+      .format('std error of mean',varname,fileList[fn]), plotStr, False )
+      '''
     plotStr  = ["std({}) vs z ".format(varname), varname ,"z"]
+    
   elif( mode == 'var' ):
-    vp = np.var( vr, axis=(0,2,3) ); zp = z
+    vp  = np.var( vr, axis=axs ); zp = z
+    if( vp2 is not None ): vp2 = np.var( vr2, axis=axs )
     plotStr  = ["var({}) vs z ".format(varname), varname ,"z"]
-  
+    
 
   if( writeAscii ):
     print(' (2) Writing data to ascii file: {}.dat'.format(varname))
@@ -104,8 +153,20 @@ for fn in fileNos:
     np.savetxt(varname+'_'+mode+'_'+fstr+'.dat', np.c_[zp, vp], header=hStr)
 
 
-  fig = addToPlot(fig, vp, zp,'{}({}), {}'.format(mode,varname,fileList[fn]), plotStr, False )
+  if( len(vp.shape) == 3 ):  
+    vp  = vp[:,1,1]
   
+  if( vp2 is not None ):
+    if( len(vp2.shape) == 3 ): vp2 = vp2[:,1,1]
+  
+  fig = addToPlot(fig, vp,  zp,' {}({}), {}, N = {}'\
+    .format(mode,varname,fileList[fn].split('_')[-1], len(time)), plotStr, False )
+  
+  if( vp2 is not None ):
+    fig = addToPlot(fig, vp2, zp,' {}({}), {}, Resampled with N = {}'\
+      .format(mode,varname,fileList[fn].split('_')[-1], Ns), plotStr, False )
+    fig = addToPlot(fig, np.abs(vp-vp2), zp,' {}({}), {}, Resampling error = |(v_o-v_rs)/v_o|'\
+      .format(mode,varname,fileList[fn].split('_')[-1]), plotStr, False )
 
 plt.legend(loc=0)
 plt.show()
