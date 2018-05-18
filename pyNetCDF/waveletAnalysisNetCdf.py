@@ -5,15 +5,13 @@ import argparse
 import matplotlib.pyplot as plt
 from plotTools import addToPlot, addImagePlotDict
 from analysisTools import sensibleIds, groundOffset, discreteWaveletAnalysis
-import timeSeries as ts
+from waveletTools import wtDataset, Morlet
 from netcdfTools import read3dDataFromNetCDF
-#from netcdfTools import read3dDataFromNetCDF, netcdfOutputDataset, \
-#  createNetcdfVariable, netcdfWriteAndClose
 from utilities import filesFromList
 from txtTools import openIOFile
 from scipy import signal, ndimage
 ''' 
-Description: A script to perform wavelet analysis on velocity data stored in a NETCDF file.
+Description: A script to perform wavelet analysis on data stored in a NETCDF file.
 
 Author: Mikko Auvinen
         mikko.auvinen@helsinki.fi 
@@ -121,42 +119,47 @@ fig1 = addToPlot(fig1, time,sig,'Signal', plotStr )
 
 
 
-T1 = ts.timeSeries(sig,  time, f=freq )
+WD1 = wtDataset(sig,  time, f=freq )
 
 if( complexOn ):  tt = "complex"
 else:             tt = "real"
 
 
 if( mode == 'hist'):
-  T1.MorletHisto(16)
+  WD1.MorletHisto(16)
 
 else:
   wDict  = dict()
-  exDict = T1.getBounds()
+  exDict = WD1.getBounds()
   
   if( mode == 'spectro' ):
+    
     if( power ): 
-      wDict['R'] = T1.PowerMorletSpectrogram()
+      wDict['R'] = WD1.PowerMorletSpectrogram()
       wDict['title'] = ' Power Morlet Spectrogram '
       bounds = exDict['freq']
     else:
-      wDict['R'] = T1.SigMorletSpectrogram(ttype=tt)
+      wDict['R'] = WD1.SigMorletSpectrogram(ttype=tt)
       wDict['title'] = ' {} Morlet Spectrogram '.format(tt.upper())
       bounds = exDict['freq']
       
+    wDict['ylabel'] = 'frequency (Hz)'
+    
+      
   elif( mode == 'scalo' ):
     if( power ): 
-      wDict['R'] = T1.PowerMorletScalogram()
+      wDict['R'] = WD1.PowerMorletScalogram()
       wDict['title'] = ' Power Morlet Scalogram '
       bounds = exDict['scales']
     else:
-      wDict['R'] = T1.SigMorletScalogram(ttype=tt)
+      wDict['R'] = WD1.SigMorletScalogram(ttype=tt)
       wDict['title'] = ' {} Morlet Scalogram '.format(tt.upper())
       bounds = exDict['scales']
+      
+    wDict['ylabel'] = 'scales (s)'
 
   wDict['extent'] = bounds
   wDict['xlabel'] = 'time (s)'
-  wDict['ylabel'] = 'frequency (Hz)'
   wDict['gridOn'] = gridOn; wDict['limsOn'] = limsOn
   wDict['cmap'] = 'bwr'
   

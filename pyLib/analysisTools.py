@@ -188,24 +188,7 @@ def continuousWaveletAnalysis( vx, wDict ):
 
 #==========================================================#
 
-def Morlet(npoints, width, omega0, dt, ttype="complex"):
-  """
-  The  central frequency is: Omega0/(2*pi*s)
-  The band spans from Omega0/s-3/s and Omega0/s+3/s
-  Sampling pulsation must therefore be >2*Omega0/s+3/s
-  s here is the scale parameter
-  """
-  vec= dt*(np.arange(0, npoints) - (npoints - 1.0)/2)
-  c=1./(np.sqrt(1.+np.exp(-omega0**2)-2*np.exp(-3./4.*omega0**2)))
-  k=np.exp(-omega0**2/2.)
-  total = c/np.pi**(1./4.)*np.exp(-vec**2/(2*width**2))*(np.cos(omega0*vec/width)+(np.sin(omega0*vec/width))*1j-k)
 
-  if ttype=="real":
-    return np.real(total)
-  else:
-    return total
-
-#==========================================================#
 
 
 
