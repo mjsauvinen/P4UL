@@ -498,13 +498,25 @@ def applyFilter(Rx, filterInfo ):
 
 def labelRaster(R, maskId=None):
   import scipy.ndimage.measurements as snms
+  Rm = np.zeros( R.shape, type(R[0,0]) )
   if( maskId is not None ):
-    Rtmp = R.copy()
-    Rtmp[~(R==maskId)] = 0.   # Set other mask values to zero
-  else:
-    Rtmp = R
+    mIds = list()
+    if(   isinstance( maskId, list) ):
+      mIds.extend(maskId)
+    elif( isinstance( maskId, int ) ):
+      mIds.append(maskId)
+    else:
+      sys.exit(' Error in labelRaster: maskId is not a list or int. It is {}'.format(type(maskId)))
+    
+    idx = np.zeros( R.shape , bool )
+    for im in mIds:
+      idx = np.maximum( idx , (R == im ) )
+      
+    Rm[idx] = R[idx]   # Set desired mask values 
 
-  Rl, shapeCount = snms.label(Rtmp) # this might be slow for unfiltered data
+
+  Rl, shapeCount = snms.label(Rm) # this might be slow for unfiltered data
+  Rm = None
   print(' Found {} shapes from the data.'.format(shapeCount))
 
   return Rl, shapeCount
