@@ -36,7 +36,11 @@ parser.add_argument("-n", "--niter",  type=int, default=5000,\
   help="Number of iterations taken by the bootstrap algorithm. Defaut=5000")
 parser.add_argument("-a", "--alpha",  type=float, default=0.05,\
   help="Value defining the confidence interval. Ex. alpha=0.05 refers to 95th-CI. Default=0.05")
+parser.add_argument("-all", "--allfiles", help="Select all files automatically.",\
+  action="store_true", default=False)
 parser.add_argument("-wa", "--writeAscii", action="store_true", default=False,\
+  help="Save profile data to an ascii file.")
+parser.add_argument("-wao", "--writeAsciiOnly", action="store_true", default=False,\
   help="Save profile data to an ascii file.")
 parser.add_argument("-s", "--save", type=str, default=None, \
   help="Name of the saved figure. Default=None")
@@ -51,8 +55,11 @@ alpha      = args.alpha
 paxis      = args.paxis
 ij         = args.ij
 niter      = args.niter
-writeAscii = args.writeAscii
 saveFig    = args.save
+allfiles   = args.allfiles
+writeAscii     = args.writeAscii or args.writeAsciiOnly
+writeAsciiOnly = args.writeAsciiOnly
+
 #==========================================================#
 
 if( mode == 'mean' ): sfunc = bs_stats.mean
@@ -60,7 +67,7 @@ if( mode == 'std'  ): sfunc = bs_stats.std
 if( mode == 'var'  ): sfunc = bs_stats.var
 
 # Obtain a list of files to include.
-fileNos, fileList = filesFromList( fileKey+'*' )
+fileNos, fileList = filesFromList( fileKey+'*', allfiles )
 
 fig = plt.figure(num=1, figsize=(12,10))
 ax = fig.add_axes( [0.1, 0.075 , 0.875 , 0.81] ) #[left, top, width, height]
@@ -108,9 +115,6 @@ for fn in fileNos:
   
   nameList = fileList[fn].split('_')
   nstr = '{}{}'.format(nameList[0].replace('/MASK','_'), nameList[-1].strip('.nc'))
-  ax.plot(vres, d, lw=2, label='{}, {}'.format(mode, nstr))
-  ax.fill_betweenx(d, vupper, vlower, facecolor='gray', alpha=0.25)
-  ax.set_title('{} of {}, {} '.format(mode, varname, nstr))
   
   if( writeAscii ):
     fname = '{}_{}_{}.dat'.format(varname, mode, nstr)
@@ -118,11 +122,16 @@ for fn in fileNos:
     hStr = '{}({}) [{}, value, lower, upper] '.format(mode,varname,paxis)
     np.savetxt(fname, np.c_[d, vres, vlower, vupper], header=hStr)
 
-plt.legend(loc=0)
-plt.grid(True)
+  if( not writeAsciiOnly ):
+    ax.plot(vres, d, lw=2, label='{}, {}'.format(mode, nstr))
+    ax.fill_betweenx(d, vupper, vlower, facecolor='gray', alpha=0.25)
+    ax.set_title('{} of {}, {} '.format(mode, varname, nstr))
 
-if( saveFig ):
-  fig.savefig( saveFig, format='jpg', dpi=300)
+    plt.legend(loc=0); plt.grid(True)
+    
+    if( saveFig ):
+      fig.savefig( saveFig, format='jpg', dpi=300)
+    
+    plt.show()
 
-plt.show()
-
+print(' Done! ')
