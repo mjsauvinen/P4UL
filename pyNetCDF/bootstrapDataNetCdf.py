@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import argparse
 from plotTools import addToPlot
 from netcdfTools import read3dDataFromNetCDF
-from utilities import filesFromList
+from utilities import filesFromList, writeLog
 try:
   import bootstrapped.bootstrap as bs
   import bootstrapped.stats_functions as bs_stats
@@ -22,7 +22,7 @@ hStr = '''Indecies in the plane perpendicular to the profile plane.
 Ex. [i,j] for z-profile, [i,k] for y-profile, [j,k] for x-profile. 
 If not given, the middle Indecies are chosen.'''
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(prog='bootstrapDataNetCdf.py')
 parser.add_argument("fileKey", default=None,\
   help="Search string for collecting files.")
 parser.add_argument("-v", "--varname",  type=str, default='u',\
@@ -41,7 +41,7 @@ parser.add_argument("-wa", "--writeAscii", action="store_true", default=False,\
 parser.add_argument("-s", "--save", type=str, default=None, \
   help="Name of the saved figure. Default=None")
 args = parser.parse_args()    
-
+writeLog( parser, args )
 #==========================================================#
 # Rename ... that's all.
 fileKey    = args.fileKey

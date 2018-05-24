@@ -30,7 +30,8 @@ parser.add_argument("-fo", "--fileout", type=str, default="out.nc", \
   help="Name of the output NETCDF file. Default=out.nc")
 parser.add_argument("-v", "--varname",  type=str, default='u',\
   help="Name of the variable in NETCDF file. Default='u' ")
-parser.add_argument("-m", "--mode", type=str, default='spectro', choices=['histo', 'spectro', 'scalo'],\
+parser.add_argument("-m", "--mode", type=str, default='spectro', \
+  choices=['spectrohist', 'scalohist', 'spectro', 'scalo'],\
   help="Mode: histo-, spectro-, or scalo-gram.")
 parser.add_argument("-P", "--power", action="store_true", default=False,\
   help="Plot power histo-, spectro- or scalo-gram.")
@@ -114,7 +115,8 @@ print(' freq = {} '.format( freq ))
 sig  = v[:,kIds[0], ijk1[1], ijk1[0]] - np.mean( v[:,kIds[0], ijk1[1], ijk1[0]] )
 fig1 = plt.figure()
 plotStr = [" Signal "," time "," v(time) "]
-fig1 = addToPlot(fig1, time, ndimage.gaussian_filter(sig, sigma=60.),'Filtered', plotStr )
+fig1 = addToPlot(fig1, time, \
+  ndimage.gaussian_filter(sig, sigma=60.),'Filtered', plotStr )
 fig1 = addToPlot(fig1, time,sig,'Signal', plotStr )
 
 
@@ -125,8 +127,25 @@ if( complexOn ):  tt = "complex"
 else:             tt = "real"
 
 
-if( mode == 'hist'):
-  WD1.MorletHisto(16)
+if('hist' in mode):
+  Qstr = '''    Enter the index of desired {} values
+    given the range values {}...{} with indecies {}...{}.'''
+  if( 'spectro' in mode ):
+    histmode = 'frequency'
+    print(Qstr.format(histmode,freq[0],freq[-1], 0, len(freq)-1))
+  else:
+    histmode = 'scale'
+    print(Qstr.format(histmode,WD1.scales[0],WD1.scales[-1], 0, len(WD1.scales)-1))
+    
+  idx = input('    Use comma (,) to separate index values: ')
+  if( not isinstance( idx, tuple ) ):
+    if( isinstance( idx, int ) ):
+      idx = (idx,)
+    else:
+      sys.exit(' Error: wrong entry for index values ')
+      
+  for i in idx:
+    WD1.MorletHisto(i, mode=histmode, nbins=32)
 
 else:
   wDict  = dict()
