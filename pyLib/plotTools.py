@@ -70,19 +70,26 @@ def setColormap( img ):
   return img
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-def setColorbarLims( img ):
+def setColorbarLims( img, lMax=None, lMin=None ):
   # Specify the bounds in the colorbar
-  try:
-    lMin,lMax = map(float, raw_input(' Enter limits for colorbar: <min> <max> =').split())
-    img.set_clim([lMin,lMax])
-  except:
-    pass
+  if( (lMax is None) or (lMin is None) ):
+    try:
+      lMin,lMax = map(float, raw_input(' Enter limits for colorbar: <min> <max> =').split())
+      img.set_clim([lMin,lMax])
+    except:
+      pass
+  else:
+    try:
+      lMin = float(lMin); lMax = float(lMax)
+      img.set_clim([lMin,lMax])
+    except:
+      pass
     
   return img
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def userColormapSettings( fig, im, Rmax=1. ):
+def userColormapSettings( fig, im, Rmax=None, Rmin=None ):
   uticks =None # User-defined ticks. <None> leads to default setting.
   eformat=None
   
@@ -94,7 +101,10 @@ def userColormapSettings( fig, im, Rmax=1. ):
   except:
     uticks=None
   
-  if(Rmax<1.e-3): eformat='%.2e'
+  if(Rmax is not None):
+    if(Rmax<1.e-3): 
+      eformat='%.2e'
+  
   cb = fig.colorbar(im, ticks=uticks, format=eformat)
   
   return cb
@@ -153,6 +163,18 @@ def addImagePlot( fig, R, titleStr, gridOn=False, limsOn=False ):
   if(limsOn):
     cbar = userColormapSettings( fig, im, np.max(R) )
   else:
+    minval  = np.min(R); maxval = np.max(R)
+    minSign = np.sign( minval )
+    maxSign = np.sign( maxval )
+    vmin = min( np.abs(minval), np.abs(maxval) )
+    vmax = max( np.abs(minval), np.abs(maxval) )
+    
+    if( vmax/vmin < 1.5 ):
+      vmax *= maxSign; vmin = minSign * vmax 
+    else:
+      vmax *= maxSign; vmin *= minSign
+    
+    im   = setColorbarLims( im, vmax, vmin )
     cbar = fig.colorbar(im)
   
   return fig
@@ -178,7 +200,7 @@ def addImagePlotDict(fig, RDict ):
   ax.grid(gOn)
   
   if(lOn):
-    cbar = userColormapSettings( fig, im, np.max(R) )
+    cbar = userColormapSettings( fig, im, np.max(R), np.min(R) )
   else:
     cbar = fig.colorbar(im)
   

@@ -60,7 +60,7 @@ else:
   
 
 # Gather the desired files:
-fileNos, fileList = filesFromList( "*"+strKey+"*" )
+fileNos, fileList = filesFromList( strKey+"*" )
 
 # Process the files:
 for fn in fileNos:

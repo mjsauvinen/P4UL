@@ -19,10 +19,12 @@ parser.add_argument("-v", "--varname",  type=str, default='u',\
   help="Name of the variable in NETCDF file. Default='u' ")
 parser.add_argument("-m", "--mode", type=str, default='d', choices=['d', 'r', 's'],\
   help="Diff mode: 'd': delta, 'r': relative, 's': scaled.")
+parser.add_argument("-w", "--writeRMS", help="Write the root-mean-square of the differences to a file.",\
+  action="store_true", default=False)
 parser.add_argument("-p", "--printOn", help="Print the numpy array data.",\
   action="store_true", default=False)
-parser.add_argument("-pp", "--printOnly", action="store_true", default=False,\
-  help="Only print the numpy array data. Don't save.")
+parser.add_argument("-s", "--save", action="store_true", default=False,\
+  help="Save figures. Default=False")
 parser.add_argument("--lims", help="User specified limits.", action="store_true", default=False)
 parser.add_argument("--grid", help="Turn on grid.", action="store_true", default=False)
 args = parser.parse_args()    
@@ -33,12 +35,16 @@ f1       = args.filename1      # './DATA_2D_XY_AV_NETCDF_N02-1.nc'
 f2       = args.filename2      # './DATA_2D_XY_AV_NETCDF_N02-2.nc'
 varname  = args.varname
 mode     = args.mode
+writeRMS = args.writeRMS
 printOn  = args.printOn
-printOnly= args.printOnly
+saveOn   = args.save
 limsOn   = args.lims
 gridOn   = args.grid
 
 #----------------------------------------------------------#
+
+# Shorter name
+vn = varname.split('_')[0]
 
 d1Dict = read3dDataFromNetCDF( f1 , varname , 1 )
 v1 = d1Dict['v']; x1 = d1Dict['x']; y1 = d1Dict['y']; z1 = d1Dict['z']
@@ -58,6 +64,13 @@ else:
 
 
 idk = selectFromList( z1 )
+
+
+if( writeRMS ):
+  fout = file('RMS_d{}.dat'.format(vn), 'wb')
+  fout.write('# file1 = {}, file2 = {}\n'.format(f1, f2))
+  fout.write('# z_coord \t RMS(d{})\n'.format(vn))
+  #fout.write('{:.2f}\t{:.2e}'.format( z1[k1], dv ))
 
 for k1 in idk:
   
@@ -81,10 +94,25 @@ for k1 in idk:
   else:
     dv = (v1[0,k1,:,:] - f2 * v2[0,k2,:,:])
 
+  RMSDiff = np.sqrt(np.sum(dv**2)/float(np.prod(dv.shape)))
+  print(' RMS (d{}) = {}'.format( vn , RMSDiff ))
+  if( writeRMS ):
+    fout.write('{:.2f}\t{:.2e}\n'.format( z1[k1], RMSDiff ))
 
-  if( printOn or printOnly ):
+  
+
+  if( printOn ):
     xydims = dims1[2:]
     figDims = 13.*(xydims[::-1].astype(float)/np.max(xydims))
     fig = plt.figure(num=1, figsize=figDims)
-    fig = addImagePlot( fig, dv[::-1,:], 'dv', gridOn, limsOn )
+    labelStr = '({0}_1 - {0}_2)(z={1} m)'.format(vn, z1[k1])
+    fig = addImagePlot( fig, dv[::-1,:], labelStr, gridOn, limsOn )
+    
+    
+    if( saveOn ):
+      figname = 'RMSDiff_{}_z{}.jpg'.format(vn, int(z1[k1]))
+      print(' Saving = {}'.format(figname))
+      fig.savefig( figname, format='jpg', dpi=150)
     plt.show()
+
+if( writeRMS ): fout.close()

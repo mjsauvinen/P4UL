@@ -38,7 +38,7 @@ def maskFromData(Ri, mlist, mxN=20):
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
 
-def histogram( Rm, Ri, mlist ):
+def histogram( Rm, Ri, mlist, threshold = 0. ):
 
   maxv  = int(np.ceil(np.max(Ri)))
   zbins = np.zeros( (len(mlist), maxv) )
@@ -46,14 +46,22 @@ def histogram( Rm, Ri, mlist ):
   j = 0
   for im in mlist:
     LR, labelCount = labelRaster(Rm, im)
-    Np = float(np.count_nonzero( (LR > 0) ))#; print('Np={}'.format(Np))
-
+    #Np = float(np.count_nonzero( (LR > 0) ))#; print('Np={}'.format(Np))
+    #Np  = float(labelCount)
+    Np = 0
+    Av = np.zeros( labelCount )
     for l in xrange(1,labelCount+1):
       idx = (LR==l)
-      w  = np.count_nonzero(idx) #; print('w={}'.format(w))
-      k  = int( np.mean( Ri[idx] ) )
-      zbins[j,k] += w/Np
-
+      v  = int( np.floor(np.max( Ri[idx] )) )
+      if( v > threshold ):
+        w  = np.count_nonzero(idx) #; print('w={}'.format(w))
+        Np += w
+        Av[l-1] = float(v)
+        zbins[j,v] += w
+    zbins[j,:] /= Np
+    
+    idx = ( Av > threshold )
+    print(' Mask {}: mean = {}, var = {}, std = {}'.format(im, np.mean(Av[idx]), np.var(Av[idx]), np.std(Av[idx])))
     j += 1
 
   return zbins
@@ -73,22 +81,26 @@ parser.add_argument("-mx", "--maxMaskNo",type=int, default=20,\
   help="Maximum mask id value. Default=20")
 parser.add_argument("-ma", "--maskAbove", help="Mask all above given value.",\
   type=int, default=None)
-parser.add_argument("-eff", "--effArea", help="Consider the effective area (excluding zero buffers) only.",\
-  action="store_true", default=False)
+parser.add_argument("-ex", "--exBuffer", action="store_true", default=False,\
+  help="Consider the effective area excluding frontal buffer.")
 parser.add_argument("-p", "--printOn", help="Print the numpy array data.",\
   action="store_true", default=False)
+parser.add_argument("--lims", help="User specified colormap and limits for plot.",\
+  action="store_true", default=False)
+parser.add_argument("--save", help="Save the figure.", action="store_true", default=False)
 args = parser.parse_args()
 #==========================================================#
-
 # Renaming, nothing more.
 filemask  = args.filemask
 filedata  = args.filedata
 maxMaskNo = args.maxMaskNo
 maskAbove = args.maskAbove
 Fafb      = args.Fafb # frontal area fraction
-effArea   = args.effArea
+exBuffer  = args.exBuffer
 printOn   = args.printOn
-
+limsOn    = args.lims
+saveFig   = args.save
+#==========================================================#
 
 # Set rasters to None
 Rm = None; Rt = None
@@ -114,16 +126,23 @@ if( filedata ):
 
 if( not (filemask or filedata) ):
   sys.exit(' No data files provided, Exiting ...')
+  
+#----------------------------------------------------------#
 
 ix = 0
-if( effArea ):
+if( exBuffer ):
   if( filemask ):
+    emx  = int(np.median( Rm[:,0] ))
+    print(' Excluding buffer of Mask {} ...'.format(emx))
+    Ixm = ( Rm != emx ).astype(int)
     for i in xrange( len(Rm[0,:]) ):
-      nz = np.count_nonzero( Rm[:,i] )
-      if( nz > 0 ): 
+      nz  = np.count_nonzero( Ixm[:,i] )
+      
+      if( nz > 3 ): 
         ix = i; break
     
     Rm = Rm[:,ix:].copy(); Rmdims = np.array(np.shape(Rm))
+    print(' ix = {}, Rm.shape = {}'.format(ix, Rm.shape))
     
   if( filedata ):
     if( ix == 0 ):
@@ -132,8 +151,9 @@ if( effArea ):
         if( nz > 0 ): 
           ix = i; break
     Rt = Rt[:,ix:].copy(); Rtdims = np.array(np.shape(Rt))
-    #print(' ix = {}, shape = {}'.format(ix, Rtdims))
+    print(' ix = {}, Rt.shape = {}'.format(ix, Rt.shape))
 
+#----------------------------------------------------------#
 
 if( filemask ):
   Atot = totalArea( Rmdims, dPxm )
@@ -142,6 +162,7 @@ else:
   Atot = totalArea( Rtdims, dPxt )
   print('\n Total area of {} domain:\n Atot = {:.4g} m^2 \n'.format(filedata,Atot))
 
+#----------------------------------------------------------#
 
 # Compute frontal area fractions
 if( filedata and Fafb ):
@@ -149,6 +170,7 @@ if( filedata and Fafb ):
   print('\n Frontal area fractions of {}:\n Ae/Atot = {:.2f}, An/Atot = {:.2f}\n'\
     .format(filedata, AE/Atot, AN/Atot))
 
+#----------------------------------------------------------#
 
 # Create an empty mask id list
 mskList = list()
@@ -179,5 +201,11 @@ if( Rxm is not None ):
     Rdims = np.array(Rxm.shape)
     figDims = 13.*(Rdims[::-1].astype(float)/np.max(Rdims))
     pfig = plt.figure(num=1, figsize=figDims)
-    pfig = addImagePlot( pfig, Rxm, ' Mask ', gridOn=True )
+    gridOn = True
+    pfig = addImagePlot( pfig, Rxm, ' Mask ', gridOn, limsOn )
+    if( saveFig ):
+      if( filemask ): figname = filemask.split('.')[0]+'.jpg'
+      else:           figname = filedata.split('.')[0]+'.jpg'
+      pfig.savefig( figname , format='jpg', dpi=300)
+      
     plt.show()
