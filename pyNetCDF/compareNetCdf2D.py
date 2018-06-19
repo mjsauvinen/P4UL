@@ -13,10 +13,14 @@ from utilities import selectFromList
 #==========================================================#
 
 parser = argparse.ArgumentParser(prog='compareNetCdf2D.py')
-parser.add_argument("-f1", "--filename1",type=str, help="Name of the first (1) input NETCDF file.")
-parser.add_argument("-f2", "--filename2",type=str, help="Name of the second (2) input NETCDF file.")
+parser.add_argument("-f1", "--filename1",type=str, help="Name of the first (ref) input NETCDF file.")
+parser.add_argument("-f2", "--filename2",type=str, help="Name of the second input NETCDF file.")
 parser.add_argument("-v", "--varname",  type=str, default='u',\
   help="Name of the variable in NETCDF file. Default='u' ")
+parser.add_argument("-v0", "--vref", type=float, nargs=2, default=[0.,0.],\
+  help="Reference values 'v0' in v+ = (v - v0)/v* for -f1 and -f2. Default = [0,0]")
+parser.add_argument("-vs", "--vstar", type=float, nargs=2, default=[1.,1.],\
+  help="Characteristic value 'v*' in v+ = (v - v0)/v* for -f1 and -f2. Default = [1,1]")
 parser.add_argument("-m", "--mode", type=str, default='d', choices=['d', 'r', 's'],\
   help="Diff mode: 'd': delta, 'r': relative, 's': scaled.")
 parser.add_argument("-w", "--writeRMS", help="Write the root-mean-square of the differences to a file.",\
@@ -34,6 +38,8 @@ args = parser.parse_args()
 f1       = args.filename1      # './DATA_2D_XY_AV_NETCDF_N02-1.nc'
 f2       = args.filename2      # './DATA_2D_XY_AV_NETCDF_N02-2.nc'
 varname  = args.varname
+v0       = np.array(args.vref )
+vs       = np.array(args.vstar)
 mode     = args.mode
 writeRMS = args.writeRMS
 printOn  = args.printOn
@@ -48,12 +54,14 @@ vn = varname.split('_')[0]
 
 d1Dict = read3dDataFromNetCDF( f1 , varname , 1 )
 v1 = d1Dict['v']; x1 = d1Dict['x']; y1 = d1Dict['y']; z1 = d1Dict['z']
+v1 -= v0[0]; v1 /= vs[0]
 d1Dict = None 
 dims1  = np.array( v1.shape )
 
 
 d2Dict = read3dDataFromNetCDF( f2 , varname , 1 )
 v2 = d2Dict['v']; x2 = d2Dict['x']; y2 = d2Dict['y']; z2 = d2Dict['z']
+v2 -= v0[1]; v2 /= vs[1]
 d2Dict = None 
 dims2  = np.array( v2.shape )
 
@@ -83,16 +91,20 @@ for k1 in idk:
   
   
   #Correct the scales to avoid systematic differences
-  vm1 = np.mean( v1[0,k1,:,0] )  # Mean < >_y value at inlet 
-  vm2 = np.mean( v2[0,k2,:,0] )
-  f2  = vm1/vm2 
+  #vm1 = np.mean( v1[0,k1,:,0] )  # Mean < >_y value at inlet 
+  #vm2 = np.mean( v2[0,k2,:,0] )
+  #f2  = vm1/vm2
+  v1x  = v1[0,k1,:,:]
+  idx  = ( np.abs(v1x) > 1E-3 )
+  vm1  = np.mean( v1x[idx] )
+  f2 = 1.
 
   if( mode == 'r' ):
-    dv = (v1[0,k1,:,:] - f2 * v2[0,k2,:,:])/np.abs( v1[0,k1,:,:] )
+    dv = (f2 * v2[0,k2,:,:] - v1[0,k1,:,:])/np.abs( v1[0,k1,:,:] + 1E-5 )
   elif( mode == 's' ):
-    dv = (v1[0,k1,:,:] - f2 * v2[0,k2,:,:])/ vm1
+    dv = (f2 * v2[0,k2,:,:] - v1[0,k1,:,:])/( vm1 + 1E-5 )
   else:
-    dv = (v1[0,k1,:,:] - f2 * v2[0,k2,:,:])
+    dv = (f2 * v2[0,k2,:,:] - v1[0,k1,:,:])
 
   RMSDiff = np.sqrt(np.sum(dv**2)/float(np.prod(dv.shape)))
   print(' RMS (d{}) = {}'.format( vn , RMSDiff ))

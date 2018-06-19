@@ -131,11 +131,28 @@ def marker_stack():
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 def color_stack(ic=None):
   global iCg
-  colorList = ['b', 'r' ,'g', 'c', 'm', 'k']
+  '''
+  Brown      '#A52A2A',
+  DeepPink   '#FF1493',
+  BlueViolet '#8A2BE2',
+  DarkCyan   '#008B8B',
+  DarkOrange '#FF8C00',
+  GoldenRod  '#DAA520',
+  SeaGreen   '#2E8B57',
+  OrangeRed  '#FF4500',
+  SlateBlue  '#6A5ACD'
+  '''
+  colorList = ['b','r','g','c','#DAA520','k',\
+    '#A52A2A','#FF1493','#8A2BE2','#008B8B',\
+      '#FF8C00','m','#2E8B57','#FF4500','#6A5ACD']
+  ncolors = len(colorList)
+  
   if( ic is not None and np.isscalar(ic) ):
-    iCg = min( int(ic) , ( len(colorList)-1 ) ) 
+    iCg = min( int(ic) , ( ncolors-1 ) ) 
   clr = colorList[iCg]
-  iCg = min( ( iCg + 1 ), ( len(colorList)-1 ) )
+  iCg += 1
+  if( iCg > (ncolors-1) ): 
+    iCg = 0
   
   return clr
 
@@ -284,6 +301,8 @@ def plotCiXY( fig, pDict ):
   Cy      = dataFromDict('Cy',       pDict, allowNone=True)
   logOn   = dataFromDict('logOn',    pDict, allowNone=True)
   revAxes = dataFromDict('revAxes',  pDict, allowNone=True)
+  ylims   = dataFromDict('ylims',    pDict, allowNone=True)
+  xlims   = dataFromDict('xlims',    pDict, allowNone=True)
   
   labelStr = fn.rsplit(".", 1)[0]
   
@@ -293,16 +312,22 @@ def plotCiXY( fig, pDict ):
   try:    x = np.loadtxt(fn)
   except: x = np.loadtxt(fn,delimiter=',')
   
-  nrows, ncols = x.shape 
-  if( ncols < 4 ):
+  nrows, ncols = x.shape
+  #print(' nrows, ncols = {}, {}'.format(nrows,ncols))
+  if( ncols > 3 ):
+    # Copy values and clear memory
+    d = x[:,0]; v = x[:,1]; v_l = x[:,2]; v_u = x[:,3]
+  elif( ncols == 2 ):
+    d = x[:,0]; v = x[:,1]; v_l = x[:,1]; v_u = x[:,1]
+  else:
     msg = '''
-    Error! ncols is less than 4. 
-    The data must be in [x, v, v_lower, v_upper, (possibly something else)] format. 
-    Exiting...'''
+    Error! ncols has a strange value {}. 
+    The data must be in [x, v, v_lower, v_upper, (possibly something else)] format.
+    Or alternatively [x,v] format in which case no confidence intervals will be present.
+    Exiting...'''.format( ncols )
     sys.exit(msg)
   
-  # Copy values and clear memory
-  d = x[:,0]; v = x[:,1]; v_l = x[:,2]; v_u = x[:,3]
+  # clear memory
   x = None 
   
   ax  = fig.add_axes( [0.15, 0.075 , 0.8 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
@@ -331,8 +356,11 @@ def plotCiXY( fig, pDict ):
     else:
       fillbf = ax.fill_between
   
-  lines = plotf( xp, yp, lw=2, label=labelStr, color=color_stack())
+
+  lines = plotf( xp, yp, lw=2.2, label=labelStr, color=color_stack())
   linef = fillbf( d , v_u, v_l, facecolor='gray', alpha=0.25)
+  ax.set_ybound(lower=ylims[0], upper=ylims[1] )
+  ax.set_xbound(lower=xlims[0], upper=xlims[1] )
   ax.set_xlabel(xlb)
   ax.set_ylabel(ylb)
 
@@ -580,7 +608,8 @@ def addQuiver( X, Y, Ux, Uy , fc,  labelStr, titleStr=" " ):
 
 def addContourf( X, Y, Q, labelStr, titleStr=" ", cdict=None ):
   Xdims = np.array(X.shape)
-  figDims = 12.*(Xdims[::-1].astype(float)/np.max(Xdims))
+  #figDims = 12.*(Xdims[::-1].astype(float)/np.max(Xdims))
+  figDims  = (11,11)
   fig = plt.figure(figsize=figDims)
   #fig, ax = plt.subplots()
   ax = fig.add_axes( [0.1, 0.08 , 0.9 , 0.85] ) #[left, up, width, height]
@@ -603,7 +632,7 @@ def addContourf( X, Y, Q, labelStr, titleStr=" ", cdict=None ):
   ax.set_title( titleStr )
   
   cbar = fig.colorbar(CO)
-  cbar.ax.set_ylabel(labelStr)
+  cbar.ax.set_ylabel(labelStr, fontsize=20, fontstyle='normal', fontweight='book', fontname='serif')
   return CO
 
 

@@ -12,7 +12,7 @@ class wtDataset:
   -omega0 (optional): the central pulsation of the Morlet/RealMorlet wavelet.
 
   """
-  def __init__(self, data,  t, s=None, f=None, omega0=1.):
+  def __init__(self, data,  t, s=None, f=None, omega0=6.):
     self.data = data
     self.scales = s
     self.t=t

@@ -32,6 +32,10 @@ parser.add_argument("-fx", "--factorX", type=float, default=1.0,\
   help="Multiplication factor for x-values: fx*x")
 parser.add_argument("-fy", "--factorY", type=float, default=1.0,\
   help="Multiplication factor for y-values: fy*y")
+parser.add_argument("-yl", "--ylims", type=float, nargs=2, default=[None,None],\
+  help="Bounds (limits) for the y axes")
+parser.add_argument("-xl", "--xlims", type=float, nargs=2, default=[None,None],\
+  help="Bounds (limits) for the x axes")
 parser.add_argument("-s", "--save", type=str, default=None, \
   help="Name of the saved figure. Default=None")
 args = parser.parse_args()
@@ -41,6 +45,8 @@ strKey  = args.strKey
 factorX = args.factorX
 factorY = args.factorY
 revAxes = args.revAxes
+xlims   = args.xlims
+ylims   = args.ylims
 logOn   = args.log
 labelsOn= args.labels
 saveFig = args.save
@@ -62,6 +68,9 @@ while 1:
     pdict['Cy'] = factorY
     pdict['logOn']   = logOn
     pdict['revAxes'] = revAxes
+    pdict['xlims']   = xlims
+    pdict['ylims']   = ylims
+    
     pfig = plotCiXY( pfig, pdict )
 
   if( labelsOn ):
@@ -71,6 +80,7 @@ while 1:
   plt.legend(loc=0)
   
   if( saveFig ):
-    pfig.savefig( saveFig, format='jpg', dpi=300)
+    pfig.savefig( saveFig, format='jpg', dpi=200)
 
   plt.show()
+  break
