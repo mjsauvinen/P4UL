@@ -346,9 +346,15 @@ for fn in fileNos:
 
     '''
     if( printOn or printOnly ):
-      Cfp = addContourf( XM, YM, FM   , 'F(x,y)', fileout )
-      Cfm = addContourf( XM, YM, FMneg, 'F_neg(x,y)', fileout+'_neg' )
-      Cz = addContourf( XM, YM, ZM, 'Z(x,y)', ' Topography Height (m) ' )
+      CfD = dict()
+      CfD['title']='F(x,y)'; CfD['label']=fileout; CfD['N']=16
+      Cfp = addContourf( XM, YM, FM   , CfD )
+      
+      CfD['title']='F_neg(x,y)'; CfD['label']=fileout+'_neg'; CfD['N']=16
+      Cfm = addContourf( XM, YM, FMneg, CfD )
+      
+      CfD['title']='Z(x,y)'; CfD['label']=' Topography Height (m) '; CfD['N']=16
+      Cz = addContourf( XM, YM, ZM, CfD )
       plt.show()
     '''
   FM = ZM = XM = YM = None

@@ -4,7 +4,7 @@ import argparse
 import numpy as np
 from mapTools import *
 from utilities import filesFromList, writeLog
-from plotTools import addImagePlot, addContourf, addScatterPlot
+from plotTools import addImagePlot
 import matplotlib.pyplot as plt
 '''
 Description:

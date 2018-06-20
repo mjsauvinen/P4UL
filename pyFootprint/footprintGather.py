@@ -196,8 +196,12 @@ if( not printOnly ):
     f_vtk.close(); Ftmp = None
 
 if( printOn ):
-  Cfp = addContourf( Xt, Yt, Ft  , 'F(x,y)'        , fileout )
-  Cfa = addContourf( Xt, Yt, F_km, 'F_km(x,y), Ana', fileout+'_km' )
+  CfD = dict()
+  CfD['title']='F(x,y)'; CfD['label']=fileout; CfD['N']=16
+  Cfp = addContourf( Xt, Yt, Ft  , CfD )
+  
+  CfD['title']='F_km(x,y), Ana'; CfD['label']=fileout+'_km'
+  Cfa = addContourf( Xt, Yt, F_km, CfD )
   
   Fym = writeCrossWindSum( Ft, Xt, None, None )
   pfig = plt.figure(num=3, figsize=(12.,9.))

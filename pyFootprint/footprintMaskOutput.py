@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from utilities import filesFromList
 from utilities import writeLog
-from plotTools import addContourf, addToPlot
 from footprintTools import *
 from mapTools import readNumpyZTile, filterAndScale
 import sys

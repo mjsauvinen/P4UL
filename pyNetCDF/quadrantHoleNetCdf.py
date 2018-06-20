@@ -137,9 +137,9 @@ SQ = resDict['SQ']  # Quadrant contributions (e.g. Reynolds stress)
 cDict = dict() 
 cDict['cmap'] = plt.cm.gist_yarg  # Include the colormap info within a dict
 cDict['N'] = 12                   # Number of levels in contour plot
-titleStr = "Quadrant Analysis\n{}:  z={}-{} m".format(filename, z[ijk1[2]],z[ijk2[2]])
-labelStr = "JPDF"
-CO = addContourf( X, Y, Q, " JPDF ", titleStr, cDict )
+cDict['title'] = "Quadrant Analysis\n{}:  z={}-{} m".format(filename, z[ijk1[2]],z[ijk2[2]])
+cDict['label'] = "JPDF"
+CO = addContourf( X, Y, Q, cDict )
 CO.ax.spines['left'].set_position('zero')
 CO.ax.spines['bottom'].set_position('zero')
 #CO.ax.set_ylabel(r"$w'/\sigma_w$")

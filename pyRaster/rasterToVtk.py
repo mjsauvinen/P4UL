@@ -67,7 +67,9 @@ if( not printOnly ):
   vtkWriteDataStructured2d( None , X, Y, R, fileout, 'Z' )
 
 if( printOnly or printOn ):
-  C = addContourf( X, Y, R, 'R', fileout+' raster data.' )
+  CfD = dict()
+  CfD['title']='R(X,Y)'; CfD['label']=fileout+' raster data.'; CfD['N']=16
+  C = addContourf( X, Y, R, CfD )
   plt.show()
 
 

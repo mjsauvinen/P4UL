@@ -3,7 +3,6 @@ import sys
 import numpy as np
 import argparse
 import matplotlib.pyplot as plt
-from plotTools import addContourf
 from analysisTools import sensibleIds, groundOffset, quadrantAnalysis
 from netcdfTools import read3dDataFromNetCDF, netcdfOutputDataset, \
   createNetcdfVariable, netcdfWriteAndClose

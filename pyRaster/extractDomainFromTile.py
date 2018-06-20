@@ -223,7 +223,10 @@ if( printOn or printOnly ):
   figDims = 13.*(Xdims[::-1].astype(float)/np.max(Xdims))
   fig = plt.figure(num=1, figsize=figDims)
   fig = addImagePlot( fig, PR, args.fileout )
-  CO = addContourf( XTRM, YTRM, PR[::-1,:], " Z(X,Y) ", "PALM DOMAIN ON MAP" )
+  
+  CfD = dict()
+  CfD['title']=' Z(x,y) '; CfD['label']="PALM DOMAIN ON MAP"; CfD['N']=16
+  CO = addContourf( XTRM, YTRM, PR[::-1,:], CfD )
   plt.show()
 
 XTRM = None; YTRM = None

@@ -606,7 +606,7 @@ def addQuiver( X, Y, Ux, Uy , fc,  labelStr, titleStr=" " ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*  
 
-def addContourf( X, Y, Q, labelStr, titleStr=" ", cdict=None ):
+def addContourf( X, Y, Q, CfDict=None ):
   Xdims = np.array(X.shape)
   #figDims = 12.*(Xdims[::-1].astype(float)/np.max(Xdims))
   figDims  = (11,11)
@@ -614,21 +614,29 @@ def addContourf( X, Y, Q, labelStr, titleStr=" ", cdict=None ):
   #fig, ax = plt.subplots()
   ax = fig.add_axes( [0.1, 0.08 , 0.9 , 0.85] ) #[left, up, width, height]
   
-
+  # Default values 
+  labelStr = ' Q(X,Y) '
+  titleStr = ' Title:  Q(X,Y) '
   cmap_x = None
   N = 12
-  if( cdict is not None ):
-    dkeys = cdict.keys()
-    if( 'cmap' in dkeys ):
-      cmap_x = cdict['cmap']
-    if( 'N' in dkeys ):
-      N = cdict['N']
-
+  
+  if( CfDict is not None ):
+    titleStr = dataFromDict('title',  CfDict, allowNone=False)
+    labelStr = dataFromDict('label',  CfDict, allowNone=False)
+    cm       = dataFromDict('cmap',   CfDict, allowNone=True )
+    N        = dataFromDict('N',      CfDict, allowNone=True )
+    vn       = dataFromDict('vmin',   CfDict, allowNone=True )
+    vx       = dataFromDict('vmax',   CfDict, allowNone=True )
+    levels   = dataFromDict('levels', CfDict, allowNone=True )
+    if( N is None ): N = 12
+  
+  
   #levels = [-1e-6, -1e-7, 0, 1e-7, 1e-6]
   #CO = plt.contourf(X,Y,Q, levels )
   
-  try:    CO = ax.contourf(X,Y,Q, N,  cmap=cmap_x )
-  except: CO = ax.contourf(X,Y,Q, 10)
+  if( levels is not None ): CO = ax.contourf(X,Y,Q, levels, cmap=cm )
+  else:                     CO = ax.contourf(X,Y,Q, N     , cmap=cm )
+  
   ax.set_title( titleStr )
   
   cbar = fig.colorbar(CO)
