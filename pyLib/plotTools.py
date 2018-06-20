@@ -619,6 +619,7 @@ def addContourf( X, Y, Q, CfDict=None ):
   titleStr = ' Title:  Q(X,Y) '
   cmap_x = None
   N = 12
+  vmax = None; vmin = None
   
   if( CfDict is not None ):
     titleStr = dataFromDict('title',  CfDict, allowNone=False)
@@ -630,16 +631,18 @@ def addContourf( X, Y, Q, CfDict=None ):
     levels   = dataFromDict('levels', CfDict, allowNone=True )
     if( N is None ): N = 12
   
-  
+  #print(' vmax = {}, vmin = {} '.format(vx,vn))
   #levels = [-1e-6, -1e-7, 0, 1e-7, 1e-6]
   #CO = plt.contourf(X,Y,Q, levels )
   
-  if( levels is not None ): CO = ax.contourf(X,Y,Q, levels, cmap=cm )
-  else:                     CO = ax.contourf(X,Y,Q, N     , cmap=cm )
+  if( levels is not None ): CO = ax.contourf(X,Y,Q, levels, cmap=cm, vmin=vn, vmax=vx )
+  else:                     CO = ax.contourf(X,Y,Q, N     , cmap=cm, vmin=vn, vmax=vx )
   
   ax.set_title( titleStr )
   
   cbar = fig.colorbar(CO)
+  if( vx is not None ): cbar.vmax = vx
+  if( vn is not None ): cbar.vmin = vn
   cbar.ax.set_ylabel(labelStr, fontsize=20, fontstyle='normal', fontweight='book', fontname='serif')
   return CO
 
