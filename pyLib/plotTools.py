@@ -209,9 +209,10 @@ def addImagePlotDict(fig, RDict ):
   gOn  = dataFromDict('gridOn', RDict, allowNone=False)
   lOn  = dataFromDict('limsOn', RDict, allowNone=False)
   cm   = dataFromDict('cmap',   RDict, allowNone=True)
+  orig = dataFromDict('origin', RDict, allowNone=True)
   
   ax = fig.add_axes( [0.1, 0.075 , 0.875 , 0.81] ) #[left, top, width, height]
-  im = ax.imshow(np.real(R), extent=ex, aspect='auto', cmap=cm)
+  im = ax.imshow(np.real(R), origin=orig, extent=ex, aspect='auto', cmap=cm)
   
   ax.set_title(ttl); ax.set_xlabel(xlbl); ax.set_ylabel(ylbl)
   ax.grid(gOn)

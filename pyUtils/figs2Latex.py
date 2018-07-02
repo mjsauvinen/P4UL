@@ -17,7 +17,7 @@ parser.add_argument("-e","--fext", type=str, default="jpg",\
   help="Figure file extension (used for searching figures). Default=jpg")
 args = parser.parse_args()    
 #==========================================================# 
-searchStr = "*."+args.fext
+searchStr = "*"+args.fext
 
 cmd = "\\includegraphics[width=0.8\\textwidth]{{./Pics/{}}}"
 

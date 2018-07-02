@@ -39,18 +39,27 @@ def groundOffset( vx ):
 
 #==========================================================#
 
+def filterTimeSeries( ds, sigma=1 ):
+  import scipy.ndimage as sn # contains the filters
+  df  = sn.gaussian_filter( ds , sigma=sigma )
+  dfp = df - np.mean( df )
+  dn  = ds - dfp
+  
+  return dn
+
+#==========================================================#
 def quadrantAnalysis( v1, v2, qDict ):
   from utilities import dataFromDict
   
   debug = False
   
   # Extract data from dict. Using dict makes future modifications easy.
-  ijk1     = dataFromDict('ijk1',     qDict, allowNone=False )
-  ijk2     = dataFromDict('ijk2',     qDict, False )
-  nkpoints = dataFromDict('nkpoints', qDict, True )
-  npx      = dataFromDict('npixels',  qDict, False )
-  axisLim  = dataFromDict('axisLim',  qDict, False )
-  holewidth= dataFromDict('holewidth',qDict, False )
+  ijk1     = dataFromDict('ijk1',      qDict, allowNone=False )
+  ijk2     = dataFromDict('ijk2',      qDict, False )
+  nkpoints = dataFromDict('nkpoints',  qDict, True )
+  npx      = dataFromDict('npixels',   qDict, False )
+  axisLim  = dataFromDict('axisLim',   qDict, False )
+  holewidth= dataFromDict('holewidth', qDict, False )
   weighted = dataFromDict('weighted',  qDict, True )
   
   # Create arrays for running loops over the selected coordinates.

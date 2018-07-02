@@ -47,9 +47,9 @@ labels      = args.labels
 footprintOn = args.footprint
 save        = args.save
 
-plt.rc('xtick', labelsize=18); #plt.rc('ytick.major', size=10)
-plt.rc('ytick', labelsize=18); #plt.rc('ytick.minor', size=6)
-plt.rc('axes', titlesize=20)
+plt.rc('xtick', labelsize=14); #plt.rc('ytick.major', size=10)
+plt.rc('ytick', labelsize=14); #plt.rc('ytick.minor', size=6)
+plt.rc('axes', titlesize=18)
 
 if( not footprintOn ):
   Rdict = readNumpyZTile(rasterfile)
