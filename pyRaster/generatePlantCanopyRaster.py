@@ -4,12 +4,9 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
-import warnings
 
 import plantCanopyTools as pct
 import netcdfTools as nct
-from scipy.integrate import trapz as itrapz
-from mpl_toolkits.mplot3d import Axes3D
 
 
 '''
