@@ -38,6 +38,8 @@ def betaDistributionProfile(alpha,beta,lb,ub,dz):
 
   return dist, z
 
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
 def constructTreeFromProfile(dist,z,lad,r,dx):
   '''
   Return a 3D array of a plant that corresponds to a given distribution.
@@ -74,3 +76,5 @@ def constructTreeFromProfile(dist,z,lad,r,dx):
     plant_3d[:,:,k] = h_slice
 
   return plant_3d
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*

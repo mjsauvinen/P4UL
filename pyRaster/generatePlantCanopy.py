@@ -19,19 +19,19 @@ Institute for Atmospheric and Earth System Research (INAR) / Physics
 Faculty of Science, University of Helsinki
 '''
 
-parser = argparse.ArgumentParser(prog='generatePlantCanopyRaster.py', description='''Generates a 3D array of LAD values
+parser = argparse.ArgumentParser(prog='generatePlantCanopy.py', description='''Generates a 3D array of LAD values
                                  based on information about individual plants.''')
-parser.add_argument("-pr","--plantraster", type=str, help="Name of the input plant raster map file.")
+parser.add_argument("-pr","--plantmap", type=str, help="Name of the input plant raster map file.")
 parser.add_argument("-pi","--plantinfo", type=str, help="Name of the input plant information file.")
 parser.add_argument("-r", "--resolution", type=float, nargs=3, help="Resolution (x,y,z) of the output 3D array.")
-parser.add_argument("-o","--output", type=str, help="Name of the 3D output file.")
+parser.add_argument("-fo","--fileout", type=str, help="Name of the 3D output file.")
 args = parser.parse_args()
 # ------------------- #
 
 dpx = args.resolution
 
 # Read in the plant information
-ds=np.load(args.plantraster)
+ds=np.load(args.plantmap)
 R=ds["R"]
 rdims=np.shape(R)
 plant_info = {}
@@ -88,7 +88,7 @@ for i in xrange(rdims[0]):
 
 
 # Save into netCDF4 dataset
-dso = nct.netcdfOutputDataset(args.output)
+dso = nct.netcdfOutputDataset(args.fileout)
 nPc = np.shape(lad_3d)
 dPc = np.array([1.,1.,0.75])
 xv = nct.createCoordinateAxis(dso, nPc, dPc, 0, 'x', 'f4', 'm', parameter=True)
