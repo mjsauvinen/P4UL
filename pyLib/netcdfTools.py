@@ -46,10 +46,12 @@ def netcdfOutputDataset(filename, mode='w'):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 
-def netcdfWriteAndClose(dso):
-  print('Writing of output data  .... ')
+def netcdfWriteAndClose(dso, verbose=True):
+  if(verbose):
+    print('Writing of output data  .... ')
   dso.close()
-  print(' ... done. File closed.')
+  if(verbose):
+    print(' ... done. File closed.')
 
   dso = None
 
@@ -84,11 +86,11 @@ def read1DVariableFromDataset(varStr, ds, iLOff=0, iROff=0, cl=1):
 
 def readVariableFromDataset(varStr, ds, cl=1 ):
   if( varStr in ds.variables.keys() ):
-    
+
     vdims = asciiEncode(ds.variables[varStr].dimensions, ' Variable dimensions ')
-    
+
     if( len(vdims) == 4 ):
-      var = ds.variables[varStr][:,::cl,::cl,::cl] 
+      var = ds.variables[varStr][:,::cl,::cl,::cl]
     elif( len(vdims) == 3 and 'time' not in vdims ):
       var = ds.variables[varStr][::cl,::cl,::cl]
     elif( len(vdims) == 3 and 'time' in vdims ):
@@ -110,10 +112,10 @@ def readVariableFromDataset(varStr, ds, cl=1 ):
       if( 'time' in dname ): dDict[dname] = dData
       else:                  dDict[dname] = dData[::cl]
       dData = None
-      
+
   else:
     sys.exit(' Variable {} not in list {}.'.format(varStr, ds.variables.keys()))
-  
+
   return var, dDict
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
@@ -142,7 +144,7 @@ def read3DVariableFromDataset(varStr, ds, iTOff=0, iLOff=0, iROff=0, cl=1, meanO
       vo = var[iL:-iR, iL:-iR, iL:-iR]
     else:
       vo = var[iT:, iL:-iR, iL:-iR, iL:-iR]
-    
+
   var = None
 
   return vo, np.array(vo.shape)
@@ -164,7 +166,7 @@ def read3dDataFromNetCDF( fname, varStr, cl=1 ):
   print(' Extracting {} from dataset in {} ... '.format( varStr, fname ))
   var, dDict = readVariableFromDataset(varStr, ds, cl )
   print(' {}_dims = {}\n Done!'.format(varStr, var.shape ))
-  
+
   # Rename the keys in dDict to simplify the future postprocessing
   for dn in dDict.keys():
     idNan = np.isnan(dDict[dn]); dDict[dn][idNan] = 0.
@@ -172,14 +174,14 @@ def read3dDataFromNetCDF( fname, varStr, cl=1 ):
       dDict['time'] = dDict.pop( dn )
     elif( 'x' == dn[0] and 'x' != dn ):
       dDict['x'] = dDict.pop( dn )
-    elif( 'y' == dn[0] and 'y' != dn ):  
-      dDict['y'] = dDict.pop( dn ) 
+    elif( 'y' == dn[0] and 'y' != dn ):
+      dDict['y'] = dDict.pop( dn )
     elif( 'z' == dn[0] and 'z' != dn ):
       dDict['z'] = dDict.pop( dn )
     else: pass
 
-  # Append the variable into the dict. 
-  dDict['v'] = var 
+  # Append the variable into the dict.
+  dDict['v'] = var
 
   return dDict
 
@@ -269,7 +271,7 @@ def vectorPrimeComponent(vc, vm):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, zlib=False, fill_value=None):
+def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, zlib=False, fill_value=None,verbose=True):
 
   if(parameter):
     dso.createDimension(vName, vLen)
@@ -283,20 +285,21 @@ def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, 
   else:
     pStr = 'variable'
 
-  print ' NetCDF {} {} successfully created. '.format(pStr, vName)
+  if(verbose):
+    print ' NetCDF {} {} successfully created. '.format(pStr, vName)
 
   return var
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 
-def createCoordinateAxis(dso, Rdims, Rdpx, axis, varname, formatstr, unit, parameter, zlib=False):
+def createCoordinateAxis(dso, Rdims, Rdpx, axis, varname, formatstr, unit, parameter, zlib=False, verbose=True):
   arr = np.empty(Rdims[axis])
   for i in xrange(Rdims[axis]):
     # dpx is in [N,E], see getGeoTransform() in gdalTools.py
     arr[i] = i * Rdpx[axis]
   axvar = createNetcdfVariable(dso, arr, varname, len(
-      arr), unit, formatstr, (varname,), parameter, zlib)
+      arr), unit, formatstr, (varname,), parameter, zlib, verbose=verbose)
   arr = None
   return axvar
 
@@ -362,35 +365,3 @@ def read3dDataFromNetCDF( fname, nameDict, cl=1 ):
   dataDict['time'] = time
 
   return dataDict
-
-# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-def setPIDSGlobalAtrributes(ds, globalAttributes):
-  import netCDF4
-  # Set PIDS global attributes to data set file
-  ds.Conventions = globalAttributes['conventions']
-  ds.palm_version = globalAttributes['palm_version']
-  ds.title = globalAttributes['title']
-  ds.acronym = globalAttributes['acronym']
-  ds.campaign = globalAttributes['campaign']
-  ds.institution = globalAttributes['institution']
-  ds.author = globalAttributes['author']
-  ds.contact_person = globalAttributes['contact_person']
-  ds.licence = globalAttributes['licence']
-  ds.history = globalAttributes['history']
-  ds.keywords = globalAttributes['keywords']
-  ds.references = globalAttributes['references']
-  ds.comment = globalAttributes['comment']
-  ds.data_content = globalAttributes['data_content']
-  ds.source = globalAttributes['source']
-  ds.dependencies = globalAttributes['dependencies']
-  ds.location = globalAttributes['location']
-  ds.site = globalAttributes['site']
-  ds.origin_x = float(globalAttributes['origin_x'])
-  ds.origin_y = float(globalAttributes['origin_y'])
-  ds.origin_z = float(globalAttributes['origin_z'])
-  ds.origin_lat = float(globalAttributes['origin_lat'])
-  ds.origin_lon = float(globalAttributes['origin_lon'])
-  ds.rotation_angle = float(globalAttributes['rotation_angle'])
-  ds.origin_time = float(globalAttributes['origin_time'])
-
-#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
