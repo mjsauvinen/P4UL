@@ -3,6 +3,7 @@ import sys
 import argparse
 import numpy as np
 import ConfigParser
+from itertools import islice, chain, repeat
 
 from netcdfTools import *
 from mapTools import readNumpyZTile
@@ -65,6 +66,42 @@ def readConfigVariable(config, section, name):
 
   return var
 
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def parseStringArrayInput(input_str, dtype):
+  # Return string type input as 2D numpy array
+  # Example input: "2,5,6\n3,6,7\n6,7,9"
+  # Example output np.array([[2,5,6],[3,6,7],[6,7,9]])
+  rows = input_str.split("\n")
+  if(len(rows[0].split(","))==1):
+    rows=rows[1:]
+  arr = np.zeros((len(rows),len(rows[0].split(","))),dtype=dtype)
+  for i in xrange(len(rows)):
+    items = rows[i].split(",")
+    try:
+      arr[i,:]=np.array(map(dtype, items))
+    except ValueError:
+      continue
+
+  return arr
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def parseCharacterArray(input_str, maxstrlen):
+  # Return string type input as 2D character array
+  # Example input: "abba,cd,acdc"
+  # Example output np.array([['a','b','b','a'],['c','d','',''],['a','c','d','c']])
+  items = input_str.split(",")
+  charr = map(list, items)
+  # Fill missing elements with empty char and construct a 2d array
+  def pad_array(charr):
+    return list(islice(chain(charr, repeat('')),maxstrlen))
+  charr = np.array(map(pad_array,charr))
+  return charr
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+#                    UNIVERSAL                      #
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def createXDim(ds, nPx, dPx, dims):
@@ -104,6 +141,8 @@ def createZDim(ds, nPx, dPx, dims):
     z_dim = ds.variables['z']
     return z_dim
 
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+#                   PIDS_STATIC                     #
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def createZLADDim(ds, nPx, dPx, dims):
@@ -263,5 +302,224 @@ def processVegetationType(fname,ds,vars,dims):
     vegetationTypeNCVar.long_name= "vegetation type classification"
 
     return vegetationTypeNCVar
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+#                    PIDS_AERO                      #
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def createNcatDim(ds, ncat, dims):
+  # Creates a new ncat dim unless it already exists
+  if('ncat' not in dims):
+    ncat_dim = createNetcdfVariable( ds, ncat, 'ncat', len(ncat), '', 'i4', ('ncat',), parameter=True, verbose=False )
+    ncat_dim.long_name = "number of emission categories"
+    dims.append('ncat')
+    return ncat_dim
+  else:
+    ncat_dim = ds.variables['ncat']
+    return ncat_dim
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def createNspeciesDim(ds, nspecies, dims):
+  # Creates a new nspecies dim unless it already exists
+  if('nspecies' not in dims):
+    nspecies_dim = createNetcdfVariable( ds, nspecies, 'nspecies', len(nspecies), '', 'i4', ('nspecies',), parameter=True, verbose=False )
+    nspecies_dim.long_name = "number of emission species"
+    dims.append('nspecies')
+    return nspecies_dim
+  else:
+    nspecies_dim = ds.variables['nspecies']
+    return nspecies_dim
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def createCompositionIndexDim(ds, composition_index, dims):
+  # Creates a new composition_index dim unless it already exists
+  if('composition_index' not in dims):
+    composition_index_dim = createNetcdfVariable( ds, composition_index, 'composition_index', len(composition_index), '', 'i4', ('composition_index',), parameter=True, verbose=False )
+    composition_index_dim.long_name = "aerosol composition index"
+    dims.append('composition_index')
+    return composition_index_dim
+  else:
+    composition_index_dim = ds.variables['composition_index']
+    return composition_index_dim
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def createStrlenDim(ds, strlen, dims):
+  # Creates a new strlen dim unless it already exists
+  if('strlen' not in dims):
+    strlen_dim = createNetcdfVariable( ds, strlen, 'strlen', len(strlen), '', 'i4', ('strlen',), parameter=True, verbose=False )
+    dims.append('strlen')
+    return strlen_dim
+  else:
+    strlen_dim = ds.variables['strlen']
+    return strlen_dim
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def createNhoursyearDim(ds, nhoursyear, dims):
+  # Creates a new nhoursyear dim unless it already exists
+  if('nhoursyear' not in dims):
+    nhoursyear_dim = createNetcdfVariable( ds, nhoursyear, 'nhoursyear', len(nhoursyear), '', 'i4', ('nhoursyear',), parameter=True, verbose=False )
+    dims.append('nhoursyear')
+    return nhoursyear_dim
+  else:
+    nhoursyear_dim = ds.variables['nhoursyear']
+    return nhoursyear_dim
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def processEmissionCategoryIndices(emiCatInds,ds,vars,dims):
+  # In my opinion ncat is completely redundant parameter, emission_category_index should
+  # be a coordinate variable with a length of ncat instead. Current setup in PALM doesn't
+  # make any sense.
+  try:
+    emiCatInds=map(int, emiCatInds.split(","))
+  except TypeError:
+    print("Error: invalid value for emission_category_index in configuration file, expected a comma-delimited list")
+    exit(1)
+  if('emission_category_index' in vars):
+    ds.variables['emission_category_index'][:]=emiCatInds
+    return ds.variables['emission_category_index']
+  else:
+    ncat_dim = createNcatDim(ds, np.arange(1,len(emiCatInds)+1), dims)
+    emiCatIndsVar = createNetcdfVariable( ds, emiCatInds, 'emission_category_index', 0, '', 'i1', ('ncat',), parameter=False, verbose=False )
+    emiCatIndsVar.long_name = "emission category index"
+    emiCatIndsVar.standard_name = 'emission_cat_index'
+
+    return emiCatIndsVar
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def processEmissionIndices(emiInds,ds,vars,dims):
+  # Again, nspecies is redundant
+  try:
+    emiInds=map(int, emiInds.split(","))
+  except TypeError:
+    print("Error: invalid value for emission_index in configuration file, expected a comma delimited list")
+    exit(1)
+  if('emission_index' in vars):
+    ds.variables['emission_index'][:]=emiInds
+    return ds.variables['emission_index']
+  else:
+    nspecies_dim = createNspeciesDim(ds, np.arange(1,len(emiInds)+1), dims)
+    emiIndsVar = createNetcdfVariable( ds, emiInds, 'emission_index', 0, '', 'u2', ('nspecies',), parameter=False, verbose=False )
+    emiIndsVar.long_name = "emission species index"
+    emiIndsVar.standard_name = 'emission_index'
+
+    return emiIndsVar
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def processEmissionCategoryNames(emiCatName,ds,vars,dims):
+  try:
+    # Max string length is chosen quite arbitralily here
+    maxstrlen=10
+    emiCatName = parseCharacterArray(emiCatName, maxstrlen)
+  except TypeError:
+    print("Error: invalid value for emission_category_name in configuration file, expected a comma delimited array")
+    exit(1)
+  if('emission_category_name' in vars):
+    ds.variables['emission_category_name'][:]=emiCatName
+    return ds.variables['emission_category_name']
+  else:
+    ncat_dim = createNcatDim(ds, np.arange(1,np.shape(emiCatName)[0]+1), dims)
+    strlen_dim = createStrlenDim(ds, np.arange(1,maxstrlen+1), dims)
+    emiCatNameVar = createNetcdfVariable( ds, np.array(emiCatName), 'emission_category_name', 0, '', 'S1', ('ncat','strlen',), parameter=False, verbose=False )
+    emiCatNameVar.long_name = "emission category name"
+    emiCatNameVar.standard_name = 'emission_cat_name'
+
+    return emiCatNameVar
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def processEmissionSpeciesNames(emiSpeName,ds,vars,dims):
+  try:
+    # Max string length is chosen quite arbitralily here
+    maxstrlen=10
+    emiSpeName = parseCharacterArray(emiSpeName, maxstrlen)
+  except TypeError:
+    print("Error: invalid value for emission_category_name in configuration file, expected a comma delimited array")
+    exit(1)
+  if('emission_species_name' in vars):
+    ds.variables['emission_species_name'][:]=emiSpeName
+    return ds.variables['emission_species_name']
+  else:
+    nspecies_dim = createNspeciesDim(ds, np.arange(1,np.shape(emiSpeName)[0]+1), dims)
+    strlen_dim = createStrlenDim(ds, np.arange(1,maxstrlen+1), dims)
+
+    emiSpeNameVar = createNetcdfVariable( ds, np.array(emiSpeName), 'emission_species_name', 0, '', 'S1', ('nspecies','strlen',), parameter=False, verbose=False )
+    emiSpeNameVar.long_name = "emission species name"
+    emiSpeNameVar.standard_name = 'emission_name'
+
+    return emiSpeNameVar
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def processEmissionTimeFactors(emiTimeFactors, lod, ds, vars, dims):
+  # Check the level of detail
+  if(lod is None or lod=='2'):
+    # Using constant value for every hour of year or read factors from npz array
+    nhoursyear = np.arange(1,8760+1) # 24*365
+    try:
+      factor=float(emiTimeFactors)
+      if('ncat' in dims):
+        ncat=len(ds.variables['ncat'][:])
+      else:
+        ncat=1
+        ncat_dim = createNcatDim(ds, [ncat], dims)
+      emiTimeFactors = np.zeros([ncat,len(nhoursyear)],dtype=float)+factor
+    except ValueError:
+      if(lod is None):
+        raise ValueError("emission_time_factors_lod must be set for non-constant emission_time_factors")
+      # Try to read 'emission_time_factors' array from given npz file
+      try:
+        npzDS = np.load(emiTimeFactors)
+        emiTimeFactors = npzDS['emission_time_factors']
+      except:
+        print("Cannot read emission_time_factors data from file \"{}\"".format(emiTimeFactors))
+        exit(1)
+      if(np.shape(emiTimeFactors)[-1]!=8760):
+        raise ValueError("emission_time_factors data must contain exactly 8760 datapoints for every emission category when emission_time_factors_lod = 2")
+      ncat_dim = createNcatDim(ds, np.arange(1,np.shape(emiTimeFactors)[0]+1), dims)
+
+    if('emission_time_factors' in vars):
+      ds.variables['emission_time_factors'][:] = emiTimeFactors
+      return ds.variables['emission_time_factors']
+    else:
+      nhourstear_dim = createNhoursyearDim(ds, nhoursyear, dims)
+      emiTimeFactorsVar = createNetcdfVariable( ds, emiTimeFactors, 'emission_time_factors', 0, '', 'f4', ('ncat','nhoursyear',), parameter=False, verbose=False )
+      emiTimeFactorsVar.long_name = "emission time scaling factors"
+      emiTimeFactorsVar.standard_name = "emission_time_scaling_factors"
+
+      return emiTimeFactorsVar
+
+  elif(lod=='1'):
+    # TODO
+    raise NotImplementedError("emission_time_factors_lod = 1 is not yet implemented")
+  else:
+    raise ValueError("invalid value for emission_time_factors_lod: {}".format(lod))
+
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def processCompositionAerosol(compAero,ds,vars,dims):
+  try:
+    compAero = parseStringArrayInput(compAero, float)
+  except TypeError:
+    print("Error: invalid value for composition_aerosol in configuration file, expected a newline and comma delimited matrix")
+    exit(1)
+  if('composition_aerosol' in vars):
+    ds.variables['composition_aerosol'][:]=compAero
+    return ds.variables['composition_aerosol']
+  else:
+    ncat_dim = createNcatDim(ds, np.arange(1,np.shape(compAero)[0]+1), dims)
+    composition_index_dim = createCompositionIndexDim(ds, np.arange(1,np.shape(compAero)[1]+1), dims)
+    compAeroVar = createNetcdfVariable( ds, compAero, 'composition_aerosol', 0, '', 'f4', ('ncat','composition_index',), parameter=False, verbose=False )
+    compAeroVar.long_name = "composition aerosol"
+    compAeroVar.standard_name = 'composition_aerosol'
+
+    return compAeroVar
 
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*

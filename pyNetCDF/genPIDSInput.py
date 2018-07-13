@@ -15,9 +15,13 @@ This grid generates input files for PALM simulations following PALM Input Data S
 
 PIDS version: 1.9
 
+WARNING: I haven't had time to test this thoroughly so please check your PIDS files before using them.
+
 TODOS:
 - Extend to cover more variables
 - Check that old and new dimensions match each other
+- Skip file if nothing to do
+- Write more comments to code, especially pidsTools.py.
 
 Author:
 Sasu Karttunen
@@ -64,6 +68,16 @@ print("\n== Vegetation ==")
 vegConfig = readConfigSection(config, 'Vegetation')
 if(vegConfig is None):
   print("No vegetation specified.")
+
+print("\n== Chemistry ==")
+chemConfig = readConfigSection(config, 'Chemistry')
+if(chemConfig is None):
+  print("No chemistry specified.")
+
+print("\n== Aerosols ==")
+aeroConfig = readConfigSection(config, 'Aerosols')
+if(aeroConfig is None):
+  print("No aerosols specified.")
 
 '''
 Open the output netCDF files and write global attributes to them.
@@ -141,4 +155,101 @@ if(vegConfig is not None):
 Close PIDS_STATIC
 '''
 netcdfWriteAndClose(pidsStaticDS, verbose=False)
-print("...static input file closed.")
+print("Static output file PIDS_STATIC closed.")
+
+'''
+Move on to PIDS_CHEM
+'''
+if(chemConfig is not None):
+  print("\n===== Chemistry input file PIDS_CHEM =====")
+  chemAppend = os.path.isfile("PIDS_CHEM")
+  if(chemAppend):
+    pidsChemDS = netcdfOutputDataset("PIDS_CHEM", mode="r+")
+    chemDims = pidsChemDS.dimensions.keys()
+    chemVars = pidsChemDS.variables.keys()
+    # Remove dims from vars with a filter
+    chemVars = filter(lambda key: key not in chemDims, chemVars)
+    print("Existing PIDS_CHEM file found, using append/update mode.")
+
+    if(len(chemDims)>0):
+      print("Dimensions: " + ', '.join(str(key) for key in chemDims))
+      print("Variables: " + ', '.join(str(key) for key in chemVars))
+      print("Warning: using old dimensions for new variables")
+    else:
+      print("No existing dimensions or variables found.")
+  else:
+    pidsChemDS = netcdfOutputDataset("PIDS_CHEM", mode="w")
+    chemDims = []
+    chemVars = []
+    print("No existing PIDS_CHEM found, creating a new one.")
+
+  setPIDSGlobalAtrributes(pidsChemDS, globalAttributes)
+
+  emiCatInds = readConfigVariable(config, 'Chemistry', 'emission_category_index')
+  if(emiCatInds is not None and emiCatInds!=""):
+    emiCatIndsVar = processEmissionCategoryIndices(emiCatInds, pidsChemDS, chemVars, chemDims)
+
+  emiInds = readConfigVariable(config, 'Chemistry', 'emission_index')
+  if(emiInds is not None and emiInds!=""):
+    emiInds = processEmissionIndices(emiInds, pidsChemDS, chemVars, chemDims)
+
+  emiCatName = readConfigVariable(config, 'Chemistry', 'emission_category_name')
+  if(emiCatName is not None and emiCatName!=""):
+    emiCatName = processEmissionCategoryNames(emiCatName, pidsChemDS, chemVars, chemDims)
+
+  emiSpeName = readConfigVariable(config, 'Chemistry', 'emission_species_name')
+  if(emiSpeName is not None and emiSpeName!=""):
+    emiSpeName = processEmissionSpeciesNames(emiSpeName, pidsChemDS, chemVars, chemDims)
+
+  emiTimeFactors = readConfigVariable(config, 'Chemistry', 'emission_time_factors')
+  emiTimeFactorsLod = readConfigVariable(config, 'Chemistry', 'emission_time_factors_lod')
+  if(emiTimeFactors is not None and emiTimeFactors!=""):
+    if(emiTimeFactorsLod==""):
+      emiTimeFactorsLod = None
+    emiTimeFactors = processEmissionTimeFactors(emiTimeFactors, emiTimeFactorsLod, pidsChemDS, chemVars, chemDims)
+
+
+  netcdfWriteAndClose(pidsChemDS, verbose=False)
+  print("Chemistry output file PIDS_CHEM closed.")
+
+'''
+Move on to PIDS_AERO
+'''
+
+if(aeroConfig is not None):
+  print("\n===== Aerosol input file PIDS_AERO =====")
+  aeroAppend = os.path.isfile("PIDS_AERO")
+  if(aeroAppend):
+    pidsAeroDS = netcdfOutputDataset("PIDS_AERO", mode="r+")
+    aeroDims = pidsAeroDS.dimensions.keys()
+    aeroVars = pidsAeroDS.variables.keys()
+    # Remove dims from vars with a filter
+    aeroVars = filter(lambda key: key not in aeroDims, aeroVars)
+    print("Existing PIDS_AERO file found, using append/update mode.")
+
+    if(len(aeroDims)>0):
+      print("Dimensions: " + ', '.join(str(key) for key in aeroDims))
+      print("Variables: " + ', '.join(str(key) for key in aeroVars))
+      print("Warning: using old dimensions for new variables")
+    else:
+      print("No existing dimensions or variables found.")
+  else:
+    pidsAeroDS = netcdfOutputDataset("PIDS_AERO", mode="w")
+    aeroDims = []
+    aeroVars = []
+    print("No existing PIDS_AERO found, creating a new one.")
+
+  setPIDSGlobalAtrributes(pidsAeroDS, globalAttributes)
+
+  compAeroStr = readConfigVariable(config, 'Aerosols', 'composition_aerosol')
+  if(compAeroStr is not None and compAeroStr!=""):
+    compAeroVar = processCompositionAerosol(compAeroStr, pidsAeroDS, aeroVars, aeroDims)
+
+
+
+  netcdfWriteAndClose(pidsAeroDS, verbose=False)
+  print("Aerosol output file PIDS_AERO closed.")
+
+'''
+Close PIDS_AERO
+'''
