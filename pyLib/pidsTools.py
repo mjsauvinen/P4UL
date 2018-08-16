@@ -10,6 +10,8 @@ from mapTools import readNumpyZTile
 
 
 '''
+Tools for genPIDSInput.py
+
 Author:
 Sasu Karttunen
 sasu.karttunen@helsinki.fi
