@@ -11,7 +11,26 @@ from netcdfTools import read3dDataFromNetCDF
 from utilities import selectFromList
 
 #==========================================================#
+def readVar( fn, vstr, cl=1 ):
+  xDict = read3dDataFromNetCDF( fn , vstr , cl )
+  v = xDict['v']; x = xDict['x']; y = xDict['y']; z = xDict['z']
+  xDict = None
+  return v, x, y, z
+#==========================================================#
+def U_hd( fn, cl=1, direction=False ):
+  ut, xu, yu, zu = readVar( fn, 'u_xy', cl )
+  vt, xv, yv, zv = readVar( fn, 'v_xy', cl )
+  x = xv[:-1]; y = yu[:-1]; z = 0.5*(zu+zv)
+  uc = 0.5*( ut[:,:,:-1,1:] + ut[:,:,:-1,:-1] )
+  vc = 0.5*( vt[:,:,1:,:-1] + ut[:,:,:-1,:-1] )
+  if( direction ):
+    v = np.arctan( vc/(uc+1.E-4) ) * (180./np.pi)
+  else:
+    v = np.sqrt( uc**2 + vc**2 )
+    
+  return v, x, y, z
 
+#==========================================================#
 parser = argparse.ArgumentParser(prog='compareNetCdf2D.py')
 parser.add_argument("-f1", "--filename1",type=str, help="Name of the first (ref) input NETCDF file.")
 parser.add_argument("-f2", "--filename2",type=str, help="Name of the second input NETCDF file.")
@@ -25,6 +44,8 @@ parser.add_argument("-m", "--mode", type=str, default='d', choices=['d', 'r', 's
   help="Diff mode: 'd': delta, 'r': relative, 's': scaled.")
 parser.add_argument("-w", "--writeRMS", help="Write the root-mean-square of the differences to a file.",\
   action="store_true", default=False)
+parser.add_argument("-nx", "--nexcl", type=int, default=0,\
+  help="Exclude the first, [nx] number of nodes from analysis in x-direction.")
 parser.add_argument("-p", "--printOn", help="Print the numpy array data.",\
   action="store_true", default=False)
 parser.add_argument("-s", "--save", action="store_true", default=False,\
@@ -41,6 +62,7 @@ varname  = args.varname
 v0       = np.array(args.vref )
 vs       = np.array(args.vstar)
 mode     = args.mode
+nx       = args.nexcl
 writeRMS = args.writeRMS
 printOn  = args.printOn
 saveOn   = args.save
@@ -51,19 +73,26 @@ gridOn   = args.grid
 
 # Shorter name
 vn = varname.split('_')[0]
+dirOn   = 'Ud' in varname
+horizOn = 'Uh' in varname
 
-d1Dict = read3dDataFromNetCDF( f1 , varname , 1 )
-v1 = d1Dict['v']; x1 = d1Dict['x']; y1 = d1Dict['y']; z1 = d1Dict['z']
-v1 -= v0[0]; v1 /= vs[0]
-d1Dict = None 
+
+if( (not horizOn) and (not dirOn) ):
+  #print('{}'.format(varname))
+  v1, x1, y1, z1 = readVar( f1, varname, 1 )
+  v2, x2, y2, z2 = readVar( f2, varname, 1 )
+  
+else:
+  v1, x1, y1, z1 = U_hd( f1, 1, dirOn )  
+  v2, x2, y2, z2 = U_hd( f2, 1, dirOn )
+
 dims1  = np.array( v1.shape )
-
-
-d2Dict = read3dDataFromNetCDF( f2 , varname , 1 )
-v2 = d2Dict['v']; x2 = d2Dict['x']; y2 = d2Dict['y']; z2 = d2Dict['z']
-v2 -= v0[1]; v2 /= vs[1]
-d2Dict = None 
 dims2  = np.array( v2.shape )
+
+if( not dirOn ):
+  v1 -= v0[0]; v1 /= vs[0]
+  v2 -= v0[1]; v2 /= vs[1]
+
 
 if( all( dims1 == dims2 ) ):
   print(' Dimensions of the two datasets match!: dims = {}'.format(dims1))
@@ -78,6 +107,7 @@ if( writeRMS ):
   fout = file('RMS_d{}.dat'.format(vn), 'wb')
   fout.write('# file1 = {}, file2 = {}\n'.format(f1, f2))
   fout.write('# z_coord \t RMS(d{})\n'.format(vn))
+  
   #fout.write('{:.2f}\t{:.2e}'.format( z1[k1], dv ))
 
 for k1 in idk:
@@ -90,34 +120,36 @@ for k1 in idk:
     k2 = k2[0]    # Take always the first term
   
   
-  #Correct the scales to avoid systematic differences
-  #vm1 = np.mean( v1[0,k1,:,0] )  # Mean < >_y value at inlet 
-  #vm2 = np.mean( v2[0,k2,:,0] )
-  #f2  = vm1/vm2
-  v1x  = v1[0,k1,:,:]
+  nx2 = 50
+  v1x  = v1[0,k1,:,nx:-nx2]
   idx  = ( np.abs(v1x) > 1E-3 )
   vm1  = np.mean( v1x[idx] )
   f2 = 1.
 
   if( mode == 'r' ):
-    dv = (f2 * v2[0,k2,:,:] - v1[0,k1,:,:])/np.abs( v1[0,k1,:,:] + 1E-5 )
+    dv = (f2 * v2[0,k2,:,nx:-nx2] - v1[0,k1,:,nx:-nx2])/np.abs( v1[0,k1,:,nx:-nx2] + 1E-5 )
   elif( mode == 's' ):
-    dv = (f2 * v2[0,k2,:,:] - v1[0,k1,:,:])/( vm1 + 1E-5 )
+    dv = (f2 * v2[0,k2,:,nx:-nx2] - v1[0,k1,:,nx:-nx2])/( vm1 + 1E-5 )
   else:
-    dv = (f2 * v2[0,k2,:,:] - v1[0,k1,:,:])
+    dv = (f2 * v2[0,k2,:,nx:-nx2] - v1[0,k1,:,nx:-nx2])
 
-  RMSDiff = np.sqrt(np.sum(dv**2)/float(np.prod(dv.shape)))
-  print(' RMS (d{}) = {}'.format( vn , RMSDiff ))
+
+  N = float( np.prod( dv.shape ) )
+  SkewDiff = (1./N)*np.sum(dv**3) * ( 1./(N-1.)*np.sum(dv**2) )**(-1.5) 
+  RMSDiff  = np.sqrt(np.sum(dv**2)/N)
+  print(' RMS (d{}) = {}, Sk(d{}) = {} '.format( vn , RMSDiff, vn, SkewDiff ))
+  
   if( writeRMS ):
     fout.write('{:.2f}\t{:.2e}\n'.format( z1[k1], RMSDiff ))
 
   
 
   if( printOn ):
-    xydims = dims1[2:]
+    dimsf  = np.array( np.shape( dv ) )
+    xydims = dimsf
     figDims = 13.*(xydims[::-1].astype(float)/np.max(xydims))
     fig = plt.figure(num=1, figsize=figDims)
-    labelStr = '({0}_1 - {0}_2)(z={1} m)'.format(vn, z1[k1])
+    labelStr = '({0}_2 - {0}_1)(z={1} m)'.format(vn, z1[k1])
     fig = addImagePlot( fig, dv[::-1,:], labelStr, gridOn, limsOn )
     
     

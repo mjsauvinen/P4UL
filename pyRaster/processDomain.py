@@ -36,7 +36,7 @@ helpFlt = ''' Filter type and its associated number. Available filters:
 parser.add_argument("-ft","--filter",type=str,nargs=2,default=[None,None], help=helpFlt)
 parser.add_argument("-rx","--rmax", type=float, default=None,\
   help="Recover peaks (after filtering) above given value.")
-parser.add_argument("-hx","--hmax", type=float, default=None,\ 
+parser.add_argument("-hx","--hmax", type=float, default=None,\
   help="Maximum allowable height.")
 parser.add_argument("-p", "--printOn", action="store_true", default=False,\
   help="Print the resulting raster data.")

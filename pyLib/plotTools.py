@@ -143,13 +143,13 @@ def color_stack(ic=None):
   SlateBlue  '#6A5ACD'
   '''
   colorList = ['b','r','g','c','#DAA520','k',\
-    '#A52A2A','#FF1493','#8A2BE2','#008B8B',\
-      '#FF8C00','m','#2E8B57','#FF4500','#6A5ACD']
+    '#FF1493','#8A2BE2','#008B8B','m',\
+      '#2E8B57','#FF4500','#6A5ACD','#A52A2A','#FF8C00']
   ncolors = len(colorList)
   
   if( ic is not None and np.isscalar(ic) ):
     iCg = min( int(ic) , ( ncolors-1 ) ) 
-  clr = colorList[iCg]
+  clr = colorList[-iCg]
   iCg += 1
   if( iCg > (ncolors-1) ): 
     iCg = 0
@@ -259,6 +259,7 @@ def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False ):
   # Print each column separately
   amax = 0.
   Ny = (x.shape[1]-1)
+  
   for i in xrange(Ny):
     if( Ny == 1 ):
       labelXX = labelStr
@@ -281,7 +282,7 @@ def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False ):
       plotf = ax.plot
     
     
-    lines = plotf( xp, yp,'-', linewidth=1.3 , label=labelXX)
+    lines = plotf( xp, yp,'-', linewidth=2.2 , label=labelXX, color=color_stack())
     
     lmax = np.abs(np.max(dp))  # Local maximum
     if( lmax > amax ): amax = lmax

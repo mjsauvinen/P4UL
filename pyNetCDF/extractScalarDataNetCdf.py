@@ -64,15 +64,15 @@ print(' time_dims = {} '.format(time_dims))
 tv = createNetcdfVariable( dso, time,'time', len(time),'s','f4',('time',), parameter )
 time = None  
 
-x, x_dims = read1DVariableFromDataset( 'x', ds, 0, 1, cl ) # Exclude the last value.
+x, x_dims = read1DVariableFromDataset( 'x', ds, 0, 1, cl ) # Scalar grid's x, exclude the last value.
 xv = createNetcdfVariable( dso, x   , 'x'   , len(x)   , 'm', 'f4', ('x',)   , parameter )
 x = None
 
-y, y_dims = read1DVariableFromDataset( 'y', ds, 0, 1, cl ) # Exclude the last value.
+y, y_dims = read1DVariableFromDataset( 'y', ds, 0, 1, cl ) # Scalar grid's y, exclude the last value.
 yv = createNetcdfVariable( dso, y   , 'y'   , len(y)   , 'm', 'f4', ('y',)   , parameter )
 y = None
 
-z, z_dims = read1DVariableFromDataset( zname, ds, 1, 0, cl ) # Exclude the first value.
+z, z_dims = read1DVariableFromDataset( zname, ds, 1, 0, cl ) # Scalar grid's z, exclude the first value.
 zv = createNetcdfVariable( dso, z   , 'z'   , len(z)   , 'm', 'f4', ('z',)   , parameter )
 z = None
 

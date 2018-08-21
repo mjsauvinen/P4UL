@@ -15,24 +15,33 @@ Author: Mikko Auvinen
 
 #==========================================================#
 parser = argparse.ArgumentParser(prog='groupVectorDataNetCDF.py')
-parser.add_argument("-f", "--filename",type=str, help="Name of the input NETCDF file.")
-parser.add_argument("-fo", "--fileout",type=str, help="Name of the output NETCDF file.", default="U-VECTOR.nc")
-parser.add_argument("-sn", "--scalar",type=str, help="(Optional) Scalar to be included.", default=None)
-parser.add_argument("-d", "--decomp", help="Decomposed into mean (V_m) and fluctuating (V^prime) components.",\
-  action="store_true", default=False) 
-parser.add_argument("-dd", "--decompOnly", help="Output V_m and V^prime components only.",\
-  action="store_true", default=False)
-parser.add_argument("-nt", "--ntimeskip", type=int, help="Skip <nt> number of time steps.",\
-  default=0)
-parser.add_argument("-c", "--coarse", type=int, help="Coarsening level. Int > 1.",\
-  default=1) 
+parser.add_argument("-f", "--filename",type=str,\
+  help="Name of the input NETCDF file.")
+parser.add_argument("-fo", "--fileout",type=str, default="U-VECTOR.nc",\
+  help="Name of the output NETCDF file.")
+parser.add_argument("-sn", "--scalars",type=str, nargs='+', default=None,\
+  help="(Optional) Scalars to be included.")
+parser.add_argument("-zn", "--zname",type=str, default='zu_3d',\
+  help="Name of z-coordinate. Default = 'zu_3d' ")
+parser.add_argument("-sx", "--suffix",type=str, default='',\
+  help="Potential suffix to be appended to variable names. Example: '_xy'. ")
+parser.add_argument("-d", "--decomp", action="store_true", default=False,\
+  help="Decomposed into mean (V_m) and fluctuating (V^prime) components.") 
+parser.add_argument("-dd", "--decompOnly",action="store_true", default=False,\
+  help="Output V_m and V^prime components only.")
+parser.add_argument("-nt", "--ntimeskip", type=int, default=0,\
+  help="Skip <nt> number of time steps.")
+parser.add_argument("-c", "--coarse", type=int, default=1,\
+  help="Coarsening level. Int > 1.")
 args = parser.parse_args() 
 #==========================================================#
 # Initial renaming operations and variable declarations
 
 filename   = args.filename
 fileout    = args.fileout
-scalarName = args.scalar 
+scalars    = args.scalars 
+suffix     = args.suffix
+zname      = args.zname
 nt         = args.ntimeskip
 cl         = abs(int(args.coarse))
 
@@ -74,7 +83,7 @@ y[np.isnan(y)] = 0.  # Special treatment.
 yv = createNetcdfVariable( dso, y   , 'y'   , len(y)   , 'm', 'f4', ('y',)   , parameter )
 y = None
 
-z, z_dims = read1DVariableFromDataset( 'zu_3d',ds, 1, 0, cl ) # Exclude the first value.
+z, z_dims = read1DVariableFromDataset( zname ,ds, 1, 0, cl ) # Exclude the first value.
 zv = createNetcdfVariable( dso, z   , 'z'   , len(z)   , 'm', 'f4', ('z',)   , parameter )
 z = None
 
@@ -89,7 +98,7 @@ PALM netCDF4:
 '''
 
 # - - - - First, u-component - - - - - - - - - -
-u0, u0_dims = read3DVariableFromDataset( 'u', ds, nt, 0, 0, cl ) # All values.
+u0, u0_dims = read3DVariableFromDataset( 'u'+suffix, ds, nt, 0, 0, cl ) # All values.
 
 ''' 
 New, cell-center dimension lengths: 
@@ -114,7 +123,7 @@ if( decompOn ):
 
 # - - - - Second, v-component - - - - - - - - - -
 
-v0, v0_dims = read3DVariableFromDataset( 'v', ds, nt, 0, 0, cl ) # All values.
+v0, v0_dims = read3DVariableFromDataset( 'v'+suffix, ds, nt, 0, 0, cl ) # All values.
 
 vc = np.zeros( cc_dims )
 vc, vm = interpolatePalmVectors( v0, v0_dims, 'j' , decompOn ); v0 = None
@@ -131,7 +140,7 @@ if( decompOn ):
 
 # - - - - Third, w-component - - - - - - - - - -
 
-w0, w0_dims = read3DVariableFromDataset( 'w', ds, nt, 0, 0, cl ) # All values.
+w0, w0_dims = read3DVariableFromDataset( 'w'+suffix, ds, nt, 0, 0, cl ) # All values.
 
 wc = np.zeros( cc_dims )
 wc, wm = interpolatePalmVectors( w0, w0_dims, 'k' , decompOn ); w0 = None
@@ -146,22 +155,22 @@ if( decompOn ):
   wmv = createNetcdfVariable( dso, wm, 'wm', cc_dims[0], 'm/s', 'f4',('z','y','x',) , variable )
   wm = None
 
-if( scalarName ):
-  s0, s0_dims = read3DVariableFromDataset( scalarName, ds, nt, 0, 0, cl ) # All values.
-  sc_dims  = np.array( s0_dims )  # Change to numpy array for manipulation
-  sc_dims[1:] -= 1   # Reduce the coord. dimensions by one. Note: time = sc_dims[0].
-  sc = np.zeros( sc_dims )
-  sc, sm = interpolatePalmVectors( s0, s0_dims, 'i' , decompOn ); s0 = None
-  if( not args.decompOnly ):
-    sv = createNetcdfVariable( dso, sc, scalarName, sc_dims[0], ' ', 'f4',('time','z','y','x',) , variable )
-    if( not decompOn ): sc = None
-  if( decompOn ):
-    sp = vectorPrimeComponent( sc, sm ); sc = None
-    spv = createNetcdfVariable( dso, sp, scalarName+'p', sc_dims[0], ' ', 'f4',('time','z','y','x',) , variable )
-    sp = None
-    smv = createNetcdfVariable( dso, sm, scalarName+'m', sc_dims[0], ' ', 'f4',('z','y','x',) , variable )
-    sm = None
+if( scalars ):
+  for sn in scalars:
+    s0, s0_dims = read3DVariableFromDataset( sn+suffix, ds, nt, 0, 0, cl ) # All values.
+    sc_dims  = np.array( s0_dims )  # Change to numpy array for manipulation
+    sc_dims[1:] -= 1   # Reduce the coord. dimensions by one. Note: time = sc_dims[0].
+    sc = np.zeros( sc_dims )
+    sc, sm = interpolatePalmVectors( s0, s0_dims, 'i' , decompOn ); s0 = None
+    if( not args.decompOnly ):
+      sv = createNetcdfVariable( dso, sc, sn, sc_dims[0], ' ', 'f4',('time','z','y','x',) , variable )
+      if( not decompOn ): sc = None
+    if( decompOn ):
+      sp = vectorPrimeComponent( sc, sm ); sc = None
+      spv = createNetcdfVariable( dso, sp, scalarName+'p', sc_dims[0], ' ', 'f4',('time','z','y','x',) , variable )
+      sp = None
+      smv = createNetcdfVariable( dso, sm, scalarName+'m', sc_dims[0], ' ', 'f4',('z','y','x',) , variable )
+      sm = None
 
 # - - - - Done , finalize the output - - - - - - - - - -
 netcdfWriteAndClose( dso )
-
