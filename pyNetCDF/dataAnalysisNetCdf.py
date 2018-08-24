@@ -87,14 +87,28 @@ fileNos, fileList = filesFromList( fileKey+'*' )
 fig = plt.figure(num=1, figsize=(12,10))
 
 for fn in fileNos:
-  if('mag' in varname):
+  if('MAG' in varname.upper()):
     dataDict = read3dDataFromNetCDF( fileList[fn] , 'u', cl )
     u = dataDict['v']
     dataDict = read3dDataFromNetCDF( fileList[fn] , 'v', cl )
     v = dataDict['v']
     # vr := Umag
-    vr = np.sqrt( u**2 + v**2 )
+    vr = np.sqrt( u**2 + v**2 ); u = None; v = None 
+  elif('TKE' in varname.upper()):
+    dataDict = read3dDataFromNetCDF( fileList[fn] , 'u', cl )
+    u = dataDict['v']; up=u-np.mean(u, axis=0); u = None
+    dataDict = read3dDataFromNetCDF( fileList[fn] , 'v', cl )
+    v = dataDict['v']; vp=v-np.mean(v, axis=0); v = None
+    dataDict = read3dDataFromNetCDF( fileList[fn] , 'w', cl )
+    w = dataDict['v']; wp=w-np.mean(w, axis=0); w = None 
+    dataDict = read3dDataFromNetCDF( fileList[fn] , 'e', cl )
+    e_sgs = dataDict['v']
     
+    e_res = 0.5*(np.mean(up**2,axis=0)+np.mean(vp**2,axis=0)+np.mean(wp**2,axis=0))
+    up = None; vp = None; wp = None 
+    
+    # vr := TKE
+    vr = e_res + e_sgs
   else:
     dataDict = read3dDataFromNetCDF( fileList[fn] , varname, cl )
     vr = dataDict['v']
@@ -119,7 +133,7 @@ for fn in fileNos:
 
   elif( mode == 'std'):
     vp  = np.std( vr, axis=axs ); zp = z
-    if( vp2 is not None ): vp2 = np.std( vr2, axis=axs ) 
+    if( vr2 is not None ): vp2 = np.std( vr2, axis=axs ) 
     
     if(meanErrorOn):
       N = len( vr[:,0,0,0] )
@@ -140,9 +154,13 @@ for fn in fileNos:
     
   elif( mode == 'var' ):
     vp  = np.var( vr, axis=axs ); zp = z
-    if( vp2 is not None ): vp2 = np.var( vr2, axis=axs )
+    if( vr2 is not None ): vp2 = np.var( vr2, axis=axs )
     plotStr  = ["var({}) vs z ".format(varname), varname ,"z"]
     
+
+  if( len(vp.shape) == 3 ):  
+    try: vp  = vp[:,1,1]
+    except: vp = vp[:,0,0]
 
   if( writeAscii ):
     print(' (2) Writing data to ascii file: {}.dat'.format(varname))
@@ -152,17 +170,14 @@ for fn in fileNos:
     fstr = fstr.split('.')[0]
     np.savetxt(varname+'_'+mode+'_'+fstr+'.dat', np.c_[zp, vp], header=hStr)
 
-
-  if( len(vp.shape) == 3 ):  
-    vp  = vp[:,1,1]
   
-  if( vp2 is not None ):
+  if( vr2 is not None ):
     if( len(vp2.shape) == 3 ): vp2 = vp2[:,1,1]
   
   fig = addToPlot(fig, vp,  zp,' {}({}), {}, N = {}'\
     .format(mode,varname,fileList[fn].split('_')[-1], len(time)), plotStr, False )
   
-  if( vp2 is not None ):
+  if( vr2 is not None ):
     fig = addToPlot(fig, vp2, zp,' {}({}), {}, Resampled with N = {}'\
       .format(mode,varname,fileList[fn].split('_')[-1], Ns), plotStr, False )
     fig = addToPlot(fig, np.abs(vp-vp2), zp,' {}({}), {}, Resampling error = |(v_o-v_rs)/v_o|'\

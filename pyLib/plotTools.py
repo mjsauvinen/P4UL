@@ -10,6 +10,7 @@ from  matplotlib.ticker import FormatStrFormatter
 
 iCg = 0  # Global integer for color
 iMg = 0  # Global integer for markers
+iLg = 0  # Global integer for line styles
 gxI = -1     # Global x-index for csv animations
 gyLst = []   # Global y-value list for csv animations
 
@@ -129,6 +130,25 @@ def marker_stack():
   return mrk
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def linestyle_stack(il=None):
+  global iLg
+  # '-'  : solid line style,    '--': dashed line style
+  # '-.' : dash-dot line style, ':' : dotted line style
+
+  lstyleList = ['-','--']
+  nlinestyles = len(lstyleList)
+  
+  if( il is not None and np.isscalar(il) ):
+    iLg = min( int(il) , (nlinestyles-1) )
+  lstyle = lstyleList[iLg] 
+  iLg += 1
+  if( iLg > (nlinestyles-1) ):
+    iLg = 0
+    
+  return lstyle
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 def color_stack(ic=None):
   global iCg
   '''
@@ -142,14 +162,14 @@ def color_stack(ic=None):
   OrangeRed  '#FF4500',
   SlateBlue  '#6A5ACD'
   '''
-  colorList = ['b','r','g','c','#DAA520','k',\
+  colorList = ['b','r','#DAA520','k','c','g',\
     '#FF1493','#8A2BE2','#008B8B','m',\
       '#2E8B57','#FF4500','#6A5ACD','#A52A2A','#FF8C00']
   ncolors = len(colorList)
   
   if( ic is not None and np.isscalar(ic) ):
     iCg = min( int(ic) , ( ncolors-1 ) ) 
-  clr = colorList[-iCg]
+  clr = colorList[iCg]
   iCg += 1
   if( iCg > (ncolors-1) ): 
     iCg = 0
@@ -282,7 +302,7 @@ def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False ):
       plotf = ax.plot
     
     
-    lines = plotf( xp, yp,'-', linewidth=2.2 , label=labelXX, color=color_stack())
+    lines = plotf( xp, yp,linestyle_stack(), linewidth=2.2 , label=labelXX, color=color_stack())
     
     lmax = np.abs(np.max(dp))  # Local maximum
     if( lmax > amax ): amax = lmax
@@ -335,11 +355,11 @@ def plotCiXY( fig, pDict ):
   ax  = fig.add_axes( [0.15, 0.075 , 0.8 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
   
   if( revAxes ):
-    xp = Cx*v; yp = d
+    xp  = Cx*v; yp = d
     v_l *= Cx; v_u *= Cx
     xlb = 'V(d)'; ylb = 'd'
   else:
-    yp = Cy*v; xp = d
+    yp  = Cy*v; xp = d
     v_l *= Cy; v_u *= Cy
     ylb = 'V(d)'; xlb = 'd'
   
@@ -358,9 +378,8 @@ def plotCiXY( fig, pDict ):
     else:
       fillbf = ax.fill_between
   
-
-  lines = plotf( xp, yp, lw=2.2, label=labelStr, color=color_stack())
-  linef = fillbf( d , v_u, v_l, facecolor='gray', alpha=0.25)
+  lines = plotf( xp, yp, linestyle_stack(), lw=2.2, label=labelStr, color=color_stack())
+  linef = fillbf( d, v_u, v_l, facecolor='gray', alpha=0.25)
   ax.set_ybound(lower=ylims[0], upper=ylims[1] )
   ax.set_xbound(lower=xlims[0], upper=xlims[1] )
   ax.set_xlabel(xlb)
