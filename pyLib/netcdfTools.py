@@ -84,11 +84,11 @@ def read1DVariableFromDataset(varStr, ds, iLOff=0, iROff=0, cl=1):
 
 def readVariableFromDataset(varStr, ds, cl=1 ):
   if( varStr in ds.variables.keys() ):
-    
+
     vdims = asciiEncode(ds.variables[varStr].dimensions, ' Variable dimensions ')
-    
+
     if( len(vdims) == 4 ):
-      var = ds.variables[varStr][:,::cl,::cl,::cl] 
+      var = ds.variables[varStr][:,::cl,::cl,::cl]
     elif( len(vdims) == 3 and 'time' not in vdims ):
       var = ds.variables[varStr][::cl,::cl,::cl]
     elif( len(vdims) == 3 and 'time' in vdims ):
@@ -110,10 +110,10 @@ def readVariableFromDataset(varStr, ds, cl=1 ):
       if( 'time' in dname ): dDict[dname] = dData
       else:                  dDict[dname] = dData[::cl]
       dData = None
-      
+
   else:
     sys.exit(' Variable {} not in list {}.'.format(varStr, ds.variables.keys()))
-  
+
   return var, dDict
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
@@ -142,7 +142,7 @@ def read3DVariableFromDataset(varStr, ds, iTOff=0, iLOff=0, iROff=0, cl=1, meanO
       vo = var[iL:-iR, iL:-iR, iL:-iR]
     else:
       vo = var[iT:, iL:-iR, iL:-iR, iL:-iR]
-    
+
   var = None
 
   return vo, np.array(vo.shape)
@@ -164,7 +164,7 @@ def read3dDataFromNetCDF( fname, varStr, cl=1 ):
   print(' Extracting {} from dataset in {} ... '.format( varStr, fname ))
   var, dDict = readVariableFromDataset(varStr, ds, cl )
   print(' {}_dims = {}\n Done!'.format(varStr, var.shape ))
-  
+
   # Rename the keys in dDict to simplify the future postprocessing
   for dn in dDict.keys():
     idNan = np.isnan(dDict[dn]); dDict[dn][idNan] = 0.
@@ -172,14 +172,14 @@ def read3dDataFromNetCDF( fname, varStr, cl=1 ):
       dDict['time'] = dDict.pop( dn )
     elif( 'x' == dn[0] and 'x' != dn ):
       dDict['x'] = dDict.pop( dn )
-    elif( 'y' == dn[0] and 'y' != dn ):  
-      dDict['y'] = dDict.pop( dn ) 
+    elif( 'y' == dn[0] and 'y' != dn ):
+      dDict['y'] = dDict.pop( dn )
     elif( 'z' == dn[0] and 'z' != dn ):
       dDict['z'] = dDict.pop( dn )
     else: pass
 
-  # Append the variable into the dict. 
-  dDict['v'] = var 
+  # Append the variable into the dict.
+  dDict['v'] = var
 
   return dDict
 
@@ -312,10 +312,10 @@ def fillTopographyArray(Rtopo, Rdims, Rdpx, datatype):
   for x in xrange(Rdims[1]):
     for y in xrange(Rdims[0]):
       # Reverse the y-axis because of the top-left origo in raster
-      maxind = int(round(Rtopo[-y - 1][x] / Rdpx[2]))
-      topo[0:maxind, y, x] = 1
+      maxind = int(round(Rtopo[-y - 1][x] / Rdpx[2]))+1
+      if(maxind>1):
+        topo[0:maxind, y, x] = 1
   print(' ...done. \n')
   return topo
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-

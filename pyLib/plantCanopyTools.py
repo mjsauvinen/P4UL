@@ -56,6 +56,7 @@ def constructTreeFromProfile(dist,z,lad,r,dx):
   -------
     plant_3d (ndarray) : 3D array (2*r,2*r,len(z)-1) containing a 3D model of the plant
   '''
+
   n=int(2.*(r/dx))
   plant_3d = np.empty((n,n,len(z)))
   # Construct a profile for plant crown radius
