@@ -315,8 +315,9 @@ def fillTopographyArray(Rtopo, Rdims, Rdpx, datatype):
   for x in xrange(Rdims[1]):
     for y in xrange(Rdims[0]):
       # Reverse the y-axis because of the top-left origo in raster
-      maxind = int(round(Rtopo[-y - 1][x] / Rdpx[2]))
-      topo[0:maxind, y, x] = 1
+      maxind = int(round(Rtopo[-y - 1][x] / Rdpx[2]))+1
+      if(maxind>1):
+        topo[0:maxind, y, x] = 1
   print(' ...done. \n')
   return topo
 
@@ -365,3 +366,4 @@ def read3dDataFromNetCDF( fname, nameDict, cl=1 ):
   dataDict['time'] = time
 
   return dataDict
+=======
