@@ -167,9 +167,9 @@ if( scalars ):
       if( not decompOn ): sc = None
     if( decompOn ):
       sp = vectorPrimeComponent( sc, sm ); sc = None
-      spv = createNetcdfVariable( dso, sp, scalarName+'p', sc_dims[0], ' ', 'f4',('time','z','y','x',) , variable )
+      spv = createNetcdfVariable( dso, sp, sn+'p', sc_dims[0], ' ', 'f4',('time','z','y','x',) , variable )
       sp = None
-      smv = createNetcdfVariable( dso, sm, scalarName+'m', sc_dims[0], ' ', 'f4',('z','y','x',) , variable )
+      smv = createNetcdfVariable( dso, sm, sn+'m', sc_dims[0], ' ', 'f4',('z','y','x',) , variable )
       sm = None
 
 # - - - - Done , finalize the output - - - - - - - - - -
