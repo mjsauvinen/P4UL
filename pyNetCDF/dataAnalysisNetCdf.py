@@ -41,14 +41,40 @@ def resample(X, n=None):
   return Xr
 
 #==========================================================#
+
+def calc_entropy( V, z ):
+  import scipy.stats as st # contains st.entropy 
+  
+  vo = np.zeros( len(z) )
+  for k in xrange( len(z) ):
+    try:    Vk = V[:,k,1,1]
+    except: Vk = V[:,k,0,0]
+    Vk = Vk - np.mean(Vk)
+    vals, bins = np.histogram( Vk, bins=31, density=True ) # Do not store the bins
+    bins = None
+    vo[k] = st.entropy( vals )
+    
+  return vo
+
+#==========================================================#
+
+def calc_skew( V, axs=(0) ):
+  import scipy.stats as st # contains st.entropy
+  V -= np.mean( V, axis=(0) )
+  vo = st.skew( V, axis=axs )
+  
+  return vo
+
+#==========================================================#
 sepStr = ' # = # = # = # = # = # = # = # = '
 parser = argparse.ArgumentParser()
 parser.add_argument("fileKey", default=None,\
   help="Search string for collecting files.")
 parser.add_argument("-v", "--varname",  type=str, default='u',\
   help="Name of the variable in NETCDF file. Default='u' ")
-parser.add_argument("-m", "--mode", type=str, default='mean', choices=['mean', 'std', 'var'],\
-  help="Mode: mean, std, or var.")
+parser.add_argument("-m", "--mode", type=str, default='mean', \
+  choices=['mean', 'std', 'var','skew','entropy'],\
+  help="Mode: mean, std, var, or entropy.")
 parser.add_argument("-rs", "--resample", action="store_true", default=False,\
   help="Include resampling of the time series.")
 parser.add_argument("-Ns", "--Nsample", type=int, default=None,\
@@ -78,6 +104,7 @@ cl          = abs(args.coarse)
 varname     = args.varname
 writeAscii  = args.writeAscii
 
+
 #==========================================================#
 
 
@@ -87,14 +114,26 @@ fileNos, fileList = filesFromList( fileKey+'*' )
 fig = plt.figure(num=1, figsize=(12,10))
 
 for fn in fileNos:
-  if('MAG' in varname.upper()):
+  VNU = varname.upper()
+  if('MAG' in VNU or 'U1' in VNU or 'U2' in VNU or 'DIR' in VNU):
     dataDict = read3dDataFromNetCDF( fileList[fn] , 'u', cl )
     u = dataDict['v']
     dataDict = read3dDataFromNetCDF( fileList[fn] , 'v', cl )
     v = dataDict['v']
-    # vr := Umag
-    vr = np.sqrt( u**2 + v**2 ); u = None; v = None 
-  elif('TKE' in varname.upper()):
+    
+    if('MAG' in VNU ): # vr := Umag
+      vr = np.sqrt( u**2 + v**2 ); u = None; v = None
+    else:
+      um = np.mean( u, axis=(0) ); vm = np.mean( v, axis=(0) )
+      a  = np.arctan( vm/(um+1.e-5) ); um = None; vm = None 
+      if( 'U1' in VNU ):
+        vr = u * np.cos(a) + v * np.sin(a)
+      elif('U2' in VNU): # U2
+        vr =-u * np.sin(a) + v * np.cos(a)
+      else:# direction
+        vr = np.arctan( v/(u+1.e-5) ) * (180./np.pi)
+    
+  elif('TKE' in VNU):
     dataDict = read3dDataFromNetCDF( fileList[fn] , 'u', cl )
     u = dataDict['v']; up=u-np.mean(u, axis=0); u = None
     dataDict = read3dDataFromNetCDF( fileList[fn] , 'v', cl )
@@ -156,14 +195,25 @@ for fn in fileNos:
     vp  = np.var( vr, axis=axs ); zp = z
     if( vr2 is not None ): vp2 = np.var( vr2, axis=axs )
     plotStr  = ["var({}) vs z ".format(varname), varname ,"z"]
-    
+  
+  elif( mode == 'entropy' ):
+    vp = calc_entropy( vr, z ); zp = z
+    if( vr2 is not None ): vp2 = calc_entropy( vr2, z )
+    plotStr  = ["entropy({}) vs z ".format(varname), varname ,"z"]
+  
+  elif( mode == 'skew' ):
+    vp = calc_skew( vr, axs ); zp = z
+    if( vr2 is not None ): vp2 = calc_skew( vr2, axs )
+    plotStr  = ["skew({}) vs z ".format(varname), varname ,"z"]
+
+# ================================================================= #
 
   if( len(vp.shape) == 3 ):  
     try: vp  = vp[:,1,1]
     except: vp = vp[:,0,0]
 
   if( writeAscii ):
-    print(' (2) Writing data to ascii file: {}.dat'.format(varname))
+    print(' (2) Writing data to ascii file: {}_{}.dat'.format(varname,mode))
     print(' x.shape = {} vs y.shape = {}'.format(np.shape(zp), np.shape(vp)))
     hStr = ' {} '.format(varname)
     fstr = fileList[fn].split('_')[-1]
