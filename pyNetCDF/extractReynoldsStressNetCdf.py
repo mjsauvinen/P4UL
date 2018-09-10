@@ -3,7 +3,7 @@ from netcdfTools import *
 import sys
 import argparse
 import numpy as np
-from utilities import filesFromList
+from utilities import filesFromList, writeLog
 ''' 
 Description:
 
@@ -30,7 +30,8 @@ parser.add_argument("-nt", "--ntimeskip", type=int, default=0,\
   help="Skip <nt> number of time steps. Default = 0.")
 parser.add_argument("-c", "--coarse", type=int, default=1,\
   help="Coarsening level. Int > 1. Default = 1.")
-args = parser.parse_args() 
+args = parser.parse_args()
+writeLog( parser, args )
 #==========================================================#
 # Initial renaming operations and variable declarations
 
