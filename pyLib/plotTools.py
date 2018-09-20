@@ -347,6 +347,7 @@ def plotCiXY( fig, pDict ):
   fn      = dataFromDict('filename', pDict, allowNone=False)
   Cx      = dataFromDict('Cx',       pDict, allowNone=True)
   Cy      = dataFromDict('Cy',       pDict, allowNone=True)
+  linemode= dataFromDict('lm',       pDict, allowNone=False)
   logOn   = dataFromDict('logOn',    pDict, allowNone=True)
   revAxes = dataFromDict('revAxes',  pDict, allowNone=True)
   ylims   = dataFromDict('ylims',    pDict, allowNone=True)
@@ -404,7 +405,8 @@ def plotCiXY( fig, pDict ):
     else:
       fillbf = ax.fill_between
   
-  lines = plotf( xp, yp, linestyle_stack(), lw=2.2, label=labelStr, color=color_stack2())
+  lines = plotf( xp, yp, linestyle_stack(), lw=2.2, \
+    label=labelStr, color=color_stack(lm=linemode))
   linef = fillbf( d, v_u, v_l, facecolor='gray', alpha=0.25)
   ax.set_ybound(lower=ylims[0], upper=ylims[1] )
   ax.set_xbound(lower=xlims[0], upper=xlims[1] )

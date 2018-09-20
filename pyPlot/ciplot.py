@@ -36,6 +36,8 @@ parser.add_argument("-yl", "--ylims", type=float, nargs=2, default=[None,None],\
   help="Bounds (limits) for the y axes")
 parser.add_argument("-xl", "--xlims", type=float, nargs=2, default=[None,None],\
   help="Bounds (limits) for the x axes")
+parser.add_argument("-lm", "--linemode", type=int, default=1,\
+  help="Mode for displaying the color and type of lines. See the source code. Default=1")
 parser.add_argument("-s", "--save", type=str, default=None, \
   help="Name of the saved figure. Default=None")
 args = parser.parse_args()
@@ -44,6 +46,7 @@ args = parser.parse_args()
 strKey  = args.strKey
 factorX = args.factorX
 factorY = args.factorY
+linemode= args.linemode
 revAxes = args.revAxes
 xlims   = args.xlims
 ylims   = args.ylims
@@ -66,6 +69,7 @@ while 1:
     pdict['filename'] = fileList[fn]
     pdict['Cx'] = factorX
     pdict['Cy'] = factorY
+    pdict['lm'] = linemode
     pdict['logOn']   = logOn
     pdict['revAxes'] = revAxes
     pdict['xlims']   = xlims
