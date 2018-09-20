@@ -118,9 +118,11 @@ for k1 in idk:
     k2 = k2[0]    # Take always the first term
   
   
-  #nx2 = int(0.09 * np.shape(v1)[-1]) # Take away the last 9%
-  v1x  = v1[0,k1,:,nx[0]:-nx[1]]
-  v2x =  v2[0,k2,:,nx[0]:-nx[1]]
+  if( len( dims1 ) == 4 ): v1x  = v1[0,k1,:,nx[0]:-nx[1]]
+  else:                    v1x  = v1[  k1,:,nx[0]:-nx[1]]
+    
+  if( len( dims2 ) == 4 ): v2x =  v2[0,k2,:,nx[0]:-nx[1]]
+  else:                    v2x =  v2[  k2,:,nx[0]:-nx[1]]
   
   idx  = ( np.abs(v1x) > 1E-4 )
   vm1  = np.mean( v1x[idx] )
