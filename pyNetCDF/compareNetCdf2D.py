@@ -40,12 +40,12 @@ parser.add_argument("-v0", "--vref", type=float, nargs=2, default=[0.,0.],\
   help="Reference values 'v0' in v+ = (v - v0)/v* for -f1 and -f2. Default = [0,0]")
 parser.add_argument("-vs", "--vstar", type=float, nargs=2, default=[1.,1.],\
   help="Characteristic value 'v*' in v+ = (v - v0)/v* for -f1 and -f2. Default = [1,1]")
-parser.add_argument("-m", "--mode", type=str, default='d', choices=['d', 'r', 's'],\
-  help="Diff mode: 'd': delta, 'r': relative, 's': scaled.")
+parser.add_argument("-m", "--mode", type=str, default='d', choices=['d', 'r', 's','n'],\
+  help="Diff mode: 'd': delta, 'r': relative, 's': scaled, 'n': root normalized mean square diff.")
 parser.add_argument("-w", "--writeRMS", help="Write the root-mean-square of the differences to a file.",\
   action="store_true", default=False)
-parser.add_argument("-nx", "--nexcl", type=int, default=0,\
-  help="Exclude the first, [nx] number of nodes from analysis in x-direction.")
+parser.add_argument("-nx", "--nexcl", type=int, nargs=2, default=[0,1],\
+  help="Exclude the [first,last] number of nodes from analysis in x-direction.")
 parser.add_argument("-p", "--printOn", help="Print the numpy array data.",\
   action="store_true", default=False)
 parser.add_argument("-s", "--save", action="store_true", default=False,\
@@ -73,8 +73,8 @@ gridOn   = args.grid
 
 # Shorter name
 vn = varname.split('_')[0]
-dirOn   = 'Ud' in varname
-horizOn = 'Uh' in varname
+dirOn   = 'UD' in varname.upper()
+horizOn = 'UH' in varname.upper()
 
 
 if( (not horizOn) and (not dirOn) ):
@@ -99,9 +99,7 @@ if( all( dims1 == dims2 ) ):
 else:
   print(' Caution! Dataset dimensions do not match. dims_1 = {} vs. dims_1 = {}'.format(dims1, dims2))
 
-
 idk = selectFromList( z1 )
-
 
 if( writeRMS ):
   fout = file('RMS_d{}.dat'.format(vn), 'wb')
@@ -120,29 +118,42 @@ for k1 in idk:
     k2 = k2[0]    # Take always the first term
   
   
-  nx2 = 50
-  v1x  = v1[0,k1,:,nx:-nx2]
-  idx  = ( np.abs(v1x) > 1E-3 )
+  #nx2 = int(0.09 * np.shape(v1)[-1]) # Take away the last 9%
+  v1x  = v1[0,k1,:,nx[0]:-nx[1]]
+  v2x =  v2[0,k2,:,nx[0]:-nx[1]]
+  
+  idx  = ( np.abs(v1x) > 1E-4 )
   vm1  = np.mean( v1x[idx] )
-  f2 = 1.
+  
 
   if( mode == 'r' ):
-    dv = (f2 * v2[0,k2,:,nx:-nx2] - v1[0,k1,:,nx:-nx2])/np.abs( v1[0,k1,:,nx:-nx2] + 1E-5 )
+    dv = (v2x - v1x)/np.abs( v1x + 1E-5 )
   elif( mode == 's' ):
-    dv = (f2 * v2[0,k2,:,nx:-nx2] - v1[0,k1,:,nx:-nx2])/( vm1 + 1E-5 )
+    dv = (v2x - v1x)/( vm1 + 1E-5 )
+    #print('max={}, std={}'.format(np.max(dv), np.std(dv)))
+    
+  elif( mode == 'd'):
+    dv = (v2x - v1x)
+    
   else:
-    dv = (f2 * v2[0,k2,:,nx:-nx2] - v1[0,k1,:,nx:-nx2])
+    denom = v2x*v1x 
+    sgn = np.sign( denom )
+    d2  = ( sgn*(np.abs(denom) + 1E-4) ); denom = None; sgn = None 
+    dv  = (v2x - v1x)
 
-
-  N = float( np.prod( dv.shape ) )
-  SkewDiff = (1./N)*np.sum(dv**3) * ( 1./(N-1.)*np.sum(dv**2) )**(-1.5) 
-  RMSDiff  = np.sqrt(np.sum(dv**2)/N)
+  idnn = ~(dv == np.nan )
+  N = len( np.ravel( dv[idnn] ) );# print(' N = {} '.format(N))
+  if( mode == 'n'):
+    RMSDiff  = np.sqrt( np.abs(np.sum(dv**2)/N * np.sum(d2**(-1))/N) )
+    SkewDiff = 0.
+  else:
+    RMSDiff  = np.sqrt(np.sum(dv**2)/N)
+    SkewDiff = (1./N)*np.sum(dv**3) * ( 1./(N-1.)*np.sum(dv**2) )**(-1.5) 
   print(' RMS (d{}) = {}, Sk(d{}) = {} '.format( vn , RMSDiff, vn, SkewDiff ))
   
   if( writeRMS ):
     fout.write('{:.2f}\t{:.2e}\n'.format( z1[k1], RMSDiff ))
 
-  
 
   if( printOn ):
     dimsf  = np.array( np.shape( dv ) )
@@ -152,11 +163,21 @@ for k1 in idk:
     labelStr = '({0}_2 - {0}_1)(z={1} m)'.format(vn, z1[k1])
     fig = addImagePlot( fig, dv[::-1,:], labelStr, gridOn, limsOn )
     
+    fig2 = plt.figure(num=2, figsize=figDims)
+    lbl = '(Ref {0})(z={1} m)'.format(vn, z1[k1])
+    fig2 = addImagePlot( fig2, v1x[::-1,:], lbl, gridOn, limsOn )
+    
+    
+    fig3 = plt.figure(num=3)
+    plt.hist( np.ravel(dv[idnn]), bins=25, \
+      normed=True, log=True, histtype=u'bar', label=labelStr )
     
     if( saveOn ):
       figname = 'RMSDiff_{}_z{}.jpg'.format(vn, int(z1[k1]))
       print(' Saving = {}'.format(figname))
       fig.savefig( figname, format='jpg', dpi=150)
+      fig2.savefig( figname.replace("RMSDiff","Ref"), format='jpg', dpi=150)
+      fig3.savefig( figname.replace("RMSDiff","Hist"), format='jpg', dpi=150)
     plt.show()
 
 if( writeRMS ): fout.close()

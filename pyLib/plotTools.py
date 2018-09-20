@@ -8,6 +8,15 @@ from  matplotlib.ticker import FormatStrFormatter
 
 # 08.04.2016:  Mona added an option for colorbar bounds to addImagePlot
 
+plt.rc('xtick', labelsize=20); #plt.rc('ytick.major', size=10)
+plt.rc('ytick', labelsize=20); #plt.rc('ytick.minor', size=6)
+plt.rcParams["font.family"] = "serif"
+#plt.rcParams["font.serif"] = "Utopia"
+#plt.rcParams["font.family"] = "monospace"
+#plt.rcParams["font.monospace"] = "Courier"
+#plt.rcParams["legend.labelspacing"] = 1.
+
+
 iCg = 0  # Global integer for color
 iMg = 0  # Global integer for markers
 iLg = 0  # Global integer for line styles
@@ -131,12 +140,16 @@ def marker_stack():
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def linestyle_stack(il=None):
+def linestyle_stack(lm=1, il=None):
   global iLg
   # '-'  : solid line style,    '--': dashed line style
   # '-.' : dash-dot line style, ':' : dotted line style
+  
+  if( lm == 1 ):
+    lstyleList = ['-','--','-.',':']
+  else:
+    lstyleList = ['-','--']
 
-  lstyleList = ['-','--']
   nlinestyles = len(lstyleList)
   
   if( il is not None and np.isscalar(il) ):
@@ -149,22 +162,31 @@ def linestyle_stack(il=None):
   return lstyle
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-def color_stack(ic=None):
+def color_stack(lm=1, ic=None):
   global iCg
   '''
-  Brown      '#A52A2A',
-  DeepPink   '#FF1493',
-  BlueViolet '#8A2BE2',
-  DarkCyan   '#008B8B',
-  DarkOrange '#FF8C00',
-  GoldenRod  '#DAA520',
-  SeaGreen   '#2E8B57',
-  OrangeRed  '#FF4500',
-  SlateBlue  '#6A5ACD'
+  Brown       '#A52A2A',
+  DeepPink    '#FF1493',
+  BlueViolet  '#8A2BE2',
+  DarkCyan    '#008B8B',
+  DarkOrange  '#FF8C00',
+  DarkMagenta '#8B008B',
+  GoldenRod   '#DAA520',
+  SeaGreen    '#2E8B57',
+  OrangeRed   '#FF4500',
+  SlateBlue   '#6A5ACD'
   '''
-  colorList = ['b','r','#DAA520','k','c','g',\
-    '#FF1493','#8A2BE2','#008B8B','m',\
-      '#2E8B57','#FF4500','#6A5ACD','#A52A2A','#FF8C00']
+  if( lm == 1 ):
+    colorList = ['b','r','c','k','#FF8C00','g','#8B008B',\
+      '#FF1493','#8A2BE2','#008B8B','m',\
+        '#2E8B57','#FF4500','#6A5ACD',\
+          '#A52A2A','#DAA520']
+  else:
+    colorList = ['b','b','r','r','c','c','k','k','#FF8C00','#FF8C00','g','g','#8B008B','#8B008B',\
+      '#FF1493','#FF1493','#8A2BE2','#8A2BE2','#008B8B','#008B8B','m','m',\
+        '#2E8B57','#2E8B57','#FF4500','#FF4500','#6A5ACD','#6A5ACD',\
+          '#A52A2A','#A52A2A','#DAA520','#DAA520']
+  
   ncolors = len(colorList)
   
   if( ic is not None and np.isscalar(ic) ):
@@ -269,12 +291,14 @@ def addToPlot(fig, x,y,labelStr, plotStr=["","",""], logOn=False):
   
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False ):
+def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False, linemode=1 ):
   try:    x = np.loadtxt(fileStr)
   except: x = np.loadtxt(fileStr,delimiter=',')
   ax  = fig.add_axes( [0.15, 0.075 , 0.8 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
 
   labelStr = fileStr.rsplit(".", 1)[0]
+  labelStr = labelStr.split("_", 1)[-1]
+  labelStr = labelStr.split("/", 1)[0]
 
   # Print each column separately
   amax = 0.
@@ -302,7 +326,9 @@ def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False ):
       plotf = ax.plot
     
     
-    lines = plotf( xp, yp,linestyle_stack(), linewidth=2.2 , label=labelXX, color=color_stack())
+    lines = plotf( xp, yp, \
+      linestyle_stack(lm=linemode), linewidth=2.5 , \
+        label=labelXX, color=color_stack(lm=linemode))
     
     lmax = np.abs(np.max(dp))  # Local maximum
     if( lmax > amax ): amax = lmax
@@ -378,7 +404,7 @@ def plotCiXY( fig, pDict ):
     else:
       fillbf = ax.fill_between
   
-  lines = plotf( xp, yp, linestyle_stack(), lw=2.2, label=labelStr, color=color_stack())
+  lines = plotf( xp, yp, linestyle_stack(), lw=2.2, label=labelStr, color=color_stack2())
   linef = fillbf( d, v_u, v_l, facecolor='gray', alpha=0.25)
   ax.set_ybound(lower=ylims[0], upper=ylims[1] )
   ax.set_xbound(lower=xlims[0], upper=xlims[1] )

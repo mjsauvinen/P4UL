@@ -145,7 +145,10 @@ if('hist' in mode):
       sys.exit(' Error: wrong entry for index values ')
       
   for i in idx:
-    WD1.MorletHisto(i, mode=histmode, nbins=32)
+    pk, bins, patches = WD1.MorletHistogram(i, mode=histmode, nbins=32, plotHistogram=True )
+    pk=map(lambda x: x*(bins[1]-bins[0]), pk)
+    
+    
 
 else:
   wDict  = dict()

@@ -30,6 +30,8 @@ parser.add_argument("-fx", "--factorX", type=float, default=1.0,\
   help="Multiplication factor for x-values: fx*x")
 parser.add_argument("-fy", "--factorY", type=float, default=1.0,\
   help="Multiplication factor for y-values: fy*y")
+parser.add_argument("-lm", "--linemode", type=int, default=1,\
+  help="Mode for displaying the color and type of lines. See the source code. Default=1")
 parser.add_argument("-s", "--save", type=str, default=None, \
   help="Name of the saved figure. Default=None")
 args = parser.parse_args()
@@ -38,6 +40,7 @@ args = parser.parse_args()
 strKey  = args.strKey
 factorX = args.factorX
 factorY = args.factorY
+linemode= args.linemode
 revAxes = args.revAxes
 logOn   = args.log
 labelsOn= args.labels
@@ -45,8 +48,10 @@ saveFig = args.save
 
 strKey = inputIfNone( strKey , " Enter search string: " )
 
-plt.rc('xtick', labelsize=24); #plt.rc('ytick.major', size=10)
-plt.rc('ytick', labelsize=24); #plt.rc('ytick.minor', size=6)
+styleStr = 'seaborn-white' # 'ggplot'  # 'seaborn-paper'
+#plt.style.use(styleStr)
+
+
 
 while 1:
 
@@ -54,7 +59,7 @@ while 1:
 
   pfig = plt.figure(num=1, figsize=(12.,9.5));
   for fn in fileNos:
-    pfig = plotXX( pfig, fileList[fn], logOn, factorX, factorY, revAxes )
+    pfig = plotXX( pfig, fileList[fn], logOn, factorX, factorY, revAxes, linemode )
 
   if( labelsOn ):
     pfig = userLabels( pfig )

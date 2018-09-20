@@ -216,7 +216,7 @@ class wtDataset:
     return output 
 
 #==========================================================#
-  def MorletHisto(self,ix, mode="frequency",nbins=30):
+  def MorletHistogram(self,ix, mode="frequency",nbins=30, plotHistogram=False ):
     """
     Plots the histogram of the input signal at a specific frequency or scale (via specified index, ix), once mode (i.e., the second argument) is equal to either \"frequency\" or \"scale\"
     Arguments:
@@ -226,19 +226,29 @@ class wtDataset:
     NB It always calculated with respect to the REAL part of the Morlet transform
     """
     assert (mode=="frequency" or mode=="scale"), "Histogram specification can be only in a string format: \"frequency\" or \"scale\" "
- 
-    fig=plt.figure()
-    tStr = "Histogram of fluctuations at {} = {}  ( corresponding to {} = {} ) "
-    if(mode=="frequency"):
-      titleStr = tStr.format(mode,self.freq[ix], "scale", self.omega0/(2.*np.pi*self.freq[ix])) 
-      plt.title(titleStr)
-      CWT=self.SigMorletSpectrogram(ttype="real",plotOn=False)
-    if(mode=="scale"):
-      titleStr = tStr.format(mode,self.scales[ix], "freq", self.omega0/(2.*np.pi*self.scales[ix]))
-      plt.title(titleStr)
-      CWT=self.SigMorletScalogram(ttype="real",plotOn=False)
+    
       
-    plt.hist(CWT[ ix ,:],nbins)
+    if(mode=="frequency"):
+      CWT=self.SigMorletSpectrogram(ttype="real", plotOn=False)
+      pk, bins, patches = plt.hist(CWT[ (list(self.scales)).index(par),:], nbins, density=True)
+
+    if(mode=="scale"):
+      CWT=self.SigMorletScalogram(ttype="real", plotOn=False)
+      pk, bins, patches = plt.hist(CWT[ (list(self.freq)).index(par),:], nbins, density=True)
+    
+    if( plotHistogram ):
+      fig=plt.figure()
+      tStr = "Histogram of fluctuations at {} = {}  ( corresponding to {} = {} ) "
+      if( mode == "frequency"):
+        titleStr = tStr.format(mode,self.freq[ix], "scale", self.omega0/(2.*np.pi*self.freq[ix]))
+      if( mode == "scale" ):
+        titleStr = tStr.format(mode,self.scales[ix], "freq", self.omega0/(2.*np.pi*self.scales[ix]))
+      
+      plt.title(titleStr)
+      plt.hist(CWT[ ix ,:],nbins)
+  
+    return pk, bins, patches 
+
       
 #==========================================================#
 # Module Functions
