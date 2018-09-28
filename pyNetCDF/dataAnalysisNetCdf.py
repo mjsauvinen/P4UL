@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from plotTools import addToPlot
 from spectraTools import spectraAnalysis
 from netcdfTools import read3dDataFromNetCDF
-from analysisTools import sensibleIds, groundOffset
+from analysisTools import sensibleIds, groundOffset, calc_ts_entropy_profile
 from utilities import filesFromList
 ''' 
 Description: A script to perform quadrant analysis on velocity data stored in a NETCDF file.
@@ -42,21 +42,6 @@ def resample(X, n=None):
 
 #==========================================================#
 
-def calc_entropy( V, z ):
-  import scipy.stats as st # contains st.entropy 
-  
-  vo = np.zeros( len(z) )
-  for k in xrange( len(z) ):
-    try:    Vk = V[:,k,1,1]
-    except: Vk = V[:,k,0,0]
-    Vk = Vk - np.mean(Vk)
-    vals, bins = np.histogram( Vk, bins=31, density=True ) # Do not store the bins
-    bins = None
-    vo[k] = st.entropy( vals )
-    
-  return vo
-
-#==========================================================#
 
 def calc_skew( V, axs=(0) ):
   import scipy.stats as st # contains st.entropy
@@ -197,8 +182,8 @@ for fn in fileNos:
     plotStr  = ["var({}) vs z ".format(varname), varname ,"z"]
   
   elif( mode == 'entropy' ):
-    vp = calc_entropy( vr, z ); zp = z
-    if( vr2 is not None ): vp2 = calc_entropy( vr2, z )
+    vp = calc_ts_entropy_profile( vr, z ); zp = z
+    if( vr2 is not None ): vp2 = calc_ts_entropy_profile( vr2, z )
     plotStr  = ["entropy({}) vs z ".format(varname), varname ,"z"]
   
   elif( mode == 'skew' ):

@@ -95,7 +95,7 @@ if( not dirOn ):
 
 
 if( all( dims1 == dims2 ) ):
-  print(' Dimensions of the two datasets match!: dims = {}'.format(dims1))
+  print(' Dimensions of the two datasets match!: dims = {}'.format(dims1))  
 else:
   print(' Caution! Dataset dimensions do not match. dims_1 = {} vs. dims_1 = {}'.format(dims1, dims2))
 
@@ -124,9 +124,15 @@ for k1 in idk:
   if( len( dims2 ) == 4 ): v2x =  v2[0,k2,:,nx[0]:-nx[1]]
   else:                    v2x =  v2[  k2,:,nx[0]:-nx[1]]
   
-  idx  = ( np.abs(v1x) > 1E-4 )
-  vm1  = np.mean( v1x[idx] )
-  
+  if( not np.ma.isMaskedArray(v1x) and not np.ma.isMaskedArray(v2x) ):
+    idm = (v1x == v2x)
+    v1x = np.ma.masked_array( v1x, mask=idm ) 
+    v2x = np.ma.masked_array( v2x, mask=idm )  
+    idm = None 
+    
+  #idx  = ( np.abs(v1x) > 1E-5 )
+  #vm1  = np.mean( v1x[idx] )
+  vm1 = np.mean( v1x )
 
   if( mode == 'r' ):
     dv = (v2x - v1x)/np.abs( v1x + 1E-5 )

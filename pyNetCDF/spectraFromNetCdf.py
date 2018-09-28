@@ -101,17 +101,17 @@ for fn in fileNos:
   if( koff > 0 ):
     print(' {}: koffset = {}'.format(fileList[fn], koff))
   
-  try:
-    for i in iList:
-      for j in jList:
-        for k in kList[::stride]:
-          vt = v[:,k+koff,j,i]
-          vName = varname+'(z={} m), {}'.format(z[k], fileList[fn].split('_NETCDF_')[1])
-          print(' Processing {} ...'.format(vName))
-          fig = spectraAnalysis(fig, vt, time, vName, Nbins, mode, normalize)
-  except:
-    print(' Failed to execute spectraAnalysis for {} ... '.format(fileList[fn]))
-    pass 
+  
+  for i in iList:
+    for j in jList:
+      for k in kList[::stride]:
+        vt = v[:,k+koff,j,i]
+        vName = varname+'(z={} m), {}'.format(z[k], fileList[fn].split('_NETCDF_')[-1])
+        print(' Processing {} ...'.format(vName))
+        fig = spectraAnalysis(fig, vt, time, vName, Nbins, mode, normalize)
+        
+  #print(' Failed to execute spectraAnalysis for {} ... '.format(fileList[fn]))
+  #pass 
 
 plt.legend(loc=0)
 plt.show()

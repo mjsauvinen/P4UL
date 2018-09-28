@@ -1,5 +1,9 @@
 import numpy as np
 import sys
+try: 
+  import scipy.stats as st # contains st.entropy
+except:
+  pass
 ''' 
 Description:
 
@@ -152,6 +156,37 @@ def quadrantAnalysis( v1, v2, qDict ):
   return Qi, X, Y, rDict
 
 #==========================================================#
+
+def calc_ts_entropy_profile( V, z, alpha=2., nbins=24 ):
+  
+  vo = np.zeros( len(z) )
+  for k in xrange( len(z) ):
+    try:    Vk = V[:,k,1,1]
+    except: Vk = V[:,k,0,0]
+    Vk = Vk - np.mean(Vk)
+    pk, bins = np.histogram( Vk, bins=nbins, density=True ) # Do not store the bins
+    bins = None
+    
+    vo[k] = calc_entropy( pk, alpha )
+    
+  return vo
+
+#==========================================================#
+
+def calc_entropy( pk , alpha=2. ):
+  '''
+  pk: probability density distribution (i.e. histogram from time series or wavelet scalo- or spectrogram.
+  '''
+  if( alpha == 1. ):
+    s = st.entropy( pk )
+  else:
+    s =(np.log( sum(np.power(np.array(pk),alpha)) ))/(1.-alpha)
+    
+  return s
+
+#==========================================================#
+
+
 
 def discreteWaveletAnalysis( vx , wDict ):
   from utilities import dataFromDict

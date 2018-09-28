@@ -15,7 +15,7 @@ Author: Mikko Auvinen
 '''
 
 #==========================================================#
-parser = argparse.ArgumentParser(prog='extractReynoldsStressesNetCdf.py')
+parser = argparse.ArgumentParser(prog='extractReynoldsStressNetCdf.py')
 parser.add_argument("fileKey", default=None,\
   help="Search string for collecting files.")
 parser.add_argument("-o", "--outstr",type=str, default="RS",\
@@ -64,10 +64,18 @@ for fn in fileNos:
   vp = dataDict['v']
   dataDict = read3dDataFromNetCDF( fileList[fn] , vnames[2], cl )
   wp = dataDict['v']
+
   
   if( notPrimes ):
-    up -= np.mean( up, axis=(0) )
-    vp -= np.mean( vp, axis=(0) )
+    # Perform coord. rotation for horizontal components
+    um = np.mean( up, axis=(0) ); vm = np.mean( vp , axis=(0) )
+    a  = np.arctan( vm/(um+1.e-5) )
+    u1  = up * np.cos(a) + vp * np.sin(a)  # Streamwise comp.
+    v1  =-up * np.sin(a) + vp * np.cos(a)  # Spanwise comp.
+    up = u1; vp = v1
+    
+    up -= um
+    vp -= vm
     wp -= np.mean( wp, axis=(0) )
   
   # Coords and time:
@@ -91,6 +99,19 @@ for fn in fileNos:
 
   zv = createNetcdfVariable( dso, z   , 'z'   , len(z)   , 'm', 'f4', ('z',)   , parameter )
   z = None
+
+  if( notPrimes ):
+    # Streamwise velocity
+    u1o = createNetcdfVariable(\
+      dso, up, 'u1', time_dim, 'm s^(-1)', 'f4',('time','z','y','x',) , variable )
+    u2o = createNetcdfVariable(\
+      dso, vp, 'u2', time_dim, 'm s^(-1)', 'f4',('time','z','y','x',) , variable )
+    
+    u1mo = createNetcdfVariable(\
+      dso, um, 'um1', time_dim, 'm s^(-1)', 'f4',('z','y','x',) , variable )
+    u2mo = createNetcdfVariable(\
+      dso, vm, 'um2', time_dim, 'm s^(-1)', 'f4',('z','y','x',) , variable )
+
 
   # First resolved TKE:
   tns = 0.5*( up**2 + vp**2 + wp**2 )
