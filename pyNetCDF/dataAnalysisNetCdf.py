@@ -119,20 +119,26 @@ for fn in fileNos:
         vr = np.arctan( v/(u+1.e-5) ) * (180./np.pi)
     
   elif('TKE' in VNU):
+    try:
+      dataDict = read3dDataFromNetCDF( fileList[fn] , 'e', cl )
+      e_sgs = dataDict['v']
+    except:
+      print(' No e_sgs -> Result is RESOLVED TKE! ')
+      e_sgs = None
     dataDict = read3dDataFromNetCDF( fileList[fn] , 'u', cl )
     u = dataDict['v']; up=u-np.mean(u, axis=0); u = None
     dataDict = read3dDataFromNetCDF( fileList[fn] , 'v', cl )
     v = dataDict['v']; vp=v-np.mean(v, axis=0); v = None
     dataDict = read3dDataFromNetCDF( fileList[fn] , 'w', cl )
     w = dataDict['v']; wp=w-np.mean(w, axis=0); w = None 
-    dataDict = read3dDataFromNetCDF( fileList[fn] , 'e', cl )
-    e_sgs = dataDict['v']
     
     e_res = 0.5*(np.mean(up**2,axis=0)+np.mean(vp**2,axis=0)+np.mean(wp**2,axis=0))
     up = None; vp = None; wp = None 
     
     # vr := TKE
-    vr = e_res + e_sgs
+    vr = e_res
+    if( e_sgs is not None ): vr += e_sgs
+    
   else:
     dataDict = read3dDataFromNetCDF( fileList[fn] , varname, cl )
     vr = dataDict['v']
