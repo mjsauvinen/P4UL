@@ -296,9 +296,16 @@ def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False, linemode=1 ):
   except: x = np.loadtxt(fileStr,delimiter=',')
   ax  = fig.add_axes( [0.15, 0.075 , 0.8 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
 
-  labelStr = fileStr.rsplit(".", 1)[0]
-  labelStr = labelStr.split("_", 1)[-1]
-  labelStr = labelStr.split("/", 1)[0]
+  lStr = fileStr.rsplit(".", 1)[0]  # Remove the ".dat" 
+  rStr = lStr.rsplit("_")[-1]
+  tStr = lStr.split("/", 2)
+  if( tStr[0] is "." ):
+    lStr = tStr[1]
+  else:
+    lStr = tStr[0]
+  
+  labelStr = lStr+"_"+rStr
+  
 
   # Print each column separately
   amax = 0.
@@ -354,6 +361,7 @@ def plotCiXY( fig, pDict ):
   xlims   = dataFromDict('xlims',    pDict, allowNone=True)
   
   labelStr = fn.rsplit(".", 1)[0]
+  labelStr = labelStr.split('/')[0]
   
   if( Cx is None ): Cx = 1.
   if( Cy is None ): Cy = 1.
@@ -405,7 +413,7 @@ def plotCiXY( fig, pDict ):
     else:
       fillbf = ax.fill_between
   
-  lines = plotf( xp, yp, linestyle_stack(), lw=2.2, \
+  lines = plotf( xp, yp, linestyle_stack(lm=linemode), lw=2.2, \
     label=labelStr, color=color_stack(lm=linemode))
   linef = fillbf( d, v_u, v_l, facecolor='gray', alpha=0.25)
   ax.set_ybound(lower=ylims[0], upper=ylims[1] )

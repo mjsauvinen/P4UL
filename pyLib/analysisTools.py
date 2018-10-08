@@ -157,7 +157,7 @@ def quadrantAnalysis( v1, v2, qDict ):
 
 #==========================================================#
 
-def calc_ts_entropy_profile( V, z, alpha=2., nbins=24 ):
+def calc_ts_entropy_profile( V, z, alpha=2., nbins=16 ):
   
   vo = np.zeros( len(z) )
   for k in xrange( len(z) ):
