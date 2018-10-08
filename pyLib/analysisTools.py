@@ -173,7 +173,7 @@ def calc_ts_entropy_profile( V, z, alpha=2., nbins=24 ):
 
 #==========================================================#
 
-def calc_entropy( pk , alpha=2. ):
+def calc_entropy( pk , alpha=1. ):
   '''
   pk: probability density distribution (i.e. histogram from time series or wavelet scalo- or spectrogram.
   '''
@@ -186,7 +186,17 @@ def calc_entropy( pk , alpha=2. ):
 
 #==========================================================#
 
+def calc_divergence( pk, rk, alpha=1. ):
+  
+  if(alpha==1.):
+    div=sum(np.array(pk)*np.log(np.array(pk)/np.array(rk)))
+  else:
+    powratio=np.power(np.array(pk),alpha)/np.power(np.array(rk),alpha-1.)
+    div=np.log((sum(powratio)))/(alpha-1.)
+  
+  return div
 
+#==========================================================#
 
 def discreteWaveletAnalysis( vx , wDict ):
   from utilities import dataFromDict
