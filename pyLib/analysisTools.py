@@ -188,8 +188,10 @@ def calc_entropy( pk , alpha=1. ):
 
 def calc_divergence( pk, rk, alpha=1. ):
   
+  pk += 1e-9; rk += 1e-9  # Add something small in case zero 
+  
   if(alpha==1.):
-    div=sum(np.array(pk)*np.log(np.array(pk)/np.array(rk)))
+    div=sum(np.array(pk)*np.log(np.array(pk)/(np.array(rk)) ))
   else:
     powratio=np.power(np.array(pk),alpha)/np.power(np.array(rk),alpha-1.)
     div=np.log((sum(powratio)))/(alpha-1.)

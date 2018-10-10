@@ -32,6 +32,7 @@ parser.add_argument("-c", "--coarse", type=int, default=1,\
   help="Coarsening level. Int > 1. Default = 1.")
 args = parser.parse_args()
 writeLog( parser, args )
+
 #==========================================================#
 # Initial renaming operations and variable declarations
 
