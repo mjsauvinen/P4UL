@@ -591,18 +591,18 @@ def totalArea( Rdims, dx ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def frontalAreas( Ri ):
+def frontalAreas( Ri, hclip=1. ):
   # Calculate frontal areas of the domain
   Ae = 0.
   for i in xrange( Ri.shape[0] ):
     ce = (Ri[i,1:] > Ri[i,:-1]).astype(float)
-    he = (Ri[i,1:]-Ri[i,:-1]); he[(he<4.)] = 0. # Height, clip out non-buildings
+    he = (Ri[i,1:]-Ri[i,:-1]); he[(he<hclip)] = 0. # Height, clip out non-buildings
     Ae += np.sum( ce * he )
 
   An = 0.
   for j in xrange( Ri.shape[1] ):
     cn = (Ri[1:,j] > Ri[:-1,j]).astype(float)
-    hn = (Ri[1:,j]-Ri[:-1,j]); hn[(hn<4.)] = 0.
+    hn = (Ri[1:,j]-Ri[:-1,j]); hn[(hn<hclip)] = 0.
     An += np.sum( cn* hn )
 
   return Ae, An

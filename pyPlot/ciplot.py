@@ -63,7 +63,8 @@ while 1:
 
   fileNos, fileList = filesFromList( strKey+"*" )
 
-  pfig = plt.figure(num=1, figsize=(12.,9.5));
+  pfig = plt.figure(num=1, figsize=(10.,10.5));
+  #pfig = plt.figure(num=1, figsize=(6.,8.))
   for fn in fileNos:
     pdict = dict()
     pdict['filename'] = fileList[fn]

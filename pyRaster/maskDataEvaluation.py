@@ -52,16 +52,17 @@ def histogram( Rm, Ri, mlist, threshold = 0. ):
     Av = np.zeros( labelCount )
     for l in xrange(1,labelCount+1):
       idx = (LR==l)
-      v  = int( np.floor(np.max( Ri[idx] )) )
-      if( v > threshold ):
-        w  = np.count_nonzero(idx) #; print('w={}'.format(w))
-        Np += w
+      for v in Ri[idx]:
+      #v  = int( np.floor(np.percentile( Ri[idx], 96 )) )
+        nw = 1 # = np.count_nonzero(idx) #; print('w={}'.format(w))
+        Np += nw
         Av[l-1] = float(v)
-        zbins[j,v] += w
+        zbins[j,int(v)] += nw
     zbins[j,:] /= Np
     
     idx = ( Av > threshold )
-    print(' Mask {}: mean = {}, var = {}, std = {}'.format(im, np.mean(Av[idx]), np.var(Av[idx]), np.std(Av[idx])))
+    print(' Mask {}: mean = {}, var = {}, std = {}'\
+      .format(im, np.mean(Av[idx]), np.var(Av[idx]), np.std(Av[idx])))
     j += 1
 
   return zbins
@@ -185,10 +186,11 @@ elif( filemask ):
 else:
   sys.exit(' Nothing to do. Exiting ...')
 
-zbins = histogram( Rxm, Rt, mskList )
-np.savetxt('mask_height_histogram.dat', \
-  np.c_[np.arange(1,len(zbins[0,:])+1), 100.*np.transpose(zbins) ])
-#print(' sum = {} '.format( np.sum(zbins[0,:])))
+if( filedata ):
+  zbins = histogram( Rxm, Rt, mskList )
+  np.savetxt('mask_height_histogram.dat', \
+    np.c_[np.arange(1,len(zbins[0,:])+1), 100.*np.transpose(zbins) ])
+  #print(' sum = {} '.format( np.sum(zbins[0,:])))
 
 
 # Create an empty mask id list

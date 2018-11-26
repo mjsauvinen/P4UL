@@ -31,6 +31,7 @@ class wtDataset:
       s2 = self.omega0/(2*np.pi*min(self.freq))
       ns = len(self.freq)
       self.scales=np.linspace(s1,s2,ns)
+      
 
 #==========================================================#
 

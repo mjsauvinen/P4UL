@@ -188,7 +188,10 @@ for fn in fileNos:
     plotStr  = ["var({}) vs z ".format(varname), varname ,"z"]
   
   elif( mode == 'entropy' ):
-    vp = calc_ts_entropy_profile( vr, z ); zp = z
+    nbins=24
+    Bs = np.logspace(-0.75, 0.8, nbins, endpoint=True); Bs[-1] = 9.0
+    
+    vp = calc_ts_entropy_profile(vr, z, alpha=1., nbins=Bs); zp = z
     if( vr2 is not None ): vp2 = calc_ts_entropy_profile( vr2, z )
     plotStr  = ["entropy({}) vs z ".format(varname), varname ,"z"]
   

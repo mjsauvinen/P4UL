@@ -24,9 +24,10 @@ def U_hd( fn, cl=1, direction=False ):
   uc = 0.5*( ut[:,:,:-1,1:] + ut[:,:,:-1,:-1] )
   vc = 0.5*( vt[:,:,1:,:-1] + ut[:,:,:-1,:-1] )
   if( direction ):
-    v = np.arctan( vc/(uc+1.E-4) ) * (180./np.pi)
+    v = np.arctan( vc/(uc+1.E-5) ) * (180./np.pi)
   else:
-    v = np.sqrt( uc**2 + vc**2 )
+    a = np.arctan( vc/(uc+1.E-5) )
+    v = uc * np.cos(a) + vc * np.sin(a)
     
   return v, x, y, z
 
@@ -176,16 +177,16 @@ for k1 in idk:
     fig2 = addImagePlot( fig2, v1x[::-1,:], lbl, gridOn, limsOn )
     
     
-    fig3 = plt.figure(num=3)
-    plt.hist( np.ravel(dv[idnn]), bins=25, \
-      normed=True, log=True, histtype=u'bar', label=labelStr )
+    #fig3 = plt.figure(num=3)
+    #plt.hist( np.ravel(dv[idnn]), bins=25, \
+    #  normed=True, log=True, histtype=u'bar', label=labelStr )
     
     if( saveOn ):
       figname = 'RMSDiff_{}_z{}.jpg'.format(vn, int(z1[k1]))
       print(' Saving = {}'.format(figname))
       fig.savefig( figname, format='jpg', dpi=150)
       fig2.savefig( figname.replace("RMSDiff","Ref"), format='jpg', dpi=150)
-      fig3.savefig( figname.replace("RMSDiff","Hist"), format='jpg', dpi=150)
+      #fig3.savefig( figname.replace("RMSDiff","Hist"), format='jpg', dpi=150)
     plt.show()
 
 if( writeRMS ): fout.close()

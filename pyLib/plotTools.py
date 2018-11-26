@@ -72,7 +72,10 @@ def setColormap( img ):
   try:
     printDict( cmaps_new, 3 )
     icmap = input(' Enter integer key for the colormap = ')
-    img.set_cmap(cmaps_new[icmap])
+    try:    nc = input(' Number of discrete colors in colormap = ')
+    except: nc = None
+    cm = plt.get_cmap( cmaps_new[icmap], nc )
+    img.set_cmap(cm)
   except:
     print(' Using default colormap.')
     pass
@@ -296,15 +299,17 @@ def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False, linemode=1 ):
   except: x = np.loadtxt(fileStr,delimiter=',')
   ax  = fig.add_axes( [0.15, 0.075 , 0.8 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
 
-  lStr = fileStr.rsplit(".", 1)[0]  # Remove the ".dat" 
-  rStr = lStr.rsplit("_")[-1]
-  tStr = lStr.split("/", 2)
-  if( tStr[0] is "." ):
-    lStr = tStr[1]
-  else:
-    lStr = tStr[0]
+
+  labelStr = labelString( fileStr )
+  #lStr = fileStr.rsplit(".", 1)[0]  # Remove the ".dat" 
+  #rStr = lStr.rsplit("_")[-1]
+  #tStr = lStr.split("/", 2)
+  #if( tStr[0] is "." ):
+  #  lStr = tStr[1]
+  #else:
+  #  lStr = tStr[0]
   
-  labelStr = lStr+"_"+rStr
+  #labelStr = lStr+"_"+rStr
   
 
   # Print each column separately
@@ -340,13 +345,112 @@ def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False, linemode=1 ):
     lmax = np.abs(np.max(dp))  # Local maximum
     if( lmax > amax ): amax = lmax
     
-  if( amax <1.e-3 and revAxes): 
-    if( revAxes ): ax.xaxis.set_major_formatter(FormatStrFormatter('%.2e'))
-    else:          ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
+  #if( amax <5.e-4 and revAxes): 
+  #  if( revAxes ): ax.xaxis.set_major_formatter(FormatStrFormatter('%.2e'))
+  #  else:          ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
   
   ax.set_xlabel(" X ")
   ax.set_ylabel(" Y ")
   return fig
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def ciDataFromFile( filename ):
+  
+  try:    x = np.loadtxt(filename)
+  except: x = np.loadtxt(filename,delimiter=',')
+  
+  nrows, ncols = x.shape
+  #print(' nrows, ncols = {}, {}'.format(nrows,ncols))
+  if( ncols > 3 ):
+    # Copy values and clear memory
+    d = x[:,0]; v = x[:,1]; vl = x[:,2]; vu = x[:,3]
+  elif( ncols == 2 ):
+    d = x[:,0]; v = x[:,1]; vl = x[:,1]; vu = x[:,1]
+  else:
+    msg = '''
+    Error! ncols has a strange value {}. 
+    The data must be in [x, v, v_lower, v_upper, (possibly something else)] format.
+    Or alternatively [x,v] format in which case no confidence intervals will be present.
+    Exiting...'''.format( ncols )
+    sys.exit(msg)
+  
+  # clear memory
+  x = None 
+  
+  return d, v, vl, vu
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+def ciScaleVals( d, v, vl, vu, Cx, Cy, revAxes ):
+  if( revAxes ):
+    xx  = Cx*v
+    vl *= Cx; vu *= Cx
+    d  *= Cy
+    yy  = d
+    
+  else:
+    yy  = Cy*v
+    vl *= Cy; vu *= Cy
+    d  *= Cx
+    xx  = d
+    
+  return d, xx, yy, vl, vu
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def ciDiffVals( x1, y1, v1l, v1u, x2, y2, v2l, v2u, revAxes ):
+  
+  # Because it is possible that all v2u > v1u (or v2u < v1u) we have to prepare for that.
+  id2 = (v2u>v1u)
+  id1 = ~id2
+  
+  id2On=False; id1On=False
+  if( np.count_nonzero(id2) > 0 ):
+    id2On = True
+    v1mu = np.abs( np.mean(v1u[id2]) )
+    
+  if( np.count_nonzero(id1) > 0 ): 
+    id1On = True
+    v1ml = np.abs( np.mean(v1l[id1]) )
+  
+  if( revAxes ):
+    #if( id2On ): x1[id2] =np.maximum( ((v2l[id2]-v1u[id2])/v1mu)*100., 0.) # If diff is pos, there's overlap
+    #if( id1On ): x1[id1] =np.minimum( ((v2u[id1]-v1l[id1])/v1ml)*100., 0.) # If diff is neg, -- " --
+    if( id2On ): x1[id2] =np.maximum( (v2l[id2]-v1u[id2]), 0.) # If diff is pos, there's overlap
+    if( id1On ): x1[id1] =np.minimum( (v2u[id1]-v1l[id1]), 0.) # If diff is neg, -- " --
+    y1 = 0.5*( y1 + y2 )
+    dm = np.mean( np.abs(x1) )
+  else:
+    #if( id2On ): y1[id2] =np.maximum( ((v2l[id2]-v1u[id2])/v1mu)*100., 0.) # If diff is pos, there's overlap
+    #if( id1On ): y1[id1] =np.minimum( ((v2u[id1]-v1l[id1])/v1ml)*100., 0.) # If diff is neg, -- " --  
+    if( id2On ): y1[id2] =np.maximum( (v2l[id2]-v1u[id2]), 0.) # If diff is pos, there's overlap
+    if( id1On ): y1[id1] =np.minimum( (v2u[id1]-v1l[id1]), 0.) # If diff is neg, -- " --  
+    x1 = 0.5*( x1 + x2 )
+    dm = np.mean( np.abs(y1) )
+    
+  return x1, y1, dm
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def labelString( fname ):
+  
+  ls = fname
+  if( "." in ls ): 
+    ls = ls.rsplit(".", 1)[0]
+  
+  if( "/" in ls ):
+    sL = ls.split('/')
+    
+    if( len(sL) > 1 ):
+      lL = map( len, sL )
+      if(  (lL[0] > 1) and ("." not in sL[0]) ):
+        ls = sL[0]
+      elif((lL[1] > 1) and ("." not in sL[1]) ):
+        ls = sL[1]
+      else:
+        ls = sL[-1]  
+
+  return ls
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
@@ -360,43 +464,19 @@ def plotCiXY( fig, pDict ):
   ylims   = dataFromDict('ylims',    pDict, allowNone=True)
   xlims   = dataFromDict('xlims',    pDict, allowNone=True)
   
-  labelStr = fn.rsplit(".", 1)[0]
-  labelStr = labelStr.split('/')[0]
+  labelStr = labelString( fn )
   
   if( Cx is None ): Cx = 1.
   if( Cy is None ): Cy = 1.
   
-  try:    x = np.loadtxt(fn)
-  except: x = np.loadtxt(fn,delimiter=',')
-  
-  nrows, ncols = x.shape
-  #print(' nrows, ncols = {}, {}'.format(nrows,ncols))
-  if( ncols > 3 ):
-    # Copy values and clear memory
-    d = x[:,0]; v = x[:,1]; v_l = x[:,2]; v_u = x[:,3]
-  elif( ncols == 2 ):
-    d = x[:,0]; v = x[:,1]; v_l = x[:,1]; v_u = x[:,1]
-  else:
-    msg = '''
-    Error! ncols has a strange value {}. 
-    The data must be in [x, v, v_lower, v_upper, (possibly something else)] format.
-    Or alternatively [x,v] format in which case no confidence intervals will be present.
-    Exiting...'''.format( ncols )
-    sys.exit(msg)
-  
-  # clear memory
-  x = None 
+  d, v, v_l, v_u = ciDataFromFile( fn )
   
   ax  = fig.add_axes( [0.15, 0.075 , 0.8 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
   
-  if( revAxes ):
-    xp  = Cx*v; yp = d
-    v_l *= Cx; v_u *= Cx
-    xlb = 'V(d)'; ylb = 'd'
-  else:
-    yp  = Cy*v; xp = d
-    v_l *= Cy; v_u *= Cy
-    ylb = 'V(d)'; xlb = 'd'
+  d, xp, yp, v_l, v_u = ciScaleVals( d, v, v_l, v_u, Cx, Cy, revAxes )
+  
+  if( revAxes ): xlb = 'V(d)'; ylb = 'd'
+  else:          ylb = 'V(d)'; xlb = 'd'
   
   
   if( logOn ):
@@ -413,9 +493,9 @@ def plotCiXY( fig, pDict ):
     else:
       fillbf = ax.fill_between
   
-  lines = plotf( xp, yp, linestyle_stack(lm=linemode), lw=2.2, \
+  lines = plotf( xp, yp, linestyle_stack(lm=linemode), lw=3.5, \
     label=labelStr, color=color_stack(lm=linemode))
-  linef = fillbf( d, v_u, v_l, facecolor='gray', alpha=0.25)
+  linef = fillbf( d, v_u, v_l, facecolor='white', edgecolor='white', alpha=0.25)
   ax.set_ybound(lower=ylims[0], upper=ylims[1] )
   ax.set_xbound(lower=xlims[0], upper=xlims[1] )
   ax.set_xlabel(xlb)
@@ -425,6 +505,80 @@ def plotCiXY( fig, pDict ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def plotCiDiffXY( fig, pDict ):  
+  f1      = dataFromDict('fileref',  pDict, allowNone=False)
+  fn      = dataFromDict('filename', pDict, allowNone=False)
+  Cx      = dataFromDict('Cx',       pDict, allowNone=True)
+  Cy      = dataFromDict('Cy',       pDict, allowNone=True)
+  linemode= dataFromDict('lm',       pDict, allowNone=False)
+  logOn   = dataFromDict('logOn',    pDict, allowNone=True)
+  revAxes = dataFromDict('revAxes',  pDict, allowNone=True)
+  ylims   = dataFromDict('ylims',    pDict, allowNone=True)
+  xlims   = dataFromDict('xlims',    pDict, allowNone=True)
+  
+  labelStr = labelString( fn )
+  
+  if( Cx is None ): Cx = 1.
+  if( Cy is None ): Cy = 1.
+  
+  d1, v1, v1_l, v1_u = ciDataFromFile( f1 )
+  d2, v2, v2_l, v2_u = ciDataFromFile( fn )
+  
+  if( d2[-1] != d1[-1] ):
+    if( d2[-1] > d1[-1] ):  # Quick and dirty handling for cases when d2[-1] > d1[-1]
+      idx = ( d2 <= d1[-1] ) # Take the terms where values match 
+      d2 = d2[idx]; v2 = v2[idx]; v2_l = v2_l[idx]; v2_u = v2_u[idx] # Shorten
+      
+      # Compute the ratio to match the resolutions (roughly)
+      r = np.round( (d2[1]-d2[0])/(d1[1]-d1[0]) ).astype(int)
+      
+      # Use the matching indecies only
+      idm = ( np.mod((np.arange(len(d1))+1) , r) == 0 )
+      d1 = d1[idm]; v1 = v1[idm]; v1_l = v1_l[idm]; v1_u = v1_u[idm]
+
+
+  Lm  = min( len(v2), len(v1) )
+  d2 = d2[:Lm]; v2 = v2[:Lm]; v2_l = v2_l[:Lm]; v2_u = v2_u[:Lm]
+  d1 = d1[:Lm]; v1 = v1[:Lm]; v1_l = v1_l[:Lm]; v1_u = v1_u[:Lm]
+  
+  d1, x1, y1, v1_l, v1_u = ciScaleVals( d1, v1, v1_l, v1_u, Cx, Cy, revAxes )
+  d2, x2, y2, v2_l, v2_u = ciScaleVals( d2, v2, v2_l, v2_u, Cx, Cy, revAxes )
+  
+  xp, yp, dm = ciDiffVals( x1, y1, v1_l, v1_u, x2, y2, v2_l, v2_u, revAxes )
+  
+  if( revAxes ): xlb = 'D(d)'; ylb = 'd'
+  else:          ylb = 'D(d)'; xlb = 'd'
+  
+  
+  ax  = fig.add_axes([0.15, 0.075 , 0.8 , 0.81]) #[left, up, width, height], fig.add_subplot(111)
+  if( logOn ):
+    if( revAxes ):
+      plotf  = ax.semilogx
+      fillbf = ax.fill_betweenx
+    else:
+      plotf = ax.semilogy
+      fillbf= ax.fill_between
+  else:
+    plotf = ax.plot
+    if( revAxes ):
+      fillbf = ax.fill_betweenx
+    else:
+      fillbf = ax.fill_between
+  
+  lines = plotf( xp, yp, linestyle_stack(lm=linemode), lw=3., \
+    label=labelStr+r': $\left< | \Delta | \right>$={:.2g}'.format(dm) , color=color_stack(lm=linemode))
+  #label=r': $\left< | \Delta | \right>$={:.2f}'.format(dm) , color=color_stack(lm=linemode))
+  
+  #linef = fillbf( d, v_u, v_l, facecolor='gray', alpha=0.25)
+  
+  ax.set_ybound(lower=ylims[0], upper=ylims[1] )
+  ax.set_xbound(lower=xlims[0], upper=xlims[1] )
+  ax.set_xlabel(xlb)
+  ax.set_ylabel(ylb)
+
+  return fig
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 def plotDY( fig, fileStr, dim=3,  revAxes=False ):
   dim = min( dim, 3 ); dim=max(dim , 1)
   x = np.loadtxt(fileStr)
@@ -436,7 +590,7 @@ def plotDY( fig, fileStr, dim=3,  revAxes=False ):
   d = np.sqrt(r)
   ax  = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
 
-  labelStr = fileStr.split(".")[0]
+  labelStr = labelString( fileStr )
 
   # Print each column separately
   for i in xrange((x.shape[1]-dim)):
@@ -452,20 +606,6 @@ def plotDY( fig, fileStr, dim=3,  revAxes=False ):
   else:
     ax.set_xlabel(" D(X,Y,Z) "); ax.set_ylabel(" F(D) ")
 
-  return fig
-
-# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-
-def plotCXY( fig, fileStr, Cx, Cy ):
-  x = np.loadtxt(fileStr)
-  ax  = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
-
-  labelStr = fileStr.split(".")[0]
-
-  # Print each column separately
-  for i in xrange((x.shape[1]-1)):
-    lines=ax.plot(Cx*x[:,0],Cy*x[:,i+1],'o', markersize=6, linewidth=1.1, label=labelStr+'['+str(i)+']')
-    
   return fig
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*

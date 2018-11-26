@@ -58,7 +58,7 @@ if( not args.printOnly ):
 
 
 if( args.printOn or args.printOnly ):
-  
+  Rdims = np.array( np.shape( R ) )
   figDims = 13.*(Rdims[::-1].astype(float)/np.max(Rdims))
   fig = plt.figure(num=1, figsize=figDims)
   fig = addImagePlot( fig, R, fileout )
