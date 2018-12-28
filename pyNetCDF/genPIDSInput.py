@@ -141,6 +141,18 @@ if(surfConfig is not None):
   if(pavementTypeFile is not None and pavementTypeFile!=""):
     pavementTypeVar = processPavementType(pavementTypeFile,pidsStaticDS,staticVars,staticDims)
 
+  waterTypeFile = readConfigVariable(config, 'Surface', 'water_type')
+  if(waterTypeFile is not None and waterTypeFile!=""):
+    waterTypeVar = processWaterType(waterTypeFile,pidsStaticDS,staticVars,staticDims)
+
+  soilTypeFile = readConfigVariable(config, 'Surface', 'soil_type')
+  if(soilTypeFile is not None and soilTypeFile!=""):
+    soilTypeVar = processSoilType(soilTypeFile,pidsStaticDS,staticVars,staticDims)
+
+  streetTypeFile = readConfigVariable(config, 'Surface', 'street_type')
+  if(streetTypeFile is not None and streetTypeFile!=""):
+    streetTypeVar = processStreetType(streetTypeFile,pidsStaticDS,staticVars,staticDims)
+
 
 if(vegConfig is not None):
   ladFile = readConfigVariable(config, 'Vegetation', 'lad')
@@ -244,6 +256,32 @@ if(aeroConfig is not None):
   compAeroStr = readConfigVariable(config, 'Aerosols', 'composition_aerosol')
   if(compAeroStr is not None and compAeroStr!=""):
     compAeroVar = processCompositionAerosol(compAeroStr, pidsAeroDS, aeroVars, aeroDims)
+
+  aeroEmiStr = readConfigVariable(config, 'Aerosols', 'aerosol_emission_values')
+  if (aeroEmiStr is not None and aeroEmiStr!=""):
+    aeroSourceArea = readConfigVariable(config, 'Aerosols', 'aerosol_source_area')
+    if(aeroSourceArea is not None and aeroSourceArea!=""):
+      aeroEmissionDmid= readConfigVariable(config, 'Aerosols', 'aerosol_emission_dmid')
+      if(aeroEmissionDmid is not None and aeroEmissionDmid!=""):
+        aeroEminVar = processAerosolEmissionValues(aeroEmiStr, aeroSourceArea, aeroEmissionDmid, pidsAeroDS, aeroVars, aeroDims)
+
+  emiMassFracsVar = processEmissionMassFractions(pidsAeroDS)
+
+  emiCatInds = readConfigVariable(config, 'Chemistry', 'emission_category_index')
+  if(emiCatInds is not None and emiCatInds!=""):
+    emiCatIndsVar = processEmissionCategoryIndices(emiCatInds, pidsAeroDS, aeroVars, aeroDims)
+
+  emiInds = readConfigVariable(config, 'Chemistry', 'emission_index')
+  if(emiInds is not None and emiInds!=""):
+    emiInds = processEmissionIndices(emiInds, pidsAeroDS, aeroVars, aeroDims)
+
+  emiCatName = readConfigVariable(config, 'Chemistry', 'emission_category_name')
+  if(emiCatName is not None and emiCatName!=""):
+    emiCatName = processEmissionCategoryNames(emiCatName, pidsAeroDS, aeroVars, aeroDims)
+
+  emiSpeName = readConfigVariable(config, 'Chemistry', 'emission_species_name')
+  if(emiSpeName is not None and emiSpeName!=""):
+    emiSpeName = processEmissionSpeciesNames(emiSpeName, pidsAeroDS, aeroVars, aeroDims)
 
 
 

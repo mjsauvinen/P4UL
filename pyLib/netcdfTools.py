@@ -366,4 +366,3 @@ def read3dDataFromNetCDF( fname, nameDict, cl=1 ):
   dataDict['time'] = time
 
   return dataDict
-=======

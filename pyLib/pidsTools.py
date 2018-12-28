@@ -26,9 +26,9 @@ def setPIDSGlobalAtrributes(ds, globalAttributes):
   strAttributeKeys = ['Conventions', 'palm_version', 'title', 'acronym', 'campaign',\
                    'institution', 'author', 'contact_person', 'licence', 'history',\
                    'keywords', 'references', 'comment', 'data_content', 'source',\
-                   'dependencies', 'location', 'site']
+                   'dependencies', 'location', 'site', 'origin_time']
   floatAttributeKeys = ['origin_x', 'origin_y', 'origin_z', 'origin_lat', 'origin_lon',\
-                        'rotation_angle', 'origin_time']
+                        'rotation_angle']
   for key in strAttributeKeys:
     try:
       setattr(ds, key, globalAttributes[key])
@@ -184,7 +184,7 @@ def processOrography(fname,ds,vars,dims):
 
 def processBuildings(fname,ds,vars,dims):
   buildDict = readNumpyZTile(fname,verbose=False)
-  buildR = buildDict['R']
+  buildR = buildDict['R'][::-1,:]
   buildDPx = buildDict['dPx']
   buildNPx = np.shape(buildR)
   buildLOD = len(buildNPx)-1 # 1=2D height field, 2=3D mask
@@ -204,17 +204,17 @@ def processBuildings(fname,ds,vars,dims):
 
   elif(buildLOD==2):
     # Save as a 3D boolean mask array
-
+    #topo=fillTopographyArray(buildR, buildNPx, buildDPx, int)
     # I'm quite not sure why axes swapping has to be done but at least it works
-    buildR = np.swapaxes(buildR,0,2)
+    topo = np.swapaxes(buildR,0,2)
     if('buildings_3d' in vars):
-      ds.variables['buildings_3d'][:]=buildR
+      ds.variables['buildings_3d'][:]=topo
       return ds.variables['buildings_3d']
     else:
       x_dim = createXDim(ds, buildNPx, buildDPx, dims)
       y_dim = createYDim(ds, buildNPx, buildDPx, dims)
       z_dim = createZDim(ds, buildNPx, buildDPx, dims)
-      buildNCVar = createNetcdfVariable(ds, buildR, 'buildings_3d', 0, 'm', 'b', ('z','y','x'), False, False, fill_value=-127, verbose=False)
+      buildNCVar = createNetcdfVariable(ds, topo, 'buildings_3d', 0, 'm', 'b', ('z','y','x'), False, False, fill_value=-127, verbose=False)
       buildNCVar.long_name= "building_flag"
       buildNCVar.lod = int(buildLOD)
       return buildNCVar
@@ -236,7 +236,7 @@ def processBuildingIDs(fname,ds,vars,dims):
     x_dim = createXDim(ds, buildIDNPx, buildIDDPx, dims)
     y_dim = createYDim(ds, buildIDNPx, buildIDDPx, dims)
 
-    buildIDNCVar = createNetcdfVariable(ds, buildIDR, 'building_id', 0, 'm', 'i4', ('y','x'), False, False, fill_value=-9999, verbose=False)
+    buildIDNCVar = createNetcdfVariable(ds, buildIDR, 'building_id', 0, 'm', 'b', ('y','x'), False, False, fill_value=-127, verbose=False)
     buildIDNCVar.long_name= "building id numbers"
 
     return buildIDNCVar
@@ -256,10 +256,70 @@ def processPavementType(fname,ds,vars,dims):
     x_dim = createXDim(ds, pavementTypeNPx, pavementTypeDPx, dims)
     y_dim = createYDim(ds, pavementTypeNPx, pavementTypeDPx, dims)
 
-    pavementTypeNCVar = createNetcdfVariable(ds, pavementTypeR, 'pavement_type', 0, 'm', 'i4', ('y','x'), False, False, fill_value=-9999, verbose=False)
+    pavementTypeNCVar = createNetcdfVariable(ds, pavementTypeR, 'pavement_type', 0, 'm', 'b', ('y','x'), False, False, fill_value=-127, verbose=False)
     pavementTypeNCVar.long_name= "pavement type classification"
 
     return pavementTypeNCVar
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def processWaterType(fname,ds,vars,dims):
+  waterTypeDict = readNumpyZTile(fname,verbose=False)
+  waterTypeR = waterTypeDict['R']
+  waterTypeDPx = waterTypeDict['dPx']
+  waterTypeNPx = np.shape(waterTypeR)
+
+  if('water_type' in vars):
+    ds.variables['water_type'][:]=waterTypeR
+    return ds.variables['water_type']
+  else:
+    x_dim = createXDim(ds, waterTypeNPx, waterTypeDPx, dims)
+    y_dim = createYDim(ds, waterTypeNPx, waterTypeDPx, dims)
+
+    waterTypeNCVar = createNetcdfVariable(ds, waterTypeR, 'water_type', 0, 'm', 'b', ('y','x'), False, False, fill_value=-127, verbose=False)
+    waterTypeNCVar.long_name= "water type classification"
+
+    return waterTypeNCVar
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def processSoilType(fname,ds,vars,dims):
+  soilTypeDict = readNumpyZTile(fname,verbose=False)
+  soilTypeR = soilTypeDict['R']
+  soilTypeDPx = soilTypeDict['dPx']
+  soilTypeNPx = np.shape(soilTypeR)
+
+  if('soil_type' in vars):
+    ds.variables['soil_type'][:]=soilTypeR
+    return ds.variables['soil_type']
+  else:
+    x_dim = createXDim(ds, soilTypeNPx, soilTypeDPx, dims)
+    y_dim = createYDim(ds, soilTypeNPx, soilTypeDPx, dims)
+
+    soilTypeNCVar = createNetcdfVariable(ds, soilTypeR, 'soil_type', 0, 'm', 'b', ('y','x'), False, False, fill_value=-127, verbose=False)
+    soilTypeNCVar.long_name= "soil type classification"
+
+    return soilTypeNCVar
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def processStreetType(fname,ds,vars,dims):
+  streetTypeDict = readNumpyZTile(fname,verbose=False)
+  streetTypeR = streetTypeDict['R'][::-1,:]
+  streetTypeDPx = streetTypeDict['dPx']
+  streetTypeNPx = np.shape(streetTypeR)
+
+  if('street_type' in vars):
+    ds.variables['street_type'][:]=streetTypeR
+    return ds.variables['street_type']
+  else:
+    x_dim = createXDim(ds, streetTypeNPx, streetTypeDPx, dims)
+    y_dim = createYDim(ds, streetTypeNPx, streetTypeDPx, dims)
+
+    streetTypeNCVar = createNetcdfVariable(ds, streetTypeR, 'street_type', 0, 'm', 'b', ('y','x'), False, False, fill_value=-127, verbose=False)
+    streetTypeNCVar.long_name= "street type classification"
+
+    return streetTypeNCVar
 
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
@@ -268,6 +328,7 @@ def processLAD(fname,ds,vars,dims):
   ladR = ladDict['R']
   ladDPx = ladDict['dPx']
   ladNPx = np.shape(ladR)
+  ladDPx = np.append(ladDPx,3.0)
 
   # Same here as in buildings_3d, idk why this has to be done for 3D arrays
   ladR = np.swapaxes(ladR,0,2)
@@ -276,11 +337,13 @@ def processLAD(fname,ds,vars,dims):
     ds.variables['lad'][:]=ladR
     return ds.variables['lad']
   else:
+    print(ladNPx)
+    print(ladR.shape)
     x_dim = createXDim(ds, ladNPx, ladDPx, dims)
     y_dim = createYDim(ds, ladNPx, ladDPx, dims)
     zlad_dim = createZLADDim(ds, ladNPx, ladDPx, dims)
 
-    ladNCVar = createNetcdfVariable(ds, ladR, 'lad', 0, 'm', 'f4', ('z','y','x'), False, False, fill_value=-9999.9, verbose=False)
+    ladNCVar = createNetcdfVariable(ds, ladR, 'lad', 0, 'm', 'f4', ('zlad','y','x'), False, False, fill_value=-9999.9, verbose=False)
     ladNCVar.long_name= "leaf area density"
 
     return ladNCVar
@@ -300,7 +363,7 @@ def processVegetationType(fname,ds,vars,dims):
     x_dim = createXDim(ds, vegetationTypeNPx, vegetationTypeDPx, dims)
     y_dim = createYDim(ds, vegetationTypeNPx, vegetationTypeDPx, dims)
 
-    vegetationTypeNCVar = createNetcdfVariable(ds, vegetationTypeR, 'vegetation_type', 0, 'm', 'i4', ('y','x'), False, False, fill_value=-9999, verbose=False)
+    vegetationTypeNCVar = createNetcdfVariable(ds, vegetationTypeR, 'vegetation_type', 0, 'm', 'b', ('y','x'), False, False, fill_value=-127, verbose=False)
     vegetationTypeNCVar.long_name= "vegetation type classification"
 
     return vegetationTypeNCVar
@@ -525,3 +588,69 @@ def processCompositionAerosol(compAero,ds,vars,dims):
     return compAeroVar
 
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def processAerosolEmissionValues(emiStr,fname,emiDmid,ds,vars,dims):
+  # Aerosol emission values with lod of 2
+  # This is far from ready...
+  # Everything is hardcoded etc.
+  sourceDict = readNumpyZTile(fname,verbose=False)
+  sourceR = sourceDict['R'].T[:,::-1
+                              ]
+  sourceDPx = sourceDict['dPx']
+  sourceNPx = np.shape(sourceR)
+
+  if('aerosol_emission_values' in vars):
+    raise NotImplementedError("Updating aerosol_emission_values not implemented yet.")
+  else:
+    try:
+      emiDmids=map(float, emiDmid.split(","))
+    except TypeError:
+      print("Error: invalid value for aerosol_emission_dmid in configuration file, expected a comma-delimited list")
+      exit(1)
+    try:
+      emiVals=map(float, emiStr.split(","))
+    except TypeError:
+      print("Error: invalid value for aerosol_emission_values in configuration file, expected a comma-delimited list")
+      exit(1)
+
+    print(sourceNPx)
+
+    x_dim = createXDim(ds, sourceNPx, sourceDPx, dims)
+    y_dim = createYDim(ds, sourceNPx, sourceDPx, dims)
+    ncat_dim = createNcatDim(ds, [1], dims)
+    nbins=len(emiDmids)
+
+
+    aerosol_emission_values = np.zeros([nbins,1,sourceNPx[1],sourceNPx[0]],dtype=float) - 9999.9
+
+    for i in xrange(nbins):
+      aerosol_emission_values[i,0,sourceR.T==1] = emiVals[i]
+
+    print("doo")
+    dmid_Dim = createNetcdfVariable( ds, emiDmids, 'Dmid', len(emiDmids), '', 'f4', ('Dmid',), parameter=True, verbose=False )
+    dims.append('Dmid')
+
+    emiValVar = createNetcdfVariable(ds, aerosol_emission_values, 'aerosol_emission_values', 0, 'm', 'f4', ('Dmid','ncat','y','x',), False, False, fill_value=-9999.9, verbose=False)
+    emiValVar.long_name= 'aerosol emission values'
+    emiValVar.standard_name = 'aerosol_emission_values'
+    emiValVar.lod = 2
+    emiValVar.unit = '#/m2/s'
+
+    return emiValVar
+
+def processEmissionMassFractions(ds):
+  compIndex = np.arange(1,8,1)
+  compIndexDim = createNetcdfVariable( ds, compIndex, 'composition_index', len(compIndex), '', 'f4', ('composition_index',), parameter=True, verbose=False )
+
+  compIndexDim.units = ""
+  emiMassFracsD = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+  emiMassFracs = np.zeros([1,len(emiMassFracsD)])-9999.9
+  for i in xrange(len(emiMassFracsD)):
+    emiMassFracs[0,i]=emiMassFracsD[i]
+
+  emiMassFracsVar = createNetcdfVariable(ds, emiMassFracs, 'emission_mass_fracs', 0, 'm', 'f4', ('ncat','composition_index',), False, False, fill_value=-9999.9, verbose=False)
+  emiMassFracsVar.long_name = "mass fractions of aerosol emissions: H2SO4,OC,BC,DU,SS,NO,NH"
+  emiMassFracsVar.stardard_name = "emission_mass_fractions"
+  emiMassFracsVar.units = ""
+
+  return emiMassFracsVar

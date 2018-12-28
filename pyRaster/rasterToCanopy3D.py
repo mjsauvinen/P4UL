@@ -39,7 +39,7 @@ args = parser.parse_args()
 writeLog(parser, args)
 
 #==========================================================#
-# Renaming ... that's all 
+# Renaming ... that's all
 filename = args.filename
 method   = args.method
 alpha    = args.alpha
@@ -53,7 +53,7 @@ constantLAD = ( method == 'const' )
 profileLAD  = ( method == 'prof'  )
 
 if( profileLAD ):
-  if( (alpha is None) or (beta is None) ): 
+  if( (alpha is None) or (beta is None) ):
     sys.exit(' Error: alpha and/or beta is None. Exiting ...')
 
 Rdict = readNumpyZTile( filename )
@@ -89,14 +89,14 @@ print(' Rry shape = {} '.format(Rry.shape))
 # Calculate leaf area density profiles for each horizontal grid tile and fill array vertically
 for j in xrange(nPc[1]):
   for i in xrange(nPc[0]):
-    Zi = Rry[j,i] # Zi := canopy height at [j,i] 
+    Zi = Rry[j,i] # Zi := canopy height at [j,i]
     # Check if there is canopy at all in the vertical column
     if (Zi <= zref[0]):
       continue
-    
+
     # Number of layers
     dZ   = Zi - zref[0]
-    nind = int(np.floor( dZ/float(dPc[2]) )) + 1 
+    nind = int(np.floor( dZ/float(dPc[2]) )) + 1
 
     if( profileLAD and (nind > 3) ):
       # Calculate LAD profile
@@ -106,7 +106,7 @@ for j in xrange(nPc[1]):
       k2L = k2C - k1
       canopy[i,j,k1:k2C] = lad[0:k2L] #  Grid point at canopy top level gets value 0
     else:
-      k2 = int(np.ceil(Zi/dPc[2]))
+      k2 = int(np.ceil(Zi/dPc[2]))+1
       k2 = min( k2, nPc[2] )
       canopy[i,j,k1:k2] = lad_const
 
@@ -120,7 +120,7 @@ if (args.asmask):
   canopymask[np.where(canopy>args.threshold)]=1
   if (args.asmask=="npz"):
     # Save as Numpy Z file.
-    Rdict["R"]=canopymask
+    Rdict["R"]=canopy
     saveTileAsNumpyZ( fileout, Rdict )
   elif (args.asmask=="nc"):
     # Save as netCDF4

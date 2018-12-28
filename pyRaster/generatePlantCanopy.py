@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(prog='generatePlantCanopy.py', description='''G
 parser.add_argument("-pr","--plantmap", type=str, help="Name of the input plant raster map file.")
 parser.add_argument("-pi","--plantinfo", type=str, help="Name of the input plant information file.")
 parser.add_argument("-r", "--resolution", type=float, nargs=3, help="Resolution (x,y,z) of the output 3D array.")
-parser.add_argument("-o", "--output", type=str, default="ascii", help="Output format of the LAD array: ASCII array \
+parser.add_argument("-o", "--output", type=str, default="ascii", help="Output format of the LAD array: npz array [npz], ASCII array \
                     [ascii] or a NetCDF4 file [nc].")
 parser.add_argument("-fo","--fileout", type=str, help="Name of the 3D output file.")
 args = parser.parse_args()
@@ -122,5 +122,7 @@ elif(args.output=="nc"):
   lad_3d=np.swapaxes(lad_3d,1,2)
   nc_ds = nct.createNetcdfVariable(dso, lad_3d, "leaf_area_density", 0, 'm', 'f4', ('z', 'y', 'x'), parameter=False)
   nct.netcdfWriteAndClose(dso)
+elif(args.output=="npz"):
+  np.savez(args.fileout,R=lad_3d,dPx=dpx,GlobOrig=ds["GlobOrig"])
 else:
   raise ValueError("Unknown output format: {}".format(args.output))
