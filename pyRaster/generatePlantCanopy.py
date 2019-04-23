@@ -84,15 +84,13 @@ for i in xrange(rdims[1]):
     j=int(j/dpx[0])
 
     if(alpha==0 or beta==0):
-      i_top = int(np.round(ub/dpx[2]))+3
+      i_top = int(np.round(ub/dpx[2]))+1
       lad_3d[i,j,0:i_top] = lad
       continue
-
     plant_dist, zdims = pct.betaDistributionProfile(alpha,beta,lb,ub,dpx[2])
     plant_model = pct.constructTreeFromProfile(plant_dist, zdims, lad, radius, dpx[0])
 
     lad_3d[i-int(np.floor(radius/dpx[1])):i+int(np.floor(radius/dpx[1]))+1,j-int(np.floor(radius/dpx[0])):j+int(np.floor(radius/dpx[0]))+1,0:np.shape(plant_model)[2]]+=plant_model
-    lad_3d[lad_3d>lad]=lad
 
 if(args.output=="ascii"):
   fx = open( args.fileout, 'w')

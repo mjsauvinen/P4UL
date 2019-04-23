@@ -3,12 +3,12 @@ from netcdfTools import *
 import sys
 import argparse
 import numpy as np
-''' 
+'''
 Description:
 
 
 Author: Mikko Auvinen
-        mikko.auvinen@helsinki.fi 
+        mikko.auvinen@helsinki.fi
         University of Helsinki &
         Finnish Meteorological Institute
 '''
@@ -19,20 +19,20 @@ parser.add_argument("-f", "--filename",type=str, help="Name of the input NETCDF 
 parser.add_argument("-fo", "--fileout",type=str, help="Name of the output NETCDF file.", default="U-VECTOR.nc")
 parser.add_argument("-sn", "--scalar",type=str, help="(Optional) Scalar to be included.", default=None)
 parser.add_argument("-d", "--decomp", help="Decomposed into mean (V_m) and fluctuating (V^prime) components.",\
-  action="store_true", default=False) 
+  action="store_true", default=False)
 parser.add_argument("-dd", "--decompOnly", help="Output V_m and V^prime components only.",\
   action="store_true", default=False)
 parser.add_argument("-nt", "--ntimeskip", type=int, help="Skip <nt> number of time steps.",\
   default=0)
 parser.add_argument("-c", "--coarse", type=int, help="Coarsening level. Int > 1.",\
   default=1) 
-args = parser.parse_args() 
+args = parser.parse_args()
 #==========================================================#
 # Initial renaming operations and variable declarations
 
 filename   = args.filename
 fileout    = args.fileout
-scalarName = args.scalar 
+scalarName = args.scalar
 nt         = args.ntimeskip
 cl         = abs(int(args.coarse))
 
@@ -46,9 +46,9 @@ independent or dependent variable in function createNetcdfVariable().
 parameter = True;  variable  = False
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
-''' 
+'''
 Create a NETCDF input dataset (ds), and its associated lists of dependent (varList)
-and independent (dimList) variables. 
+and independent (dimList) variables.
 '''
 ds, varList, paramList = netcdfDataset(filename)
 
@@ -62,7 +62,7 @@ Create the output independent variables right away and empty memory.
 '''
 time, time_dims = read1DVariableFromDataset('time', ds, nt, 0, 1 ) # All values.
 tv = createNetcdfVariable( dso, time,'time', len(time),'s','f4',('time',), parameter )
-time = None  
+time = None
 
 x, x_dims = read1DVariableFromDataset( 'x',ds, 0, 1, cl ) # Exclude the last value.
 xv = createNetcdfVariable( dso, x   , 'x'   , len(x)   , 'm', 'f4', ('x',)   , parameter )
@@ -81,19 +81,19 @@ z = None
 
 '''
 Read in the velocity components.
-PALM netCDF4: 
+PALM netCDF4:
   u(time, zu_3d, y, xu)
   v(time, zu_3d, yv, x)
-  w(time, zw_3d, y, x)  
+  w(time, zw_3d, y, x)
   Interpolate u0 -> uc and output the values right away. Empty memory asap.
 '''
 
 # - - - - First, u-component - - - - - - - - - -
 u0, u0_dims = read3DVariableFromDataset( 'u', ds, nt, 0, 0, cl ) # All values.
 
-''' 
-New, cell-center dimension lengths: 
-Number of times remains the same, but coord. lengths 
+'''
+New, cell-center dimension lengths:
+Number of times remains the same, but coord. lengths
 are reduced by one due to interpolation.
 '''
 cc_dims  = np.array( u0_dims )  # Change to numpy array for manipulation
@@ -142,7 +142,7 @@ if( not args.decompOnly ):
 if( decompOn ):
   wp = vectorPrimeComponent( wc, wm )
   wpv = createNetcdfVariable( dso, wp, 'wp', cc_dims[0], 'm/s', 'f4',('time','z','y','x',) , variable )
-  wp = None 
+  wp = None
   wmv = createNetcdfVariable( dso, wm, 'wm', cc_dims[0], 'm/s', 'f4',('z','y','x',) , variable )
   wm = None
 
@@ -164,4 +164,3 @@ if( scalarName ):
 
 # - - - - Done , finalize the output - - - - - - - - - -
 netcdfWriteAndClose( dso )
-

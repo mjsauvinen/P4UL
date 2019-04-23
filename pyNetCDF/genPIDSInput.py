@@ -34,6 +34,8 @@ University of Helsinki
 #==========================================================#
 parser = argparse.ArgumentParser(prog='genPIDSInput.py')
 parser.add_argument("config", type=str, default=None, help="Name of the input config file.")
+parser.add_argument("-n", "--int", type=int,default=0,
+                    help="Nest ID")
 args = parser.parse_args()
 #==========================================================#
 
