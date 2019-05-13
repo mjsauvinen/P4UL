@@ -10,15 +10,15 @@ from netcdfTools import *
 
 '''
 Description:
-Writes PLANT_CANOPY_DATA_3D for PALM from input raster data.
+Generates a 3D LAD array from tree height data based on given tree profile.
 '''
 
 #==========================================================#
 parser = argparse.ArgumentParser(prog='rasterToCanopy3D.py', description='''Writes PLANT_CANOPY_DATA_3D for PALM from input raster data.''')
 parser.add_argument("-f","--filename", type=str, \
   help="Name of the input raster data file.")
-parser.add_argument("-fo", "--fileout", type=str, default='PLANT_CANOPY_DATA_3D', \
-  help="Name of the output 3D data file. Default='PLANT_CANOPY_DATA_3D'. ")
+parser.add_argument("-fo", "--fileout", type=str, \
+  help="Name of the output 3D data file. ")
 parser.add_argument("-dz", "--dz", type=float, default=None, \
   help="Resolution of the z axis. Defaults to resolution of N axis.")
 parser.add_argument("-m", "--method", type=str, default='const', choices=['prof', 'const'],\
@@ -31,8 +31,8 @@ parser.add_argument("-l", "--lai", type=float, default=6.,\
   help="Reference leaf area index (LAI) value. Method 'prof': Reference LAI is the vertical integral over the reference tree's LAD profile. Method 'const': Reference LAI, which will be used to evaluate constant <LAD>_z = LAI_ref/(zref[1]-zref[0]), where zref[0] and zref[1] refer to the values given also as input. Default=6.")
 parser.add_argument("-zr", "--zref", type=float, nargs=2, metavar=('ZREF[0]','ZREF[1]'), default=[4.,20.],\
   help=" The starting height of the foliage and the maximum height of the reference tree whose LAI is given as input. Default=[4,20].")
-parser.add_argument("-am", "--asmask", type=str, default=None, \
-  help="Output a 3D array mask instead of a text file formatted for PALM. The argument is a file type, use nc for NetCDF4 output and npz for Numpy Z array.")
+parser.add_argument("-am", "--asmask", action="store_true", default=False, \
+  help="Output a netCDF4 3D boolean array mask for visualization purposes instead of a npz file containing LAD values.")
 parser.add_argument("-t", "--threshold", type=float, default=0.0, \
   help="Threshold LAD value to be used when generating a 3D mask. Grid points with a LAD value over the threshold will be set to 1 while the rest is set to 0. Effective only if --asmaks is set.")
 args = parser.parse_args()
@@ -118,37 +118,22 @@ if (args.asmask):
   # Use threshold value to create a mask raster.
   canopymask=np.zeros(np.shape(canopy))
   canopymask[np.where(canopy>args.threshold)]=1
-  if (args.asmask=="npz"):
-    # Save as Numpy Z file.
-    Rdict["R"]=canopy
-    saveTileAsNumpyZ( fileout, Rdict )
-  elif (args.asmask=="nc"):
-    # Save as netCDF4
-    # Maybe someday PALM can read canopy data from NetCDF4
-    dso = netcdfOutputDataset(args.fileout)
-    # Create dimensions
-    xv = createCoordinateAxis(dso, nPc, dPc, 1, 'x', 'f4', 'm', parameter=True)
-    yv = createCoordinateAxis(dso, nPc, dPc, 0, 'y', 'f4', 'm', parameter=True)
-    zv = createCoordinateAxis(dso, nPc, dPc, 2, 'z', 'f4', 'm', parameter=True)
-    # Due to a bug Paraview cannot read x,y,z correctly so rolling to z,y,x
-    canopymask=np.rollaxis(canopymask,2)
-    canopymask=np.swapaxes(canopymask,1,2)
-    masknc = createNetcdfVariable(dso, canopymask, "canopy_0", 0, 'm', 'i4', ('z', 'y', 'x'), parameter=False)
-    netcdfWriteAndClose(dso)
+
+  # Save as netCDF4
+  # Maybe someday PALM can read canopy data from NetCDF4
+  dso = netcdfOutputDataset(args.fileout)
+  # Create dimensions
+  xv = createCoordinateAxis(dso, nPc, dPc, 1, 'x', 'f4', 'm', parameter=True)
+  yv = createCoordinateAxis(dso, nPc, dPc, 0, 'y', 'f4', 'm', parameter=True)
+  zv = createCoordinateAxis(dso, nPc, dPc, 2, 'z', 'f4', 'm', parameter=True)
+  # Due to a bug Paraview cannot read x,y,z correctly so rolling to z,y,x
+  canopymask=np.rollaxis(canopymask,2)
+  canopymask=np.swapaxes(canopymask,1,2)
+  masknc = createNetcdfVariable(dso, canopymask, "canopy_0", 0, 'm', 'i4', ('z', 'y', 'x'), parameter=False)
+  netcdfWriteAndClose(dso)
 
 else:
-  fx = open( fileout, 'w')
-  # The first row of the file is number of vertical canopy layers
-  fx.write(str(nPc[2])+"\n")
-  # Loop through the verical canopy columns
-  for x in xrange(nPc[0]):
-    for y in xrange(nPc[1]):
-      if (np.all(canopy[x,y,:]==0)):
-        # There is no need to write empty columns
-        continue
-      # Convert everything into strings and write
-      # datatype x y col(:)
-      lineStr = str(1)+","+str(x)+","+str(y)+","+",".join(map("{:.3g}".format,canopy[x,y,:]))+"\n"
-      fx.write(lineStr)
-  fx.close()
+  # Save as Numpy Z file.
+  Rdict["R"]=canopy
+  saveTileAsNumpyZ( fileout, Rdict )
 print(" ...{} saved successfully.".format(fileout))
