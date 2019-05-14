@@ -135,5 +135,6 @@ if (args.asmask):
 else:
   # Save as Numpy Z file.
   Rdict["R"]=canopy
+  Rdict["dPx"]=dPx3D
   saveTileAsNumpyZ( fileout, Rdict )
 print(" ...{} saved successfully.".format(fileout))

@@ -328,7 +328,6 @@ def processLAD(fname,ds,vars,dims):
   ladR = ladDict['R']
   ladDPx = ladDict['dPx']
   ladNPx = np.shape(ladR)
-  ladDPx = np.append(ladDPx,3.0)
 
   # Same here as in buildings_3d, idk why this has to be done for 3D arrays
   ladR = np.swapaxes(ladR,0,2)
@@ -620,7 +619,7 @@ def processAerosolEmissionValues(emiStr,fname,emiDmid,ds,vars,dims):
     ncat_dim = createNcatDim(ds, [1], dims)
     nbins=len(emiDmids)
 
-
+    # FIX
     aerosol_emission_values = np.zeros([nbins,1,sourceNPx[1],sourceNPx[0]],dtype=float) - 9999.9
 
     for i in xrange(nbins):
@@ -630,10 +629,10 @@ def processAerosolEmissionValues(emiStr,fname,emiDmid,ds,vars,dims):
     dmid_Dim = createNetcdfVariable( ds, emiDmids, 'Dmid', len(emiDmids), '', 'f4', ('Dmid',), parameter=True, verbose=False )
     dims.append('Dmid')
 
-    emiValVar = createNetcdfVariable(ds, aerosol_emission_values, 'aerosol_emission_values', 0, 'm', 'f4', ('Dmid','ncat','y','x',), False, False, fill_value=-9999.9, verbose=False)
+    emiValVar = createNetcdfVariable(ds, aerosol_emission_values, 'aerosol_emission_values', 0, 'm', 'f4', ('Dmid','ncat','y','x',), False, False, fill_value=-9999.9, verbose=False) # FIX: dimensions
     emiValVar.long_name= 'aerosol emission values'
     emiValVar.standard_name = 'aerosol_emission_values'
-    emiValVar.lod = 2
+    emiValVar.lod = 2 # FIX: lod
     emiValVar.unit = '#/m2/s'
 
     return emiValVar
