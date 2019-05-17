@@ -20,15 +20,20 @@ Author: Mikko Auvinen
 parser = argparse.ArgumentParser(prog='mergeGridTiles.py')
 parser.add_argument("-f", "--filenames",type=str, help="List of ascii grid tile files.", \
    nargs='+')
+parser.add_argument("-nh", "--nheaderlines",type=int, default=8,\
+   help="Number of header lines in ASCII files. Default=8 (MML)") 
 parser.add_argument("-p", "--printOn", help="Print the extracted tile.",\
   action="store_true", default=False) 
 parser.add_argument("-pp", "--printOnly", help="Only print the extracted tile. Don't save.",\
-  action="store_true", default=False) 
+  action="store_true", default=False)
 parser.add_argument("-s", "--scale",type=float,\
-   help="Scale factor for the output. Default=1.", default=1.)   
+   help="Scale factor for the output. Default=1.", default=1.) 
 args = parser.parse_args() 
-writeLog( parser, args )
+writeLog( parser, args, args.printOnly )
 #==========================================================#
+
+nhl = args.nheaderlines
+
 
 # Check the file formats.
 ascii = False; npz = False
@@ -54,7 +59,7 @@ fileout = str()
 
 for filename in args.filenames:
   if( ascii ):
-    dataDict, idc = readAsciiGridHeader( filename, idc )
+    dataDict, idc = readAsciiGridHeader( filename, nhl, idc )
   elif( npz ):
     dataDict, idc = readNumpyZGridData( filename, idc )
     
@@ -72,7 +77,7 @@ dPx = resolutionFromDicts( dictList )
 gIJ, XOrig, Mrows, Mcols = arrangeTileGrid( dictList, [ascii,npz] )
 print 'gIJ : {} '.format( gIJ )
 
-Rdict = compileTileGrid( dictList, gIJ , Mrows, Mcols, [ascii, npz] )
+Rdict = compileTileGrid2( dictList, gIJ , Mrows, Mcols, [ascii, npz], nhl )
 Rdims = np.array(np.shape(Rdict['R']))
 Rdict['GlobOrig'] = XOrig
 Rdict['dPx'] = dPx

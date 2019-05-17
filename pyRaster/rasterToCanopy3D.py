@@ -59,7 +59,7 @@ if( profileLAD ):
 Rdict = readNumpyZTile( filename )
 R = Rdict['R']
 nPx = np.shape(R)
-dPx = Rdict['dPx']
+dPx = np.abs( Rdict['dPx'] )  #  <--- The deltas should be all positive here.
 
 # Calculate the shape of the new 3D array, use largest in-canopy value
 nPx3D = nPx; dPx3D = dPx
@@ -147,8 +147,8 @@ else:
         # There is no need to write empty columns
         continue
       # Convert everything into strings and write
-      # datatype x y col(:)
-      lineStr = str(1)+","+str(x)+","+str(y)+","+",".join(map("{:.3g}".format,canopy[x,y,:]))+"\n"
+      # datatype x y pctype col(:)
+      lineStr = str(1)+","+str(x)+","+str(y)+","+str(1)+","+",".join(map("{:.3g}".format,canopy[x,y,:]))+"\n"
       fx.write(lineStr)
   fx.close()
 print(" ...{} saved successfully.".format(fileout))

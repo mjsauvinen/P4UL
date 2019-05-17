@@ -33,6 +33,8 @@ parser.add_argument("-nt", "--ntimeskip", type=int, default=0,\
   help="Skip <nt> number of time steps.")
 parser.add_argument("-c", "--coarse", type=int, default=1,\
   help="Coarsening level. Int > 1.")
+parser.add_argument("-kc", "--kcopy",action="store_true", default=False,\
+  help="Copy in z-direction, do not interpolate.")
 args = parser.parse_args() 
 #==========================================================#
 # Initial renaming operations and variable declarations
@@ -44,6 +46,7 @@ suffix     = args.suffix
 zname      = args.zname
 nt         = args.ntimeskip
 cl         = abs(int(args.coarse))
+kcopy      = args.kcopy
 
 # Boolean switch for the decomposition option.
 decompOn = args.decomp or args.decompOnly
@@ -83,8 +86,11 @@ y[np.isnan(y)] = 0.  # Special treatment.
 yv = createNetcdfVariable( dso, y   , 'y'   , len(y)   , 'm', 'f4', ('y',)   , parameter )
 y = None
 
-z, z_dims = read1DVariableFromDataset( zname ,ds, 1, 0, cl ) # Exclude the first value.
+if( kcopy ): xk = 0
+else:        xk = 1
+z, z_dims = read1DVariableFromDataset( zname ,ds, xk, 0, cl )
 zv = createNetcdfVariable( dso, z   , 'z'   , len(z)   , 'm', 'f4', ('z',)   , parameter )
+print(' z_dims = {} '.format(z_dims))
 z = None
 
 
@@ -106,10 +112,13 @@ Number of times remains the same, but coord. lengths
 are reduced by one due to interpolation.
 '''
 cc_dims  = np.array( u0_dims )  # Change to numpy array for manipulation
-cc_dims[1:] -= 1   # Reduce the coord. dimensions by one. Note: time = uc_dims[0].
+if( kcopy ): cc_dims[2:] -= 1   # Reduce the x, y coord. dimensions by one. Note: time = uc_dims[0].
+else:        cc_dims[1:] -= 1   # Reduce all coord. dimensions by one. 
+print(' u0_dims = {}, cc_dims = {} '.format(u0_dims,cc_dims))
+
 
 uc = np.zeros( cc_dims )
-uc, um = interpolatePalmVectors( u0, u0_dims, 'i' , decompOn ); u0 = None
+uc, um = interpolatePalmVectors( u0, cc_dims, 'i' , decompOn ); u0 = None
 
 if( not args.decompOnly ):
   uv = createNetcdfVariable( dso, uc, 'u', cc_dims[0], 'm/s', 'f4',('time','z','y','x',) , variable )
@@ -121,29 +130,16 @@ if( decompOn ):
   umv = createNetcdfVariable( dso, um, 'um', cc_dims[0], 'm/s', 'f4',('z','y','x',) , variable )
   um = None
 
-# - - - - Second, v-component - - - - - - - - - -
-
-v0, v0_dims = read3DVariableFromDataset( 'v'+suffix, ds, nt, 0, 0, cl ) # All values.
-
-vc = np.zeros( cc_dims )
-vc, vm = interpolatePalmVectors( v0, v0_dims, 'j' , decompOn ); v0 = None
-
-if( not args.decompOnly ):
-  vv = createNetcdfVariable( dso, vc, 'v', cc_dims[0], 'm/s', 'f4',('time','z','y','x',) , variable )
-  if( not decompOn ): vc = None
-if( decompOn ):
-  vp = vectorPrimeComponent( vc, vm ); vc = None
-  vpv = createNetcdfVariable( dso, vp, 'vp', cc_dims[0], 'm/s', 'f4',('time','z','y','x',) , variable )
-  vp = None
-  vmv = createNetcdfVariable( dso, vm, 'vm', cc_dims[0], 'm/s', 'f4',('z','y','x',) , variable )
-  vm = None
 
 # - - - - Third, w-component - - - - - - - - - -
 
 w0, w0_dims = read3DVariableFromDataset( 'w'+suffix, ds, nt, 0, 0, cl ) # All values.
 
 wc = np.zeros( cc_dims )
-wc, wm = interpolatePalmVectors( w0, w0_dims, 'k' , decompOn ); w0 = None
+if( kcopy ):
+  wc, wm = interpolatePalmVectors( w0, cc_dims, 'kc' , decompOn ); w0 = None
+else:
+  wc, wm = interpolatePalmVectors( w0, cc_dims, 'k' , decompOn ); w0 = None
 
 if( not args.decompOnly ):
   wv = createNetcdfVariable( dso, wc, 'w', cc_dims[0], 'm/s', 'f4',('time','z','y','x',) , variable )
@@ -155,11 +151,33 @@ if( decompOn ):
   wmv = createNetcdfVariable( dso, wm, 'wm', cc_dims[0], 'm/s', 'f4',('z','y','x',) , variable )
   wm = None
 
+
+# - - - - Second, v-component - - - - - - - - - -
+
+v0, v0_dims = read3DVariableFromDataset( 'v'+suffix, ds, nt, 0, 0, cl ) # All values.
+
+vc = np.zeros( cc_dims )
+vc, vm = interpolatePalmVectors( v0, cc_dims, 'j' , decompOn ); v0 = None
+
+if( not args.decompOnly ):
+  vv = createNetcdfVariable( dso, vc, 'v', cc_dims[0], 'm/s', 'f4',('time','z','y','x',) , variable )
+  if( not decompOn ): vc = None
+if( decompOn ):
+  vp = vectorPrimeComponent( vc, vm ); vc = None
+  vpv = createNetcdfVariable( dso, vp, 'vp', cc_dims[0], 'm/s', 'f4',('time','z','y','x',) , variable )
+  vp = None
+  vmv = createNetcdfVariable( dso, vm, 'vm', cc_dims[0], 'm/s', 'f4',('z','y','x',) , variable )
+  vm = None
+
+
+# - - - - Fouth, possible scalars - - - - - - - - - -
+
 if( scalars ):
   for sn in scalars:
     s0, s0_dims = read3DVariableFromDataset( sn+suffix, ds, nt, 0, 0, cl ) # All values.
     sc_dims  = np.array( s0_dims )  # Change to numpy array for manipulation
-    sc_dims[1:] -= 1   # Reduce the coord. dimensions by one. Note: time = sc_dims[0].
+    if( kcopy ): sc_dims[2:] -= 1   # Reduce the x, y dimensions by one. Note: time = sc_dims[0].
+    else:        sc_dims[1:] -= 1   # Reduce all coord. dimensions by one.
     sc = np.zeros( sc_dims )
     sc, sm = interpolatePalmVectors( s0, s0_dims, 'i' , decompOn ); s0 = None
     if( not args.decompOnly ):

@@ -20,6 +20,8 @@ Author: Mikko Auvinen
 parser = argparse.ArgumentParser(prog='utmTilesFromGeoTiff.py')
 parser.add_argument("-f", "--filename", type=str, help="Name of the target .tif file", \
   default=None)
+parser.add_argument("-nd", "--ndecimals",type=int,\
+   help="Number of decimal places. Default = 1", default=1) 
 parser.add_argument("-b", "--bandSelect", help="Raster Band Selection. Default=1.",\
   action="store_true", default=False)
 parser.add_argument("-p", "--printOn", help="Print the extracted tile.",\
@@ -34,6 +36,7 @@ filename = args.filename
 bandSelect = args.bandSelect
 printOn    = args.printOn
 printOnly  = args.printOnly
+ndecimals  = args.ndecimals
 
 dataset = openGeoTiff( filename )
 nBands = numberOfRasterBands( dataset, True) # PrintOn = True/False
@@ -53,7 +56,7 @@ print(' Number of non-zero values = {}'.format(np.count_nonzero(R)))
 Rdict = dict()
 Rdict['dPx'] = dPx
 Rdict['rotation'] = 0.
-Rdict['R'] = R
+Rdict['R'] = np.round( R , decimals=ndecimals )
 Rdict['GlobOrig'] = ROrig
 
 if( not printOnly ):

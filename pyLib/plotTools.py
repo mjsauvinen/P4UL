@@ -8,8 +8,8 @@ from  matplotlib.ticker import FormatStrFormatter
 
 # 08.04.2016:  Mona added an option for colorbar bounds to addImagePlot
 
-plt.rc('xtick', labelsize=20); #plt.rc('ytick.major', size=10)
-plt.rc('ytick', labelsize=20); #plt.rc('ytick.minor', size=6)
+plt.rc('xtick', labelsize=24); #plt.rc('ytick.major', size=10)
+plt.rc('ytick', labelsize=24); #plt.rc('ytick.minor', size=6)
 plt.rcParams["font.family"] = "serif"
 #plt.rcParams["font.serif"] = "Utopia"
 #plt.rcParams["font.family"] = "monospace"
@@ -149,7 +149,7 @@ def linestyle_stack(lm=1, il=None):
   # '-.' : dash-dot line style, ':' : dotted line style
   
   if( lm == 1 ):
-    lstyleList = ['-','--','-.',':']
+    lstyleList = ['-','--',':','-.']
   else:
     lstyleList = ['-','--']
 
@@ -806,10 +806,11 @@ def addQuiver( X, Y, Ux, Uy , fc,  labelStr, titleStr=" " ):
 def addContourf( X, Y, Q, CfDict=None ):
   Xdims = np.array(X.shape)
   #figDims = 12.*(Xdims[::-1].astype(float)/np.max(Xdims))
-  figDims  = (11,11)
+  #figDims  = (11,11)
+  figDims  = (9,11)
   fig = plt.figure(figsize=figDims)
   #fig, ax = plt.subplots()
-  ax = fig.add_axes( [0.1, 0.08 , 0.9 , 0.85] ) #[left, up, width, height]
+  ax = fig.add_axes( [0.1, 0.08 , 0.88 , 0.85] ) #[left, up, width, height]
   
   # Default values 
   labelStr = ' Q(X,Y) '

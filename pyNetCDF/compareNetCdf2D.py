@@ -32,6 +32,18 @@ def U_hd( fn, cl=1, direction=False ):
   return v, x, y, z
 
 #==========================================================#
+helpStr = '''
+Diff mode: 
+'d': delta, 
+'r': relative delta, 
+'s': scaled, 
+'n': root normalized mean square diff.,
+'f': fractional bias
+'v': geometric variance
+'''
+methodList = ['d','r', 's','n','f','v','R']
+
+
 parser = argparse.ArgumentParser(prog='compareNetCdf2D.py')
 parser.add_argument("-f1", "--filename1",type=str, help="Name of the first (ref) input NETCDF file.")
 parser.add_argument("-f2", "--filename2",type=str, help="Name of the second input NETCDF file.")
@@ -41,10 +53,10 @@ parser.add_argument("-v0", "--vref", type=float, nargs=2, default=[0.,0.],\
   help="Reference values 'v0' in v+ = (v - v0)/v* for -f1 and -f2. Default = [0,0]")
 parser.add_argument("-vs", "--vstar", type=float, nargs=2, default=[1.,1.],\
   help="Characteristic value 'v*' in v+ = (v - v0)/v* for -f1 and -f2. Default = [1,1]")
-parser.add_argument("-m", "--mode", type=str, default='d', choices=['d', 'r', 's','n'],\
-  help="Diff mode: 'd': delta, 'r': relative, 's': scaled, 'n': root normalized mean square diff.")
-parser.add_argument("-w", "--writeRMS", help="Write the root-mean-square of the differences to a file.",\
-  action="store_true", default=False)
+parser.add_argument("-m","--mode", type=str, default='d', choices=methodList,\
+  help=helpStr)
+parser.add_argument("-w", "--writeFile", action="store_true", default=False,\
+  help="Write the root-mean-square of the differences to a file.")
 parser.add_argument("-nx", "--nexcl", type=int, nargs=2, default=[0,1],\
   help="Exclude the [first,last] number of nodes from analysis in x-direction.")
 parser.add_argument("-p", "--printOn", help="Print the numpy array data.",\
@@ -64,13 +76,16 @@ v0       = np.array(args.vref )
 vs       = np.array(args.vstar)
 mode     = args.mode
 nx       = args.nexcl
-writeRMS = args.writeRMS
+writeFile= args.writeFile
 printOn  = args.printOn
 saveOn   = args.save
 limsOn   = args.lims
 gridOn   = args.grid
 
 #----------------------------------------------------------#
+
+Sdict = {'d':'RMSD','s':'RMSD (scaled)','r':'RMSD (rel)','n':'RNMSD','f':'FB',\
+  'v':'VG','R':'R'}
 
 # Shorter name
 vn = varname.split('_')[0]
@@ -102,10 +117,10 @@ else:
 
 idk = selectFromList( z1 )
 
-if( writeRMS ):
-  fout = file('RMS_d{}.dat'.format(vn), 'wb')
+if( writeFile ):
+  fout = file('{}_d{}.dat'.format(Sdict[mode],vn), 'wb')
   fout.write('# file1 = {}, file2 = {}\n'.format(f1, f2))
-  fout.write('# z_coord \t RMS(d{})\n'.format(vn))
+  fout.write('# z_coord \t {}(d{})\n'.format(Sdict[mode],vn))
   
   #fout.write('{:.2f}\t{:.2e}'.format( z1[k1], dv ))
 
@@ -130,38 +145,86 @@ for k1 in idk:
     v1x = np.ma.masked_array( v1x, mask=idm ) 
     v2x = np.ma.masked_array( v2x, mask=idm )  
     idm = None 
-    
-  #idx  = ( np.abs(v1x) > 1E-5 )
-  #vm1  = np.mean( v1x[idx] )
-  vm1 = np.mean( v1x )
-
-  if( mode == 'r' ):
-    dv = (v2x - v1x)/np.abs( v1x + 1E-5 )
-  elif( mode == 's' ):
-    dv = (v2x - v1x)/( vm1 + 1E-5 )
-    #print('max={}, std={}'.format(np.max(dv), np.std(dv)))
-    
-  elif( mode == 'd'):
-    dv = (v2x - v1x)
-    
-  else:
-    denom = v2x*v1x 
-    sgn = np.sign( denom )
-    d2  = ( sgn*(np.abs(denom) + 1E-4) ); denom = None; sgn = None 
-    dv  = (v2x - v1x)
-
-  idnn = ~(dv == np.nan )
-  N = len( np.ravel( dv[idnn] ) );# print(' N = {} '.format(N))
-  if( mode == 'n'):
-    RMSDiff  = np.sqrt( np.abs(np.sum(dv**2)/N * np.sum(d2**(-1))/N) )
-    SkewDiff = 0.
-  else:
-    RMSDiff  = np.sqrt(np.sum(dv**2)/N)
-    SkewDiff = (1./N)*np.sum(dv**3) * ( 1./(N-1.)*np.sum(dv**2) )**(-1.5) 
-  print(' RMS (d{}) = {}, Sk(d{}) = {} '.format( vn , RMSDiff, vn, SkewDiff ))
   
-  if( writeRMS ):
-    fout.write('{:.2f}\t{:.2e}\n'.format( z1[k1], RMSDiff ))
+  v2x  = np.ma.round( v2x, decimals=2 )
+  v1x  = np.ma.round( v1x, decimals=2 )
+  
+  
+  if( 1 ):
+    # Take values that are above 0.01 or below -0.01
+    idx = np.array( (v1x < 5.E-2) )
+    #idx = np.array( (v1x > -0.1) )
+    m1x = np.ma.getmask(v1x)
+    m1x += idx
+  
+    m2 = np.ma.getmask(v2x)
+    m2 += idx
+  
+  
+  '''
+  id2x = np.array( np.abs(v2x) > 1E-2 ) 
+  vm2  = np.ma.mean( v2x[id2x] )
+  
+  id1x = np.array( np.abs(v1x) > 1E-2 )
+  vm1  = np.ma.mean( v1x[id1x] )
+  dv   = (v2x[id1x] - v1x[id1x] )
+
+  '''
+  
+  vm1 = np.mean( v1x )
+  vm2 = np.mean( v2x )
+  print('k={}: vm1 = {}, vm2 = {} '.format(k1,vm1,vm2))
+  
+  dv  = (v2x - v1x)
+  
+  
+  # NOTE: We are using the desired indices obtained only from the reference (f1) data.
+  
+  idnn = ~(dv == np.nan )
+  N = np.ma.count( np.ravel( dv[idnn] ) )
+  print('k={}: Number of good points, N = {}'.format(k1,N))
+
+  if( mode in ['r','s','d'] ):
+    if( mode == 'r' ): dv /= np.abs( v1x + 1E-5 )
+    if( mode == 's' ): dv /= ( vm1 + 1E-5 )
+    #if( mode == 'd' ):  Keep as is: dv = (v2x - v1x)
+    RES = np.sqrt(np.sum(dv**2)/N)
+    SkewDiff = (1./N)*np.sum(dv**3) * ( 1./(N-1.)*np.sum(dv**2) )**(-1.5)
+    print('{} (d{}) = {}, Sk(d{}) = {} '.format(Sdict[mode], vn , RES, vn, SkewDiff ))
+    
+  if( mode == 'n'):
+    v_min_th = np.sqrt(1.e-5)
+    vm1 = np.sign(vm1)*np.maximum( np.abs(vm1), v_min_th )
+    vm2 = np.sign(vm2)*np.maximum( np.abs(vm2), v_min_th )
+    denom = vm1*vm2
+    enum  = np.sum(dv**2)/N
+    RES = np.sqrt( enum/np.abs(denom) )
+    #print(' enum = {}, denom = {} '.format(enum,denom))
+    print('{} (d{}) = {}'.format(Sdict[mode], vn , RES))
+
+  if( mode == 'f'):
+    denom_min_th = 1.e-2
+    dv = (vm2 - vm1)  # Note, mean values
+    enum = np.maximum( dv, 1.e-3 )
+    denom = 0.5*(np.abs(vm2)+np.abs(vm1))
+    denom = np.sign(denom)*np.maximum( np.abs(denom), denom_min_th )
+    RES = dv/denom
+    #print(' enum = {}, denom = {} '.format(dv,denom))
+    print('{} (d{}) = {}'.format(Sdict[mode], vn , RES))
+    
+  if( mode == 'v'):
+    v_min_th = 1.e-1
+    dv =  np.log( np.maximum( np.abs(v2x), v_min_th)/(np.maximum( np.abs(v1x), v_min_th )) )
+    RES = np.exp( np.sum(dv**2)/N )
+    print('{} (d{}) = {}'.format(Sdict[mode], vn , RES))
+    
+  if( mode == 'R'):
+    dv = (v1x-vm1)*(v2x-vm2)
+    RES = (np.sum(dv)/N)/(np.std(v1x)*np.std(v2x))
+    print('{} (d{}) = {}'.format(Sdict[mode], vn , RES))
+  
+  if( writeFile ):
+    fout.write('{:.2f}\t{:.2e}\n'.format( z1[k1], RES ))
 
 
   if( printOn ):
@@ -182,11 +245,11 @@ for k1 in idk:
     #  normed=True, log=True, histtype=u'bar', label=labelStr )
     
     if( saveOn ):
-      figname = 'RMSDiff_{}_z{}.jpg'.format(vn, int(z1[k1]))
+      figname = '{}_{}_z{}.jpg'.format(Sdict[mode],vn, int(z1[k1]))
       print(' Saving = {}'.format(figname))
       fig.savefig( figname, format='jpg', dpi=150)
-      fig2.savefig( figname.replace("RMSDiff","Ref"), format='jpg', dpi=150)
-      #fig3.savefig( figname.replace("RMSDiff","Hist"), format='jpg', dpi=150)
+      fig2.savefig( 'REF_'+figname, format='jpg', dpi=150)
+      #fig3.savefig( figname.replace("RES","Hist"), format='jpg', dpi=150)
     plt.show()
 
-if( writeRMS ): fout.close()
+if( writeFile ): fout.close()

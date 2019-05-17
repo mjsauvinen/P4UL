@@ -186,12 +186,13 @@ def read3dDataFromNetCDF( fname, varStr, cl=1 ):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 
-def interpolatePalmVectors(v0, v0_dims, cmpStr, meanOn=False):
+def interpolatePalmVectors(v0, vc_dims, cmpStr, meanOn=False):
 
   icmp = int()
   iOn = False
   jOn = False
   kOn = False
+  kCopy = False
   if(cmpStr == 'i'):
     icmp = 3
     iOn = True
@@ -201,14 +202,15 @@ def interpolatePalmVectors(v0, v0_dims, cmpStr, meanOn=False):
   elif(cmpStr == 'k'):
     icmp = 1
     kOn = True
+  elif(cmpStr == 'kc'):
+    icmp = 1
+    kCopy = True
   else:
     print('Invalid component string: {}. Exiting ...'.format(cmpStr))
     sys.exit(1)
 
-  vc_dims = np.array(v0_dims)
-  vc_dims[1:] -= 1  # Reduce spatial dimension by one.
-
   vc = np.zeros(vc_dims)
+  
   if(meanOn):
     vm = np.zeros(vc_dims[1:])
   else:
@@ -217,18 +219,26 @@ def interpolatePalmVectors(v0, v0_dims, cmpStr, meanOn=False):
   # Create index arrays for interpolation.
   jl = np.arange(0, vc_dims[icmp]); jr = jl + 1  # x,y,z: left < right
 
-  nTimes = v0_dims[0]
+  nTo,   nzo, nyo, nxo = np.shape(v0)
+  nTimes, nz,  ny, nx  = vc_dims
+  
+  if( nz == nzo ): k1 = 0
+  else:            k1 = 1
+  
   for i in xrange(nTimes):
     tmp0 = v0[i, :, :, :].copy()
 
     if(iOn):
       tmp1 = (tmp0[:, :, jl] + tmp0[:, :, jr]) * 0.5; tmp0 = None
-      tmp2 = tmp1[1:, 0:-1, :]
+      tmp2 = tmp1[k1:, 0:-1, :]
     if(jOn):
       tmp1 = (tmp0[:, jl, :] + tmp0[:, jr, :]) * 0.5; tmp0 = None
-      tmp2 = tmp1[1:, :, 0:-1]
+      tmp2 = tmp1[k1:, :, 0:-1]
     if(kOn):
       tmp1 = (tmp0[jl, :, :] + tmp0[jr, :, :]) * 0.5; tmp0 = None
+      tmp2 = tmp1[:, 0:-1, 0:-1]
+    if( kCopy ):
+      tmp1 = tmp0[jl, :, :]; tmp0 = None
       tmp2 = tmp1[:, 0:-1, 0:-1]
     tmp1 = None
 
@@ -250,7 +260,6 @@ def interpolatePalmVectors(v0, v0_dims, cmpStr, meanOn=False):
   return vc, vm    # vm is empty if meanOn=False.
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-
 
 def vectorPrimeComponent(vc, vm):
   vc_dims = np.shape(vc)

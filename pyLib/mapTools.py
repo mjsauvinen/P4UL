@@ -13,136 +13,66 @@ Author: Mikko Auvinen
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def arrangeTileGrid( dictList, fileTypes ):
-  coordList = []
-  ascii = fileTypes[0]; npz = fileTypes[1]
-
-  XO_TL = np.zeros(2)  # Initialize the Top Left Origin.
-
-  for d in dictList:
-    # The last two indecies are for row / col addresses.
-    if( ascii ):
-      coordList.append( [d['id'], d['xllcorner'], d['yllcorner'], 0, 0] )
-    else: # .npz
-      coordList.append( [d['id'], d['xtlcorner'], d['ytlcorner'], 0, 0] )
-
-  # Sort the list according to y-values
-  coordListSorted = sorted( coordList, key=operator.itemgetter(2) )
-  #print ' y-sorted : {} '.format( coordListSorted )
-
-
-  # Determine the Top Left Origin (y-value).
-  ltmp = coordListSorted[-1]  # Take the last entry.
-  dtmp = dictList[ltmp[0]]    # Fetch the desired dict. ltmp[0] == id.
-  if( ascii ):
-    XO_TL[0]= dtmp['yllcorner']+dtmp['nrows']*dtmp['cellsize']
-  else:
-    XO_TL[0]= dtmp['ytlcorner']
-
-  irow = 0; maxVal = 0.
-  for t in reversed(coordListSorted):
-    if( t[2] >= maxVal ):
-      pass
-    else:
-      irow+=1  # Change row
-    t[3] = irow; maxVal = t[2]
-
-  imax = irow+1  # Store the number of rows.
-
-  # Sort the list according to x-values
-  coordListSorted = sorted( coordList, key=operator.itemgetter(1) )
-  #print ' x-sorted : {} '.format( coordListSorted )
-
-  # Determine the Top Left Origin (x-value).
-  ltmp = coordListSorted[0]
-  dtmp = dictList[ltmp[0]]
-  if( ascii ):
-    XO_TL[1]= dtmp['xllcorner']
-  else:
-    XO_TL[1]= dtmp['xtlcorner']
-
-  jcol = 0; minVal = 1.e12
-  for t in coordListSorted:
-    if( t[1] <= minVal ):
-      pass
-    else:
-      jcol+=1  # Change column
-    t[4] = jcol; minVal = t[1]
-
-  jmax = jcol+1   # Store the number of columns
-
-  ijList = []
-  for t in coordListSorted:
-    ijList.append( [ t[0], t[3], t[4] ] )# id, irow, jcol
-
-  return ijList, XO_TL, imax, jmax
-
-# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-
-def compileTileGrid( dictList, ijList, Mrows, Mcols, fileTypes ):
-  M = []  # An empty array to start with.
-  ascii = fileTypes[0]; npz = fileTypes[1]
-
-  for i in xrange(Mrows):
-    for j in xrange(Mcols):
-      for idTile, irow, jcol in ijList:
-
-        if(irow == i and jcol == j ):
-          d = dictList[idTile]
-          if( ascii ):
-            r = readAsciiGrid( d['name']+'.asc' )
-          elif( npz ):
-            Rdict = readNumpyZTile(d['name']+'.npz')
-            r=Rdict['R']
-            Rdict = None   # Throw the rest away.
-          M.append(r); r = None
-
-  print(' M.shape = {}'.format(np.shape(M)))
-
-  T = None
-  for i in xrange(Mrows):
-    c1 = i*Mcols; c2 = (i+1)*Mcols
-    print 'c1={}, c2={}'.format(c1,c2)
-    if( T is None ):
-      T = np.hstack(M[c1:c2])
-    else:
-      T = np.vstack( (T,np.hstack(M[c1:c2])) )
-
-    print(' np.shape(T) = {}'.format(np.shape(T)))
-
-  M = None
-  Rdict = {'R' : T}
-  return Rdict
-
-# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-
-def readAsciiGridHeader( filename, idx=0 ):
+def readAsciiGridHeader( filename, nHeaderEntries, idx=0 ):
   fl = open( filename , 'r')
   name = filename.strip('.asc') # Extract the tile name.
-  hdict = {'id':idx,'name': name, 'ncols':None,'nrows':None,\
-            'xllcorner':None,'yllcorner':None,'cellsize':None,\
-            'NODATA_value':None}
+  hdict = {'id':idx,'name': name }
+  # 'ncols': None
+  # 'nrows': None
+  # 'xllcorner': None
+  # 'yllcorner': None
+  # 'cellsize' : None
+  # 'NODATA_value' : None
+   
 
-  for i in xrange(len(hdict.keys())):
+  for i in xrange(nHeaderEntries):
     try:
-      s = fl.readline().split()
+      s = fl.readline().lower().split()
+      print(' Header line {}: {} '.format(i,s))
       hdict[s[0]] = float( s[1] )
     except:
       print('Unexpected ascii grid header format. Exiting.')
       sys.exit(1)
 
+  hdict = asciiCenterToCorner( hdict )
   idx += 1
   fl.close()
+  
   return hdict, idx
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def asciiTileToNumpyZ(filename):
+def asciiCenterToCorner( xdict ):
+  # Resolve the issue involving xllcorner vs xllcenter. Both are allowed by ESRI ASCII standard
+  if( 'xllcenter' in xdict.keys() ):
+    xdict['xllcorner'] = xdict['xllcenter'] - xdict['cellsize']/2.
+    
+  if( 'yllcenter' in xdict.keys() ):
+    xdict['yllcorner'] = xdict['yllcenter'] - xdict['cellsize']/2.
+  
+  return xdict
 
-  Rdict, idx = readAsciiGridHeader( filename )
-  R = readAsciiGrid( filename )
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def readAsciiGrid( filename, nHeaderEntries ):
+  try:
+    rx = np.loadtxt( filename, skiprows=nHeaderEntries ) # Note! skiprows=6.
+    print(' File {} read successfully.'.format(filename))
+  except:
+    print(' Could not read ascii grid file: {}. Exiting.'.format(filename))
+    sys.exit(1)
+
+  return rx
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def asciiTileToNumpyZ(filename, nHeaderEntries, idx=0):
+
+  Rdict, idx = readAsciiGridHeader( filename, nHeaderEntries, idx )
+  R = readAsciiGrid( filename, nHeaderEntries )
 
   Rdict['id'] = idx
+  
   Rdict['ytlcorner'] = Rdict['yllcorner'] + Rdict['cellsize']* Rdict['nrows']
   Rdict['xtlcorner'] = Rdict['xllcorner']
 
@@ -166,7 +96,7 @@ def readNumpyZGridData( filename, idx=0 ):
   name = filename.strip('.npz') # Extract the tile name.
   hdict = {'id':idx,'name': name, 'ncols':Rxdims[1],'nrows':Rxdims[0],\
            'xtlcorner':RxOrig[1],'ytlcorner':RxOrig[0],\
-           'cellsize':int(dPx[0]),'NODATA_value':None}
+           'cellsize':int(dPx[0]),'nodata_value':None}
   idx += 1
   return hdict, idx
 
@@ -186,15 +116,124 @@ def resolutionFromDicts( dictList ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def readAsciiGrid( filename ):
-  try:
-    rx = np.loadtxt( filename, skiprows=6 ) # Note! skiprows=6.
-    print(' File {} read successfully.'.format(filename))
-  except:
-    print(' Could not read ascii grid file: {}. Exiting.'.format(filename))
-    sys.exit(1)
+def arrangeTileGrid( dictList, fileTypes ):
+  coordList = []
+  ascii = fileTypes[0]; npz = fileTypes[1]
 
-  return rx
+  XO_TL = np.zeros(2)  # Initialize the Top Left Origin.
+
+  for d in dictList:
+    # The last two indecies are for row / col addresses.
+    if( ascii ):
+      coordList.append( [d['id'], d['xllcorner'], d['yllcorner'], 0, 0] )
+    else: # .npz
+      coordList.append( [d['id'], d['xtlcorner'], d['ytlcorner'], 0, 0] )
+
+  # Sort the list according to y-values
+  coordListSorted = sorted( coordList, key=operator.itemgetter(2) )
+  #print(' CoordList y-sorted : {} '.format( coordListSorted ))
+
+
+  # Determine the Top Left Origin (y-value).
+  ltmp = coordListSorted[-1]  # Take the last entry.
+  dtmp = dictList[ltmp[0]]    # Fetch the desired dict. ltmp[0] == id.
+  if( ascii ):
+    XO_TL[0]= dtmp['yllcorner']+dtmp['nrows']*dtmp['cellsize']
+  else:
+    XO_TL[0]= dtmp['ytlcorner']
+
+  irow = 0; maxVal = 0.
+  for t in reversed(coordListSorted):
+    if( t[2] >= maxVal ): # t[2] := y-cord.
+      pass
+    else:
+      irow+=1  # Change row
+    t[3] = irow; maxVal = t[2]
+
+  imax = irow+1  # Store the number of rows.
+
+  # Sort the list according to x-values
+  coordListSorted = sorted( coordList, key=operator.itemgetter(1) )
+  #print ' x-sorted : {} '.format( coordListSorted )
+
+  # Determine the Top Left Origin (x-value).
+  # This is the same for xllcorner and xtlcorner.
+  ltmp = coordListSorted[0]
+  dtmp = dictList[ltmp[0]]
+  if( ascii ):
+    XO_TL[1]= dtmp['xllcorner']
+  else:
+    XO_TL[1]= dtmp['xtlcorner']
+
+  jcol = 0; minVal = 1.e12
+  for t in coordListSorted:
+    if( t[1] <= minVal ): # t[1] := x-cord.
+      pass
+    else:
+      jcol+=1  # Change column
+    t[4] = jcol; minVal = t[1]
+
+  jmax = jcol+1   # Store the number of columns
+
+  ijList = []
+  for t in coordListSorted:
+    ijList.append( [ t[0], t[3], t[4] ] )# id, irow, jcol
+
+  return ijList, XO_TL, imax, jmax
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def minMaxCoords( xdict , fileTypes ):
+  asc = fileTypes[0]; npz = fileTypes[1]
+  if( asc ):
+    xn = xdict['xllcorner']
+    yx = xdict['yllcorner']
+    xx = xdict['xllcorner']+xdict['ncols']*xdict['cellsize']
+    yn = xdict['yllcorner']-xdict['nrows']*xdict['cellsize']
+  else:
+    xn = xdict['xtlcorner']
+    yx = xdict['ytlcorner']
+    xx = xdict['xtlcorner']
+    yn = xdict['ytlcorner']
+  
+  return xn, xx, yn, yx
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def compileTileGrid( dictList, ijList, Mrows, Mcols, fileTypes, nHeaderEntries ):
+  M = []  # An empty array to start with.
+  ascii = fileTypes[0]; npz = fileTypes[1]
+
+  for i in xrange(Mrows):
+    for j in xrange(Mcols):
+      for idTile, irow, jcol in ijList:
+
+        if(irow == i and jcol == j ):
+          d = dictList[idTile]
+          if( ascii ):
+            r = readAsciiGrid( d['name']+'.asc', nHeaderEntries )
+          elif( npz ):
+            Rdict = readNumpyZTile(d['name']+'.npz')
+            r=Rdict['R']
+            Rdict = None   # Throw the rest away.
+          M.append(r); r = None
+
+  print(' M.shape = {}'.format(np.shape(M)))
+
+  T = None
+  for i in xrange(Mrows):
+    c1 = i*Mcols; c2 = (i+1)*Mcols
+    print 'c1={}, c2={}'.format(c1,c2)
+    if( T is None ):
+      T = np.hstack(M[c1:c2])
+    else:
+      T = np.vstack( (T,np.hstack(M[c1:c2])) )
+
+    print(' np.shape(T) = {}'.format(np.shape(T)))
+
+  M = None
+  Rdict = {'R' : T}
+  return Rdict
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
