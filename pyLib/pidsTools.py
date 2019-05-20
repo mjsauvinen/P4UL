@@ -225,7 +225,7 @@ def processBuildings(fname,ds,vars,dims):
 
 def processBuildingIDs(fname,ds,vars,dims):
   buildIDDict = readNumpyZTile(fname,verbose=False)
-  buildIDR = buildIDDict['R']
+  buildIDR = buildIDDict['R'][::-1,:]
   buildIDDPx = buildIDDict['dPx']
   buildIDNPx = np.shape(buildIDR)
 
@@ -245,7 +245,7 @@ def processBuildingIDs(fname,ds,vars,dims):
 
 def processPavementType(fname,ds,vars,dims):
   pavementTypeDict = readNumpyZTile(fname,verbose=False)
-  pavementTypeR = pavementTypeDict['R']
+  pavementTypeR = pavementTypeDict['R'][::-1,:]
   pavementTypeDPx = pavementTypeDict['dPx']
   pavementTypeNPx = np.shape(pavementTypeR)
 
@@ -265,7 +265,7 @@ def processPavementType(fname,ds,vars,dims):
 
 def processWaterType(fname,ds,vars,dims):
   waterTypeDict = readNumpyZTile(fname,verbose=False)
-  waterTypeR = waterTypeDict['R']
+  waterTypeR = waterTypeDict['R'][::-1,:]
   waterTypeDPx = waterTypeDict['dPx']
   waterTypeNPx = np.shape(waterTypeR)
 
@@ -285,7 +285,7 @@ def processWaterType(fname,ds,vars,dims):
 
 def processSoilType(fname,ds,vars,dims):
   soilTypeDict = readNumpyZTile(fname,verbose=False)
-  soilTypeR = soilTypeDict['R']
+  soilTypeR = soilTypeDict['R'][::-1,:]
   soilTypeDPx = soilTypeDict['dPx']
   soilTypeNPx = np.shape(soilTypeR)
 
