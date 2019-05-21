@@ -610,8 +610,6 @@ def processAerosolEmissionValues(emiStr,fname,emiDmid,ds,vars,dims):
       print("Error: invalid value for aerosol_emission_values in configuration file, expected a comma-delimited list")
       exit(1)
 
-    print(sourceNPx)
-
     x_dim = createXDim(ds, sourceNPx, sourceDPx, dims)
     y_dim = createYDim(ds, sourceNPx, sourceDPx, dims)
     ncat_dim = createNcatDim(ds, [1], dims)
@@ -623,7 +621,6 @@ def processAerosolEmissionValues(emiStr,fname,emiDmid,ds,vars,dims):
     for i in xrange(nbins):
       aerosol_emission_values[i,0,sourceR.T==1] = emiVals[i]
 
-    print("doo")
     dmid_Dim = createNetcdfVariable( ds, emiDmids, 'Dmid', len(emiDmids), '', 'f4', ('Dmid',), parameter=True, verbose=False )
     dims.append('Dmid')
 
