@@ -58,7 +58,7 @@ if( N > 0. ):
 else:
   dr1 = 1; fr2 = rr    # fr2 < 1
   maxDims = R1dims     # Coarsening, R2dims < R1dims
-  R2dims  = (rr * R1dims).astype(int); print(' Coarser dims = {}'.format(R2dims))
+  R2dims  = np.round(rr * R1dims).astype(int); print(' Coarser dims = {}'.format(R2dims))
   s2 = (2**(2*N))   # Scale factor. If we coarsen, the R1 values are appended. Same value to 2^2n cells.
   n1 = np.arange(maxDims[0]); e1 = np.arange(maxDims[1])
   n2 = np.arange(maxDims[0]); e2 = np.arange(maxDims[1])

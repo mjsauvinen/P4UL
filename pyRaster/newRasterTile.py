@@ -28,7 +28,7 @@ parser.add_argument("-O","--Orig", type=float, nargs=2, default=[0.,0.],\
 parser.add_argument("-d","--dP", type=float, nargs=2,\
   help="Raster resolution [dn, de] in meters [m].")
 parser.add_argument("-r","--rotation", type=float, default=0.,\
-  help="Grid rotation in [rad]. Default = 0.")
+  help="Grid rotation in [rad] to be included in the raster file. Default = 0.")
 parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
   action="store_true", default=False)
 parser.add_argument("-pp", "--printOnly", help="Only print the resulting data. Don't save.",\

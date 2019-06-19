@@ -58,7 +58,7 @@ parser.add_argument("fileKey", default=None,\
 parser.add_argument("-v", "--varname",  type=str, default='u',\
   help="Name of the variable in NETCDF file. Default='u' ")
 parser.add_argument("-m", "--mode", type=str, default='mean', \
-  choices=['mean', 'std', 'var','skew','entropy'],\
+  choices=['mean', 'std', 'var','skew','entropy','max'],\
   help="Mode: mean, std, var, or entropy.")
 parser.add_argument("-rs", "--resample", action="store_true", default=False,\
   help="Include resampling of the time series.")
@@ -147,7 +147,7 @@ for fn in fileNos:
   time = dataDict['time']
   dataDict = None
   axs = (0,2,3)
-  axs = (0)
+  #axs = (0)
 
   if( resampleOn ):
     vr2 = resample( vr, Ns )
@@ -200,10 +200,16 @@ for fn in fileNos:
     if( vr2 is not None ): vp2 = calc_skew( vr2, axs )
     plotStr  = ["skew({}) vs z ".format(varname), varname ,"z"]
 
+  elif( mode == 'max'):
+    vp  = np.max( vr, axis=axs ); zp = z
+    if( vr2 is not None ): vp2 = np.mean( vr2, axis=axs )
+    plotStr  = ["max({}) vs z ".format(varname), varname ,"z"]
+
 # ================================================================= #
 
-  if( len(vp.shape) == 3 ):  
-    try: vp  = vp[:,1,1]
+  if( len(vp.shape) == 3 ):
+    jx,ix = np.array( vp.shape[1:] )/2
+    try: vp  = vp[:,jx,ix]
     except: vp = vp[:,0,0]
 
   if( writeAscii ):
