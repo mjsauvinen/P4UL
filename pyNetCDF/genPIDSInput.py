@@ -92,9 +92,7 @@ nest_id = ""
 if (outputConfig is not None):
   nestID = readConfigVariable(config, 'General', 'nest_id')
   if(nestID is not None and nestID!=""):
-    nest_id = "_{:0>2}".format(int(nestID))
-
-print(nest_id)
+    nest_id = "_N{:0>2}".format(int(nestID))
 
 '''
 Open the output netCDF files and write global attributes to them.
