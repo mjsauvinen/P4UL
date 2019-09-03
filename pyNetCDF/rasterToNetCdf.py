@@ -43,7 +43,7 @@ elif (mask):
 if (args.NdZ and mask):
   Rdims = np.append(Rdims, args.NdZ)
 elif (mask):
-  Rdims = np.append(Rdims, int(round(np.amax(Rtopo) / Rdpx[2])))
+  Rdims = np.append(Rdims, int(round(np.amax(Rtopo) / Rdpx[2]))+1)
 
 print(' Input raster data:')
 print(' Size: [N,E] = [{}, {}]'.format(*Rdims))

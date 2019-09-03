@@ -250,12 +250,17 @@ def saveTileAsNumpyZ( filename, Rdict):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def readNumpyZTile( filename, dataOnly=False ):
-  print(' Read filename {} '.format(filename))
+def readNumpyZTile( filename, dataOnly=False, verbose=True):
+  if (verbose):
+    print(' Read filename {} '.format(filename))
   # dat must be closed to avoid leaking file descriptors.
-  dat = np.load(filename)
-  Rdict = dict(dat)
-  dat.close()
+  try:
+    dat = np.load(filename)
+    Rdict = dict(dat)
+    dat.close()
+  except IOError as e:
+    print('Error reading file {0}: {1}'.format(filename, e.strerror))
+    sys.exit(e.errno)
 
   #if(dataOnly):
     #Rdict['R'] = []
@@ -546,12 +551,12 @@ def labelRaster(R, maskId=None):
       mIds.append(maskId)
     else:
       sys.exit(' Error in labelRaster: maskId is not a list or int. It is {}'.format(type(maskId)))
-    
+
     idx = np.zeros( R.shape , bool )
     for im in mIds:
       idx = np.maximum( idx , (R == im ) )
-      
-    Rm[idx] = R[idx]   # Set desired mask values 
+
+    Rm[idx] = R[idx]   # Set desired mask values
 
 
   Rl, shapeCount = snms.label(Rm) # this might be slow for unfiltered data
