@@ -26,7 +26,7 @@ parser.add_argument("-zn", "--zname",type=str, default='zu_3d',\
 parser.add_argument("-sx", "--suffix",type=str, default='',\
   help="Potential suffix to be appended to variable names. Example: '_xy'. ")
 parser.add_argument("-d", "--decomp", action="store_true", default=False,\
-  help="Decomposed into mean (V_m) and fluctuating (V^prime) components.") 
+  help="Decomposed into mean (V_m) and fluctuating (V^prime) components.")
 parser.add_argument("-dd", "--decompOnly",action="store_true", default=False,\
   help="Output V_m and V^prime components only.")
 parser.add_argument("-nt", "--ntimeskip", type=int, default=0,\
@@ -35,13 +35,13 @@ parser.add_argument("-c", "--coarse", type=int, default=1,\
   help="Coarsening level. Int > 1.")
 parser.add_argument("-kc", "--kcopy",action="store_true", default=False,\
   help="Copy in z-direction, do not interpolate.")
-args = parser.parse_args() 
+args = parser.parse_args()
 #==========================================================#
 # Initial renaming operations and variable declarations
 
 filename   = args.filename
 fileout    = args.fileout
-scalars    = args.scalars 
+scalars    = args.scalars
 suffix     = args.suffix
 zname      = args.zname
 nt         = args.ntimeskip
@@ -74,7 +74,7 @@ Create the output independent variables right away and empty memory.
 '''
 time, time_dims = read1DVariableFromDataset('time', ds, nt, 0, 1 ) # All values.
 tv = createNetcdfVariable( dso, time,'time', len(time),'s','f4',('time',), parameter )
-time = None  
+time = None
 
 x, x_dims = read1DVariableFromDataset( 'x',ds, 0, 1, cl ) # Exclude the last value.
 xv = createNetcdfVariable( dso, x   , 'x'   , len(x)   , 'm', 'f4', ('x',)   , parameter )
@@ -113,7 +113,7 @@ are reduced by one due to interpolation.
 '''
 cc_dims  = np.array( u0_dims )  # Change to numpy array for manipulation
 if( kcopy ): cc_dims[2:] -= 1   # Reduce the x, y coord. dimensions by one. Note: time = uc_dims[0].
-else:        cc_dims[1:] -= 1   # Reduce all coord. dimensions by one. 
+else:        cc_dims[1:] -= 1   # Reduce all coord. dimensions by one.
 print(' u0_dims = {}, cc_dims = {} '.format(u0_dims,cc_dims))
 
 
@@ -147,7 +147,7 @@ if( not args.decompOnly ):
 if( decompOn ):
   wp = vectorPrimeComponent( wc, wm )
   wpv = createNetcdfVariable( dso, wp, 'wp', cc_dims[0], 'm/s', 'f4',('time','z','y','x',) , variable )
-  wp = None 
+  wp = None
   wmv = createNetcdfVariable( dso, wm, 'wm', cc_dims[0], 'm/s', 'f4',('z','y','x',) , variable )
   wm = None
 

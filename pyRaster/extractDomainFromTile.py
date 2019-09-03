@@ -8,12 +8,20 @@ from plotTools import addImagePlot, addContourf, addScatterPlot
 import matplotlib.pyplot as plt
 '''
 Description:
+Extracts a rotated and/or cropped subdomain from a raster file.
 
+Authors:  Mikko Auvinen
+          mikko.auvinen@helsinki.fi
+          University of Helsinki &
+          Finnish Meteorological Institute
 
-Author: Mikko Auvinen
-        mikko.auvinen@helsinki.fi
-        University of Helsinki &
-        Finnish Meteorological Institute
+          Sasu Karttunen
+          sasu.karttunen@helsinki.fi
+          University of Helsinki
+
+          Mona Kurppa
+          mona.kurppa@helsinki.fi
+          University of Helsinki
 '''
 
 
@@ -22,7 +30,9 @@ parser = argparse.ArgumentParser(prog='extractDomainFromTile.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of raster data file.")
 parser.add_argument("-fo", "--fileout",type=str, help="Name of output raster file.")
 parser.add_argument("-iP","--iPivot", help="Local pixel ids [N,E] for the pivot in the raster file.",\
-  type=int,nargs=2,required=True)
+  type=int,nargs=2, required=True)
+parser.add_argument("-gc","--useGlobCoords", help="Use global coordinates in iP. ",
+                    action="store_true", default=False)
 parser.add_argument("-N","--NxG", type=int, nargs=2,\
   help="Number of points [Nx, Ny] in the 2D Palm grid.")
 parser.add_argument("-dx","--dxG", type=float, nargs=2, default=[ 2. , 2.],\
@@ -67,9 +77,9 @@ rY = Rdict['rowCoords']   # Local (NOT global!) row coords.
 cX = Rdict['colCoords']   # Local (NOT global) column coords.
 
 
-if( verbose ): 
+if( verbose ):
   print(' Local: [N] coords = {}...{}, [E] coords = {}...{}'\
-    .format(rY[0], rY[-1], cX[0], cX[-1] )) 
+    .format(rY[0], rY[-1], cX[0], cX[-1] ))
 
 Rdims = np.array(np.shape(R))
 # Retain information about rotation
@@ -78,6 +88,12 @@ try:
 except:
   gridRot = 0.
 ROrig = Rdict['GlobOrig']
+
+if (args.useGlobCoords==True):
+  iPv[1] = iPv[1] - ROrig[1]
+  iPv[0] = ROrig[0]-iPv[0]
+
+
 dPx = entry2Int( Rdict['dPx'] )
 if( verbose ): print(' dPx = {} '.format(dPx))
 
@@ -105,7 +121,7 @@ YgridCoords = np.linspace(ybegin,yend, NxG[1])
 #Xg, Yg = np.meshgrid( XgridCoords, YgridCoords )
 
 # Location of the pivot (indecies and coords) in the Palm grid. Not going into negative indices.
-# The -1 omitted in iPGy due to the computation of Irows (vs. Jcols) to preserve symmetry. 
+# The -1 omitted in iPGy due to the computation of Irows (vs. Jcols) to preserve symmetry.
 iPGx = np.maximum(int(    rLx[0] *(NxG[0]-1) ), 0)
 iPGy = np.maximum(int((1.-rLx[1])*(NxG[1]  ) ), 0)
 iPGy = np.minimum( iPGy , (NxG[1]-1) )
@@ -195,7 +211,7 @@ R = None
 
 '''
  Reset the top left origo such that it lies in the global coordinate system.
- This requires that we rotate the new local coordinates XTRM, YTRM to the original 
+ This requires that we rotate the new local coordinates XTRM, YTRM to the original
  coord. system using the input raster's top left origin as pivot.
 '''
 theta2 = gridRot/(np.pi/180.)
@@ -223,7 +239,7 @@ if( printOn or printOnly ):
   figDims = 13.*(Xdims[::-1].astype(float)/np.max(Xdims))
   fig = plt.figure(num=1, figsize=figDims)
   fig = addImagePlot( fig, PR, args.fileout )
-  
+
   CfD = dict()
   CfD['title']=' Z(x,y) '; CfD['label']="PALM DOMAIN ON MAP"; CfD['N']=16
   CO = addContourf( XTRM, YTRM, PR[::-1,:], CfD )
