@@ -104,7 +104,7 @@ def filesFromList( searchStr , allFiles=False):
       try:
         select=input(" Select All? [1-9]=> Yes, [Empty]=> No: ")
       except:
-        print ' Exiting program. '
+        print(' Exiting program. ')
         sys.exit(1)
 
     if( len(fileNos) == 0 ):
@@ -339,7 +339,7 @@ def vtkWriteUnsPointData( V, X, Y, Z, filename ):
     +'SCALARS fp float 1\n'\
     +'LOOKUP_TABLE fp\n'.format(nPoints)
   
-  print ' Writing file {} ...'.format( filename )
+  print(' Writing file {} ...'.format( filename ))
   
   filename = filename.split('.vtk')[0]+'.vtk'
   f = open(filename, 'w')

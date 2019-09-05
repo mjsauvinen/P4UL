@@ -778,8 +778,8 @@ def extractFromRAW( rawFile, varNames ):
   
   #print Ix
   if (len(Ix) == 0):
-    print "None of the variables in {0} were found in {1}".format(varNames,varList)
-    print "Exiting program. "
+    print("None of the variables in {0} were found in {1}".format(varNames,varList))
+    print("Exiting program. ")
     sys.exit(1)
   
   x = np.loadtxt(rawFile)
@@ -863,7 +863,7 @@ def arrow2DPlot( fig, fileStr , scale=1.0, ic=0, fillOn=True ):
   try:
     x = d[:,0]; y =d[:,1]; dx = d[:,2]; dy =d[:,3]
   except:  
-    print ' The file must contain (at least) 4 columns: x, y, dx, dy '
+    print(' The file must contain (at least) 4 columns: x, y, dx, dy ')
     sys.exit(1)
     
   ax  = fig.add_axes( [0.075, 0.075 , 0.85 , 0.85] ) #[left, up, width, height], fig.add_subplot(111)
@@ -882,7 +882,7 @@ def writeXY( x , y , fileName ):
   f = open( fileName ,'w')             #'w' = for writing
   for i in xrange(len(x)):
     f.write("%13.7e \t %13.7e \n" %(x[i], y[i]) )
-  print 'Writing file '+fileName
+  print('Writing file '+fileName)
   f.close()
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
