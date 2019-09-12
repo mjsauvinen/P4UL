@@ -74,7 +74,7 @@ nameDict['zname'] = args.zname
 # First fluctuation component
 nameDict['varname'] = varname[0]
 cl = 1
-ncDict = read3dDataFromNetCDF( filename , nameDict, cl )
+ncDict = read3dDictVarFromNetCDF( filename , nameDict, cl )
 v = ncDict['v']   # 'v' is a generic name for a variable in ncDict
 
 # Spatial coords and time

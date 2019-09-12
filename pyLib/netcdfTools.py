@@ -332,7 +332,7 @@ def fillTopographyArray(Rtopo, Rdims, Rdpx, datatype):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def read3dDataFromNetCDF( fname, nameDict, cl=1 ):
+def read3dDictVarFromNetCDF( fname, nameDict, cl=1 ):
   '''
   Establish two boolean variables which indicate whether the created variable is an
   independent or dependent variable in function createNetcdfVariable().
@@ -349,10 +349,10 @@ def read3dDataFromNetCDF( fname, nameDict, cl=1 ):
   Read cell center coordinates and time.
   Create the output independent variables right away and empty memory.
   '''
-  time, time_dims = read1DVariableFromDataset('time', ds, paramList, 0, 0, 1 ) # All values.
-  x, x_dims = read1DVariableFromDataset(nameDict['xname'], ds, paramList, 0, 0, cl )
-  y, y_dims = read1DVariableFromDataset(nameDict['yname'], ds, paramList, 0, 0, cl )
-  z, z_dims = read1DVariableFromDataset(nameDict['zname'] ,ds, paramList, 0, 0, cl )
+  time, time_dims = read1DVariableFromDataset('time', ds, 0, 0, 1 ) # All values.
+  x, x_dims = read1DVariableFromDataset(nameDict['xname'], ds, 0, 0, cl )
+  y, y_dims = read1DVariableFromDataset(nameDict['yname'], ds, 0, 0, cl )
+  z, z_dims = read1DVariableFromDataset(nameDict['zname'], ds, 0, 0, cl )
   x[np.isnan(x)] = 0.  # Clear away NaNs
   y[np.isnan(y)] = 0.  #
   z[np.isnan(z)] = 0.  #
@@ -364,7 +364,7 @@ def read3dDataFromNetCDF( fname, nameDict, cl=1 ):
   w(time, zw_3d, y, x)
   '''
   print(' Extracting {} from dataset ... '.format( nameDict['varname'] ))
-  v, v_dims = read3DVariableFromDataset(nameDict['varname'], ds, varList, 0, 0, 0, cl) # All values.
+  v, v_dims = read3DVariableFromDataset(nameDict['varname'], ds, 0, 0, 0, cl) # All values.
   print(' {}_dims = {}\n Done!'.format(nameDict['varname'], v_dims ))
 
   dataDict = dict()
@@ -375,3 +375,5 @@ def read3dDataFromNetCDF( fname, nameDict, cl=1 ):
   dataDict['time'] = time
 
   return dataDict
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
