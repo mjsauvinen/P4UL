@@ -295,7 +295,7 @@ def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, 
     pStr = 'variable'
 
   if(verbose):
-    print ' NetCDF {} {} successfully created. '.format(pStr, vName)
+    print(' NetCDF {} {} successfully created. '.format(pStr, vName))
 
   return var
 

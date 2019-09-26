@@ -56,7 +56,7 @@ def selectFromList( L ):
         print(" # [{}]: {}".format(n,entry))
         n+=1
     
-    #print "\n Enter the selection number(s): \n"
+    #print("\n Enter the selection number(s): \n")
     Ids = []
     try:
         e = input(" Selection number(s): ")
