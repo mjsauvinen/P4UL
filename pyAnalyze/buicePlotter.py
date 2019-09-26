@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os, sys
@@ -16,7 +16,7 @@ def plotBuice( fig, fileStr, logOn ):
   ax  = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
 
   # Print each column separately
-  for i in xrange((x.shape[1]-3)):
+  for i in range((x.shape[1]-3)):
     if( logOn ):
       lines=ax.semilogy(np.abs(x[:,i+3]), y[:] , linewidth=1.1 , label=fileStr)
     else:
@@ -32,7 +32,7 @@ def plotExprData( fig, fileStr ):
   x = np.loadtxt(fileStr)
   y = x[:,1]
 
-  for xp in xrange(0,41):
+  for xp in range(0,41):
     if( str(xp) in fileStr ):
       xL = float(xp)
       print 'x = ', xL
@@ -41,7 +41,7 @@ def plotExprData( fig, fileStr ):
     xL *= -1.
 
   ax = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
-  for i in xrange((x.shape[1]-3)):
+  for i in range((x.shape[1]-3)):
     lines=ax.plot((xL+10.*x[:,i+3]), y[:],'o', linewidth=1.5, label=fileStr )
   ax.set_xlabel(" X/H + 10*U/U_in ",fontsize=22)
   ax.set_xticks([-6,6,14,20,30,40])

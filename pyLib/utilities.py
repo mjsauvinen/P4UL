@@ -142,7 +142,7 @@ def reformatNumberInWord(word, separator):
   For example: 21 -> 0021.
   '''
   wrdList = word.split(separator)
-  for i in xrange(len(wrdList)):
+  for i in range(len(wrdList)):
     try:
       iwrd = int(wrdList[i])
       wrdList[i]  = '{:04d}'.format(iwrd)
@@ -151,7 +151,7 @@ def reformatNumberInWord(word, separator):
     
   # Put together the new filename 
   word_new = wrdList[0]
-  for i in xrange(1,len(wrdList)):
+  for i in range(1,len(wrdList)):
     word_new += separator+wrdList[i]
     
   return word_new
@@ -264,8 +264,8 @@ def vtkWriteHeaderAndGridStructured2d( X, Y, Z, fileName, dataStr ):
   f.write( header )
 
   print(' Writing mesh data for file {} ...'.format( fileName ))
-  for i in xrange(irows):
-    for j in xrange(jcols):
+  for i in range(irows):
+    for j in range(jcols):
       s = '{0:.1f}\t{1:.1f}\t{2:.1f}\n'.format( X[i,j], Y[i,j], Z[i,j] )
       f.write(s)
   
@@ -297,8 +297,8 @@ def vtkWritePointDataStructured2D( fx, V, X, vStr ):
     print(' Writing {} field data ...'.format(vStr))
     
     fx.write(FieldData)
-    for i in xrange(irows):
-      for j in xrange(jcols):
+    for i in range(irows):
+      for j in range(jcols):
         s = '{0:12.4e} '.format(V[i,j])
         fx.write(s)
     fx.write('\n')  # Important to place a line change at the end.
@@ -344,14 +344,14 @@ def vtkWriteUnsPointData( V, X, Y, Z, filename ):
   filename = filename.split('.vtk')[0]+'.vtk'
   f = open(filename, 'w')
   f.write( header )
-  for i in xrange(irows):
-    for j in xrange(jcols):
+  for i in range(irows):
+    for j in range(jcols):
       s = '{0:.1f}\t{1:.1f}\t{2:.1f}\n'.format( X[i,j], Y[i,j], Z[i,j] )
       f.write(s)
   
   f.write(pointdata)
-  for i in xrange(irows):
-    for j in xrange(jcols):
+  for i in range(irows):
+    for j in range(jcols):
       s = '{0:.2f} '.format(V[i,j])
       f.write(s)
   fx.write('\n')

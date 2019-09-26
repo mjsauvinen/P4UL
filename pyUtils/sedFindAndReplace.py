@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import subprocess as sb
 import argparse
 import sys
@@ -30,7 +30,7 @@ if(not len(nstr) == len(ostr)):
     sys.exit(' Number of Old and New strings do not match. Exiting ...')
 
 for fn in fileList:
-    for i in xrange(len(ostr)):
+    for i in range(len(ostr)):
         sedCommand = "find {0} -type f -exec sed -i \'s/{1}/{2}/g\' {{}} \\;"\
         .format(fn, ostr[i], nstr[i])
 

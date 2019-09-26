@@ -79,7 +79,7 @@ def parseStringArrayInput(input_str, dtype):
   if(len(rows[0].split(","))==1):
     rows=rows[1:]
   arr = np.zeros((len(rows),len(rows[0].split(","))),dtype=dtype)
-  for i in xrange(len(rows)):
+  for i in range(len(rows)):
     items = rows[i].split(",")
     try:
       arr[i,:]=np.array(map(dtype, items))
@@ -618,7 +618,7 @@ def processAerosolEmissionValues(emiStr,fname,emiDmid,ds,vars,dims):
     # FIX
     aerosol_emission_values = np.zeros([nbins,1,sourceNPx[1],sourceNPx[0]],dtype=float) - 9999.9
 
-    for i in xrange(nbins):
+    for i in range(nbins):
       aerosol_emission_values[i,0,sourceR.T==1] = emiVals[i]
 
     dmid_Dim = createNetcdfVariable( ds, emiDmids, 'Dmid', len(emiDmids), '', 'f4', ('Dmid',), parameter=True, verbose=False )
@@ -639,7 +639,7 @@ def processEmissionMassFractions(ds):
   compIndexDim.units = ""
   emiMassFracsD = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
   emiMassFracs = np.zeros([1,len(emiMassFracsD)])-9999.9
-  for i in xrange(len(emiMassFracsD)):
+  for i in range(len(emiMassFracsD)):
     emiMassFracs[0,i]=emiMassFracsD[i]
 
   emiMassFracsVar = createNetcdfVariable(ds, emiMassFracs, 'emission_mass_fracs', 0, 'm', 'f4', ('ncat','composition_index',), False, False, fill_value=-9999.9, verbose=False)

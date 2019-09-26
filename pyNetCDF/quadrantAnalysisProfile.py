@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import numpy as np
 import argparse
@@ -139,7 +139,7 @@ Qa  = np.zeros( dims, float )
 print(' Qa.shape={}'.format(np.shape(Qa)))
 
 ix1 = ijk1.copy(); ix2 = ijk2.copy()
-for kt in xrange(len(ka)):
+for kt in range(len(ka)):
   ix1[2] = ka[kt]
   ix2[2] = ka[kt]+1
   qaDict['ijk1'] = ix1; qaDict['ijk2'] = ix2
@@ -159,7 +159,7 @@ for kt in xrange(len(ka)):
     Sa = np.abs(SQ[0])
     Smag = np.sqrt( np.sum(SQ[1:]**2) )
     zm = z[ix1[2]]
-    for i in xrange(1,5):
+    for i in range(1,5):
       fwo = openIOFile('{}_Q{}.dat'.format(ofile,i) , 'a')
       fwo.write("{}\t{}\n".format(zm, SQ[i]))
       fwo.close()

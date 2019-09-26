@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from footprintTools import *
 from utilities import writeLog
 from mapTools import readNumpyZTile, entry2Int
@@ -20,7 +20,7 @@ def binBounds( s, Ns ):
   ds = (s_max-s_min)/float(Ns)
   s1 = np.zeros( Ns )
   s2 = np.zeros( Ns )
-  for i in xrange(Ns):
+  for i in range(Ns):
     s1[i] = s_min + i*ds
     s2[i] = s1[i] + ds
   # Fix the last bound to encompass the whole range:
@@ -93,11 +93,11 @@ else:
   imsk = True
 
 
-for k in xrange( Nz ):
+for k in range( Nz ):
   kx = (zt>=z1[k]) * (zt<z2[k])
-  for j in xrange( Ny ):
+  for j in range( Ny ):
     jx = (yt>=y1[j]) * (yt<y2[j])
-    for i in xrange( Nx ):
+    for i in range( Nx ):
       ix =  (xt>=x1[i]) * (xt<x2[i])
 
       idx = ix*jx*kx*imsk  # Boolean matrix for chosen indecies.

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import glob
 import numpy as np
@@ -141,7 +141,7 @@ def frequencyBins( Q , freqs, Nbins ):
   
   fbin = np.zeros(Nbins); fbin[:] = None   # None -> Nan
   Qbin = np.zeros(Nbins); Qbin[:] = None
-  for i in xrange(Nbins-1):
+  for i in range(Nbins-1):
     ieff = (freqs>freqBins[i]) * (freqs<=freqBins[i+1])
     if( any(ieff) ):
       #print('{}: N of ieff = {} '.format(i,np.count_nonzero(ieff)))

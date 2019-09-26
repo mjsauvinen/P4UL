@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from utilities import filesFromList
 from utilities import writeLog
 from footprintTools import *
@@ -80,12 +80,12 @@ for key in IDict.keys():
   #Fptot = np.sum(Fp[idx]*dA)
   Fptot  = 0.
   FpM    = np.zeros( Nm )
-  for im in xrange(Nm):
+  for im in range(Nm):
     M = (Rm == im).astype(int)
     #print(' sum(Fp*idx) = {}, min(M) = {}'.format(np.min(Fp*idx), np.min(M)))
     FpM[im] = Q[im] * np.sum(Fp*idx*M*dA)
     Fptot   += FpM[im]
-  for im in xrange(Nm):
+  for im in range(Nm):
     pStr = '{}, {}, {}, {}, {}'.format(im,FpM[im]/Fptot*100.,FpM[im],Fptot,Q[im])
     print(pStr)
   print('----------')

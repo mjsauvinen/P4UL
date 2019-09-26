@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 ''' 
 A script to make an arrow plot from files with data in [x, y, dx, dy ] format.
 
@@ -37,7 +37,7 @@ while 1:
   lines=ax.plot( x[:,0], x[:,1], '.k' )
 
   fillOn = True
-  for i in xrange(len(fileNos)):
+  for i in range(len(fileNos)):
     fn = fileNos[i]
     afig = arrow2DPlot( afig, fileList[fn], scale, i , fillOn )
     if( fillOn ): 

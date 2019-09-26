@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import pylab as pl
 import numpy as np
@@ -12,7 +12,7 @@ from utilities import filesFromList, basicAnalysis
 def reduceByRadius(x,y,a,Rlim=1.0,xo=0., yo=0.):
   b = []   # Empty list
   r = np.sqrt( (x-xo)**2 + (y-yo)**2 )
-  for i in xrange(len(r)):
+  for i in range(len(r)):
     if( r[i] <= Rlim ):
       b.append(a[i])
   #print ' len(a) = {}, len(b) = {}'.format(len(a), len(b))

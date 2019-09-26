@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import pylab as pl
 from utilities import filesFromList, selectFromList
@@ -35,13 +35,13 @@ while 1:
         pId = range(len(selections))
     
     fig = []; lblList = []
-    for j in xrange(len(pId)): 
+    for j in range(len(pId)): 
         fig.append(pl.figure(num=j, figsize=(10.,8.)))
     
     for fn in fileNos:
         lblList.append(fileList[fn])
         
-        for j in xrange(len(pId)):
+        for j in range(len(pId)):
             d = pl.loadtxt(fileList[fn])
             """
             Cols:   0       1      2      3       4       5     6
@@ -53,7 +53,7 @@ while 1:
             if( pId[j] == 2 ): x = d[:,6]; y = d[:,4]
             fig[j] = addToPlot( fig[j], x, y, fileList[fn], [selections[j],xlb[j],ylb[j]], 0)
     
-    for j in xrange(len(pId)):
+    for j in range(len(pId)):
         ax, = fig[j].get_axes(); lns = ax.get_lines()
         ax.legend(lns , lblList , loc=1)
         

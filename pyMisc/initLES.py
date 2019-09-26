@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import argparse
 import numpy as np
@@ -103,7 +103,7 @@ Re of dissipative eddies (should be unity):
 '''
 
 if( isinstance(u,np.ndarray) ):
-  for i in xrange(len(u)):
+  for i in range(len(u)):
     print(dStr.format(u[i],l[i],nu[i],t[i],epsilon[i],v[i],eta[i],Re_t[i],Re_d[i]))
 elif( isinstance(u, np.float) ):
   print(dStr.format(u,l,nu,t,epsilon,v,eta,Re_t,Re_d))

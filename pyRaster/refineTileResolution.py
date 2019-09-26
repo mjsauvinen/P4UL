@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import argparse
 import numpy as np
 from mapTools import *
@@ -83,8 +83,8 @@ if( N > 0 ):
 else:
   n2 = np.minimum( n2 , R2dims[0]-1)
   e2 = np.minimum( e2 , R2dims[1]-1)
-  for k in xrange(maxDims[0]):
-    for l in xrange(maxDims[1]):
+  for k in range(maxDims[0]):
+    for l in range(maxDims[1]):
       R2[ n2[k], e2[l] ] +=  R1[ n1[k] ,e1[l] ]
 
 

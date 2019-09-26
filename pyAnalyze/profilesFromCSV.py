@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 import sys
 import argparse
 from utilities import filesFromList
@@ -54,7 +54,7 @@ for fn in fileNos:
   a = dat[-1]; x = dat[-2]; y = dat[:-2]
   dat = None
   
-  for i in xrange(nY):
+  for i in range(nY):
     astr ='_'+str(int(a[0]/100.))
     y[i]+=(a*af)
     axLabels = ["{}(z)".format(varList[i]),"{} +x/100 [m/s]".format(varList[i]),"z [m]"]

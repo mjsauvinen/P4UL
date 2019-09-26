@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
@@ -87,7 +87,7 @@ ax = fig.add_axes( [0.1, 0.075 , 0.875 , 0.81] ) #[left, top, width, height]
 for fn in fileNos:
   vr = None
   
-  for i in xrange(len(varnames)):
+  for i in range(len(varnames)):
     if( varnames[i].upper() == 'U1' or varnames[i].upper() == 'U2' ):
       dataDict = read3dDataFromNetCDF( fileList[fn] , 'u', 1 )
       u = dataDict['v']
@@ -150,7 +150,7 @@ for fn in fileNos:
   vupper = np.zeros( (N) )
   d /= xs
   
-  for i in xrange(N):
+  for i in range(N):
     res = bs.bootstrap(vb[:,i], alpha=alpha, stat_func=sfunc, num_iterations=niter, num_threads=2)
     print(' Step {} of {} done ...'.format(i,N))
     vres[i]   = res.value

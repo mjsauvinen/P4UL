@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from utilities import vtkWriteDataStructured2d, vtkWriteHeaderAndGridStructured2d
 from utilities import vtkWritePointDataHeader, vtkWritePointDataStructured2D
 import sys
@@ -127,11 +127,11 @@ else:
 if(None in distribution):  # Fill with a constant value
   Rx[(LR>0)] = vmean
 elif (distribution[0] == "gaussian"):
-  for i in xrange(Nshapes):
+  for i in range(Nshapes):
     rv = np.random.normal(vmean, distribution[1])
     Rx[(LR ==(i + 1))] = np.random.normal(vmean, distribution[1])
 elif (distribution[0] == "uniform"):
-  for i in xrange(Nshapes):
+  for i in range(Nshapes):
     rv = np.random.uniform(-1.*distribution[1], distribution[1]) 
     Rx[(LR ==(i + 1))] = vmean + rv
 else:
@@ -143,7 +143,7 @@ LR = None
 # Gather the indecies for a mfix mask with fixed value.
 idmm = None 
 if( mfixOn ):
-  for i in xrange( len(imfix) ):
+  for i in range( len(imfix) ):
     idxm = (R==imfix[i])
     if( idmm is None):
       idmm = idxm.copy()

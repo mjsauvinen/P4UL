@@ -64,7 +64,7 @@ def waveInformation( time, Ui, xi, Ulimit, ofile=None ):
     waves = []; waves.append(Wave(time)); waves[0].newTime()
     j = 0
 
-    for i in xrange(len(Ui)):
+    for i in range(len(Ui)):
         #Check whether we're above the limit.
         if( Ui[i] > Ulimit ):
             # Then check whether the current wave is active.

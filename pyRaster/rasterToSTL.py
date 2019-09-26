@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import argparse
 import numpy as np
 from mapTools import *
@@ -68,10 +68,10 @@ X******X
 # Open the STL file and write the header.
 fw = openStlFile( solidname )
 
-for irow in xrange(Rdims[0]-1):
+for irow in range(Rdims[0]-1):
   dy = irow*dPx
   #print ' Processing row {} ... '.format(irow)
-  for jcol in xrange(Rdims[1]-1):
+  for jcol in range(Rdims[1]-1):
     dx = jcol*dPx
     # Lower diagonal triangle.
     v1[0]=ROrig[1]+dx      ;  v1[1]=ROrig[0]-dy      ;  v1[2]=R[irow,jcol]

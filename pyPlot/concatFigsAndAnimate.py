@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import argparse
 import numpy as np
@@ -40,7 +40,7 @@ fileNos2, fileList2 = filesFromList( "*"+args.fig2+"*" )
 
 nfigs = min( len(fileList1), len(fileList2) )
 
-for i in xrange(nfigs):
+for i in range(nfigs):
   cmd = 'montage -mode concatenate -tile 1x2 {0} {1} output_{2:04d}.png'\
     .format(fileList1[i], fileList2[i], i )
   if( printOn or printOnly ):

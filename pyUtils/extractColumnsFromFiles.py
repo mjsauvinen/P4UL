@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import numpy as np
 import sys
 import argparse
@@ -40,7 +40,7 @@ if( (vcols.count(None) == 0) and (euler.count(None) == 0) ):
 # Assemble Tcols -- target columns -- for vector rotation.
 if( rotationOn ):
   Tcols = np.zeros( 3 , int )
-  for i in xrange(3):
+  for i in range(3):
     vi = vcols[i]
     try: Tcols[i] = Icols.index(vi) # where the vector indecies are in Icols.
     except: sys.exit(' Error: Vector indices not in --cols. Exiting ...')

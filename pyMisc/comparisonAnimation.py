@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os, sys
 import subprocess
@@ -55,7 +55,7 @@ def plotVelocityProfiles(timeDir, time0 ):
     if(True):
         fileStr = 'C-U_%03d.dat'%angle
         ff = open( fileStr , 'w'  )
-    	for i in xrange(len(xc)):
+    	for i in range(len(xc)):
     	    ff.write('%f \t %f \t %f \n' %(xc[i], Ux_c[i], Uy_c[i]) )
     	ff.close()
     	print ' file ', fileStr, ' written successfully. '

@@ -100,7 +100,7 @@ def fp2mshIJ(pxO, pyO, pzO, xG, yG, dx, dy ):  # IJ as in indecies.
 
   # The loop must be explicitly written open because 
   # the repeated additions to cells are not accounted properly.
-  for i in xrange(len(ix)):
+  for i in range(len(ix)):
     T[iy[i],ix[i]] += 1.
   
   Z[iy[:],ix[:]] = pzO[:]
@@ -225,7 +225,7 @@ def writeCrossWindSum( F , X, fname, idx=None ):
   if( idx != None): Fx = F*idx
   else:             Fx = F.copy()
     
-  for i in xrange( nX ):
+  for i in range( nX ):
     Fm[i] = np.sum(Fx[:,i])
 
   Fx  = None

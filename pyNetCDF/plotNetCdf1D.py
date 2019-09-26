@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from netcdfTools import *
 from utilities import selectFromList, removeEntriesFromList
 from plotTools import addToPlot, userLabels
@@ -93,7 +93,7 @@ while 1:
       
       # Plot profiles for chosen time instances
       if( not timeAverageOn ):
-        for j in xrange(tskip, len(time)):
+        for j in range(tskip, len(time)):
           if( time[j] == None ): 
             labelStr  = ' {}({})'.format(varList[iy],xStr)
           else:          

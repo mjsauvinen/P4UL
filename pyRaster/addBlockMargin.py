@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import argparse
 import numpy as np
@@ -21,10 +21,10 @@ def addBlocks( T, stride, Lx, h ):
   sy = stride[0]; sx = stride[1]
   ly = Lx[0];     lx = Lx[1]
   
-  for i in xrange( int(np.ceil(Tdims[1]/sx)+1) ):
+  for i in range( int(np.ceil(Tdims[1]/sx)+1) ):
     ix  = i*sx 
     ix2 = ix + lx
-    for j in xrange( int( np.ceil(Tdims[0]/sy)+1) ):
+    for j in range( int( np.ceil(Tdims[0]/sy)+1) ):
       jy = j*sy + int(np.mod(i,2)*(sy/2))
       jy2 = jy+ly
       if( ix2 > Tdims[1] or jy2 > Tdims[0] ):

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import argparse
 import ConfigParser
@@ -98,7 +98,7 @@ if (outputConfig is not None):
 Open the output netCDF files and write global attributes to them.
 
 Intialize a dictionaries for existing dimensions and variables. This is important
-because netCDF4-python doesn't allow direct overwrite for these. For now we trust
+because netCDF4-python3 doesn't allow direct overwrite for these. For now we trust
 that the user doesn't try to append new data that has different dimensions than the
 what already exist in the original PIDS_STATIC.
 

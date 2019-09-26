@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import netCDF4 as nc
 import sys
@@ -13,7 +13,7 @@ def asciiEncode(uList, uStr):
   n = len(uList)
   if(n > 0):
     uList = list(uList)  # This might be a tuple coming in
-    for i in xrange(len(uList)):
+    for i in range(len(uList)):
       uList[i] = uList[i].encode('ascii')
   else:
     print(' Dictionary {} has zero length. Exiting ...'.format(uStr))
@@ -227,7 +227,7 @@ def interpolatePalmVectors(v0, vc_dims, cmpStr, meanOn=False):
   if( nz == nzo ): k1 = 0
   else:            k1 = 1
   
-  for i in xrange(nTimes):
+  for i in range(nTimes):
     tmp0 = v0[i, :, :, :].copy()
 
     if(iOn):
@@ -270,7 +270,7 @@ def vectorPrimeComponent(vc, vm):
   nTimes = vc_dims[0]
   print(' Computing primes for {} times ... '.format(nTimes))
 
-  for i in xrange(nTimes):
+  for i in range(nTimes):
     vp[i, :, :, :] = vc[i, :, :, :] - vm[:, :, :]
 
   print(' ... done.')
@@ -304,7 +304,7 @@ def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, 
 
 def createCoordinateAxis(dso, Rdims, Rdpx, axis, varname, formatstr, unit, parameter, zlib=False, verbose=True):
   arr = np.empty(Rdims[axis])
-  for i in xrange(Rdims[axis]):
+  for i in range(Rdims[axis]):
     # dpx is in [N,E], see getGeoTransform() in gdalTools.py
     arr[i] = i * Rdpx[axis]
   axvar = createNetcdfVariable(dso, arr, varname, len(
@@ -321,8 +321,8 @@ def fillTopographyArray(Rtopo, Rdims, Rdpx, datatype):
   print(' \n Filling 3D array from topography data...')
   print(' Dimensions [z,y,x]: [{}, {}, {}]'.format(*topodims))
   print(' Total number of data points: {}'.format(np.prod(topodims)))
-  for x in xrange(Rdims[1]):
-    for y in xrange(Rdims[0]):
+  for x in range(Rdims[1]):
+    for y in range(Rdims[0]):
       # Reverse the y-axis because of the top-left origo in raster
       maxind = int(round(Rtopo[-y - 1][x] / Rdpx[2]))+1
       if(maxind>1):

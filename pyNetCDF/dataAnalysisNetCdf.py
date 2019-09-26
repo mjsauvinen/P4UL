@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import numpy as np
 import argparse
@@ -30,9 +30,9 @@ def resample(X, n=None):
   Xr = np.zeros( (n,nk,nj,ni) )
   #print(' Resampled array size = {} '.format( Xr.shape ))
   
-  for i in xrange(ni):
-    for j in xrange(nj):
-      for k in xrange(nk):
+  for i in range(ni):
+    for j in range(nj):
+      for k in range(nk):
         if(n is None): 
           n = Nn
         ix = np.floor(np.random.rand(n)*Nn).astype(int)

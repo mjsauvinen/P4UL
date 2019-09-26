@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from netcdfTools import *
 import sys
 import argparse

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import argparse
 import numpy as np
@@ -29,7 +29,7 @@ def maskFromClip( Ri, mclip, mlist ):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
 
 def maskFromData(Ri, mlist, mxN=20):
-  for im in xrange(1,mxN+1):
+  for im in range(1,mxN+1):
     if( im in Ri ):
       #print(' Mask id = {} found in file.'.format(im))
       mlist.append(im)
@@ -50,7 +50,7 @@ def histogram( Rm, Ri, mlist, threshold = 0. ):
     #Np  = float(labelCount)
     Np = 0
     Av = np.zeros( labelCount )
-    for l in xrange(1,labelCount+1):
+    for l in range(1,labelCount+1):
       idx = (LR==l)
       for v in Ri[idx]:
       #v  = int( np.floor(np.percentile( Ri[idx], 96 )) )
@@ -136,7 +136,7 @@ if( exBuffer ):
     emx  = int(np.median( Rm[:,0] ))
     print(' Excluding buffer of Mask {} ...'.format(emx))
     Ixm = ( Rm != emx ).astype(int)
-    for i in xrange( len(Rm[0,:]) ):
+    for i in range( len(Rm[0,:]) ):
       nz  = np.count_nonzero( Ixm[:,i] )
       
       if( nz > 3 ): 
@@ -147,7 +147,7 @@ if( exBuffer ):
     
   if( filedata ):
     if( ix == 0 ):
-      for i in xrange( len(Rt[0,:]) ):
+      for i in range( len(Rt[0,:]) ):
         nz = np.count_nonzero( Rt[:,i] )
         if( nz > 0 ): 
           ix = i; break

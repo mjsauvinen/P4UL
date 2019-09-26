@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 ''' 
 A script to plot files with data in [x, y, z, v1, v2, ..., vn] format.

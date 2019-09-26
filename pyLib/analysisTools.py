@@ -120,7 +120,7 @@ def quadrantAnalysis( v1, v2, qDict ):
         v1t = v1[:,k+k_off,j,i] 
         v2t = v2[:,k+k_off,j,i] 
         
-        for l in xrange( len(vt) ):
+        for l in range( len(vt) ):
           SQ[0] += vt[l]; nTot += 1
           if( np.abs(vt[l]) > (holewidth*vt_mean) ): 
             n = np.minimum( int((v1t[l] - minLim)/dx) , npx )
@@ -160,7 +160,7 @@ def quadrantAnalysis( v1, v2, qDict ):
 def calc_ts_entropy_profile( V, z, alpha=1., nbins=16 ):
   
   vo = np.zeros( len(z) )
-  for k in xrange( len(z) ):
+  for k in range( len(z) ):
     try:    Vk = V[:,k,1,1]
     except: Vk = V[:,k,0,0]
     Vk = Vk - np.mean(Vk)

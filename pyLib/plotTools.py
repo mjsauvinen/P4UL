@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import glob
 import numpy as np
@@ -278,7 +278,7 @@ def addToPlot(fig, x,y,labelStr, plotStr=["","",""], logOn=False):
   ax = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height]
   d = np.size(np.shape(y)) # Test if y has multiple columns
 
-  for i in xrange(d):
+  for i in range(d):
     if(d==1):
       yt = y
     else:
@@ -316,7 +316,7 @@ def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False, linemode=1 ):
   amax = 0.
   Ny = (x.shape[1]-1)
   
-  for i in xrange(Ny):
+  for i in range(Ny):
     if( Ny == 1 ):
       labelXX = labelStr
     else:
@@ -583,7 +583,7 @@ def plotDY( fig, fileStr, dim=3,  revAxes=False ):
   dim = min( dim, 3 ); dim=max(dim , 1)
   x = np.loadtxt(fileStr)
   r = np.zeros( len(x[:,0]), float )
-  for i in xrange(dim):
+  for i in range(dim):
     x0 = np.min( x[:,i] )
     r += (x[:,i]-x0)**2 
     
@@ -593,7 +593,7 @@ def plotDY( fig, fileStr, dim=3,  revAxes=False ):
   labelStr = labelString( fileStr )
 
   # Print each column separately
-  for i in xrange((x.shape[1]-dim)):
+  for i in range((x.shape[1]-dim)):
     if( revAxes ):
       lines=ax.plot(x[:,i+dim],d[:],marker=marker_stack(),
                     color=color_stack(), fillstyle='none', ls='None' , label=labelStr+'['+str(i)+']' )
@@ -616,7 +616,7 @@ def plotYX( fig, fileStr, logOn ):
   ax  = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
 
   # Print each column separately
-  for i in xrange((x.shape[1]-3)):
+  for i in range((x.shape[1]-3)):
     if( logOn ):
       lines=ax.semilogy(np.abs(x[:,i+3]), y[:] , linewidth=1.1 , label=fileStr+'_'+str(i))
     else:
@@ -635,7 +635,7 @@ def fullPlotXY(fig,fileStr,figStr,xlabelStr,ylabelStr,lwidth=1.2,fsize=16,logOn=
   ax  = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
 
   # Print each column separately
-  for i in xrange((x.shape[1]-3)):
+  for i in range((x.shape[1]-3)):
     if( logOn ):
       lines=ax.semilogy(np.abs(x[:,i+3]), y[:] , linewidth=lw , label=figStr+'_'+str(i))
     else:
@@ -654,7 +654,7 @@ def plotCSV( fig, fileStr, revAxes=False, magY=False, globalValues=False ):
   line = fl.readline() # Read first line which contains all variable names as str.
   fl.close()
   varList = line.split(',')
-  for i in xrange(len(varList)):
+  for i in range(len(varList)):
     varList[i]=varList[i].strip("\"")
 
   x = np.loadtxt(fileStr, delimiter=',', skiprows=1)
@@ -737,7 +737,7 @@ def extractFromCSV( csvFile, varNames ):
   line = fl.readline() # Read first line which contains all variable names as str.
   fl.close()
   varList = line.split(',')
-  for i in xrange(len(varList)):
+  for i in range(len(varList)):
     varList[i]=varList[i].strip("\"")
     varList[i]=varList[i].strip("\""+"\n")  # This is in case the line contain '\n'
     
@@ -870,7 +870,7 @@ def arrow2DPlot( fig, fileStr , scale=1.0, ic=0, fillOn=True ):
   
   lx = max(scale, 0.825 )*0.0008
   lx = min( lx, 0.0016 )
-  for i in xrange( len(x) ):
+  for i in range( len(x) ):
     ax.arrow( x[i], y[i], scale*dx[i], scale*dy[i], color=color_stack(ic) , width=lx, \
              head_width=5.85*lx, head_length=2.85*lx, overhang=0.25, fill=fillOn )
 
@@ -880,7 +880,7 @@ def arrow2DPlot( fig, fileStr , scale=1.0, ic=0, fillOn=True ):
 
 def writeXY( x , y , fileName ):
   f = open( fileName ,'w')             #'w' = for writing
-  for i in xrange(len(x)):
+  for i in range(len(x)):
     f.write("%13.7e \t %13.7e \n" %(x[i], y[i]) )
   print('Writing file '+fileName)
   f.close()
@@ -895,7 +895,7 @@ def wavePlot( fig, fileStr, logOn ):
 
   # Print each column separately
   Ny = (x.shape[1]-1)
-  for i in xrange(Ny):
+  for i in range(Ny):
     if( Ny == 1 ):
       labelXX = labelStr
     else:
@@ -962,7 +962,7 @@ def numEntry( questionStr , defaultValue ):
 def maxValues( fileStr ):
   x = np.loadtxt(fileStr)
   mv = []
-  for i in xrange(x.shape[1]):
+  for i in range(x.shape[1]):
     mv.append(np.max(x[:,i]))
 
   return mv
@@ -980,7 +980,7 @@ def addToPlot_marker(fig, x,y,labelStr, plotStr=["","",""], logOn=False, marker=
   ax = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height]
   d = np.size(np.shape(y)) # Test if y has multiple columns
 
-  for i in xrange(d):
+  for i in range(d):
     if(d==1):
       yt = y
     else:

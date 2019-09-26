@@ -25,7 +25,7 @@ def readAsciiGridHeader( filename, nHeaderEntries, idx=0 ):
   # 'NODATA_value' : None
    
 
-  for i in xrange(nHeaderEntries):
+  for i in range(nHeaderEntries):
     try:
       s = fl.readline().lower().split()
       print(' Header line {}: {} '.format(i,s))
@@ -109,7 +109,7 @@ def resolutionFromDicts( dictList ):
   for d in dictList:
     dPx = d['cellsize']
     if( dPx != dPxRef ):
-      print 'The tile resolutions do not match. Exiting.'
+      print('The tile resolutions do not match. Exiting.')
       sys.exit(1)
 
   return np.array([dPxRef,dPxRef])
@@ -154,7 +154,7 @@ def arrangeTileGrid( dictList, fileTypes ):
 
   # Sort the list according to x-values
   coordListSorted = sorted( coordList, key=operator.itemgetter(1) )
-  #print ' x-sorted : {} '.format( coordListSorted )
+  #print(' x-sorted : {} '.format( coordListSorted ))
 
   # Determine the Top Left Origin (x-value).
   # This is the same for xllcorner and xtlcorner.
@@ -204,8 +204,8 @@ def compileTileGrid( dictList, ijList, Mrows, Mcols, fileTypes, nHeaderEntries )
   M = []  # An empty array to start with.
   ascii = fileTypes[0]; npz = fileTypes[1]
 
-  for i in xrange(Mrows):
-    for j in xrange(Mcols):
+  for i in range(Mrows):
+    for j in range(Mcols):
       for idTile, irow, jcol in ijList:
 
         if(irow == i and jcol == j ):
@@ -221,9 +221,9 @@ def compileTileGrid( dictList, ijList, Mrows, Mcols, fileTypes, nHeaderEntries )
   print(' M.shape = {}'.format(np.shape(M)))
 
   T = None
-  for i in xrange(Mrows):
+  for i in range(Mrows):
     c1 = i*Mcols; c2 = (i+1)*Mcols
-    print 'c1={}, c2={}'.format(c1,c2)
+    print('c1={}, c2={}'.format(c1,c2))
     if( T is None ):
       T = np.hstack(M[c1:c2])
     else:
@@ -307,14 +307,14 @@ def rotateGridAroundPivot( X, Y, xp, yp, theta, deg=True ):
 
   CtX = np.array([ np.cos(theta), -np.sin(theta)  ])
   CtY = np.array([ np.sin(theta) , np.cos(theta) ])
-  #print ' CtX = {} , CtY = {} '.format(CtX, CtY)
+  #print(' CtX = {} , CtY = {} '.format(CtX, CtY))
 
   Mdims = np.shape(X)
   XR = np.zeros( Mdims, float )
   YR = np.zeros( Mdims, float )
 
 
-  for i in xrange( Mdims[0] ):
+  for i in range( Mdims[0] ):
     XR[i,:] = xp + (X[i,:]-xp)*CtX[0] + (Y[i,:]-yp)*CtX[1] # E-X
     YR[i,:] = yp + (X[i,:]-xp)*CtY[0] + (Y[i,:]-yp)*CtY[1] # N-Y
 
@@ -453,12 +453,12 @@ def applyRamp( Rz, L1, L2, LeftRight, End, Mh=None ):
 
   if( End ):
     w = (1.-w)
-  #print ' w = {}, len(w) = {}, len(dL) = {}'.format(w,len(w),dL)
+  #print(' w = {}, len(w) = {}, len(dL) = {}'.format(w,len(w),dL))
   if( LeftRight ):
-    for i in xrange(dL):
+    for i in range(dL):
       Rz[:,L1+i] = w[i]*Rz[:,L1+i] + (1.-w[i])*Rm
   else: # TopBottom
-    for i in xrange(dL):
+    for i in range(dL):
       Rz[L1+i,:] = w[i]*Rz[L1+i,:] + (1.-w[i])*Rm
 
   return Rz
@@ -475,7 +475,7 @@ def filterAndScale(Rxo, Rx, filterInfo, sx=1.0, ix=None, jx=None):
   if( filterInfo.count(None) == 0):
     if( 'user' in filterInfo[0] ):
       nI = int(filterInfo[1])
-      for i in xrange(nI):
+      for i in range(nI):
         ftmp = raw_input(' Enter <method>, <num> = ').split(',')
         if( i == 0 and inxOn ):  Rxf = applyFilter(Rx[ix,jx], ftmp)
         else:                    Rxf = applyFilter(Rx, ftmp)
@@ -638,13 +638,13 @@ def totalArea( Rdims, dx ):
 def frontalAreas( Ri, hclip=1. ):
   # Calculate frontal areas of the domain
   Ae = 0.
-  for i in xrange( Ri.shape[0] ):
+  for i in range( Ri.shape[0] ):
     ce = (Ri[i,1:] > Ri[i,:-1]).astype(float)
     he = (Ri[i,1:]-Ri[i,:-1]); he[(he<hclip)] = 0. # Height, clip out non-buildings
     Ae += np.sum( ce * he )
 
   An = 0.
-  for j in xrange( Ri.shape[1] ):
+  for j in range( Ri.shape[1] ):
     cn = (Ri[1:,j] > Ri[:-1,j]).astype(float)
     hn = (Ri[1:,j]-Ri[:-1,j]); hn[(hn<hclip)] = 0.
     An += np.sum( cn* hn )

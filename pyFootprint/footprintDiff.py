@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from utilities import filesFromList
 from utilities import writeLog
 from footprintTools import *

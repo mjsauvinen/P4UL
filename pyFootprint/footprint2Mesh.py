@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from utilities import filesFromList, vtkWriteDataStructured2d, vtkWriteHeaderAndGridStructured2d
 from utilities import vtkWritePointDataHeader, vtkWritePointDataStructured2D
 from utilities import writeLog
@@ -25,7 +25,7 @@ def centralValue( a , tol, nitv=40):
   icheck = 0
   while (res > tol and icheck < int(0.001*len(a))):
 
-    for i in xrange(nitv):
+    for i in range(nitv):
       imax = np.argmax( a[ia] ); ia[imax] = False
       imin = np.argmin( a[ia] ); ia[imin] = False
       icheck += 2

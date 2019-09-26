@@ -163,7 +163,7 @@ def extractSubTile( rBand, tileCode, XOrg, dPx):
     if( len(tileCode) == 2 ): # The user could ask for the entire tile.
       nPx = UtmTileDims()/np.abs(dPx)
     else:  
-      for level in xrange(1,len(tileCode)-1):
+      for level in range(1,len(tileCode)-1):
         code+=tileChars[level+1]
         Xtmp, nPx = newTileCoords( Xtmp, tileChars, level, dPx )
         print pStr.format(code,Xtmp,nPx)

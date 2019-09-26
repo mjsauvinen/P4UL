@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import argparse
 import numpy as np
@@ -64,8 +64,8 @@ lad_3d = np.zeros((int(rdims[1]/dpx[1]),int(rdims[0]/dpx[0]),pch_index+1))
 # Reverse the y-axis because of the top-left origo in raster
 R=R[::-1,:]
 
-for i in xrange(rdims[1]):
-  for j in xrange(rdims[0]):
+for i in range(rdims[1]):
+  for j in range(rdims[0]):
     if (R[j,i]==0):
       continue
     plant = R[j,i]
@@ -99,8 +99,8 @@ if(args.output=="ascii"):
   print(nPc)
   fx.write(str(nPc[2])+"\n")
   # Loop through the verical canopy columns
-  for x in xrange(nPc[0]):
-    for y in xrange(nPc[1]):
+  for x in range(nPc[0]):
+    for y in range(nPc[1]):
       if (np.all(lad_3d[x,y,:]==0)):
         # There is no need to write empty columns
         continue

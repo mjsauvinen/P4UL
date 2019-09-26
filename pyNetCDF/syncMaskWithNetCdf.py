@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from netcdfTools import *
 from mapTools import *
 from utilities import writeLog
@@ -141,7 +141,7 @@ if( not (yx_dims==(Rsub_dims)).all ):
 m = np.zeros( u_dims[1:], 'uint8') # u_dims[1:] := (z_dim, y_dim, x_dim)
 
 # Copy raster data onto each z-plane. NOTE: y-direction is reversed.
-for i in xrange(z_dim):
+for i in range(z_dim):
   m[i,:,:] = Rsub[::-1,:]
 
 # The mask data R, by default, may contain values 0 and >0. It has to be converted into

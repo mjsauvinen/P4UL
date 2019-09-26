@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import argparse
 import numpy as np
@@ -87,8 +87,8 @@ Rry = R[::-1,:]
 print(' Rry shape = {} '.format(Rry.shape))
 
 # Calculate leaf area density profiles for each horizontal grid tile and fill array vertically
-for j in xrange(nPc[1]):
-  for i in xrange(nPc[0]):
+for j in range(nPc[1]):
+  for i in range(nPc[0]):
     Zi = Rry[j,i] # Zi := canopy height at [j,i]
     # Check if there is canopy at all in the vertical column
     if (Zi <= zref[0]):

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import numpy as np
 import argparse
@@ -122,9 +122,9 @@ for fn in fileNos:
   d  = np.zeros( (     nvz, nvy, nvx ) )
   # - - - - - - - - - - - - - - - - - - - - - - - - - -  #
   # Compute covariance
-  for i in xrange(nvx):
-    for j in xrange(nvy):
-      for k in xrange(nvz):
+  for i in range(nvx):
+    for j in range(nvy):
+      for k in range(nvz):
         Cv[:,k,j,i] = v1[ :,idz[k], idy[j], idx[i] ] * v2[ :,idz[k], idy[j], idx[i] ]
         d[k,j,i] = np.sqrt( (z[idz[k]]-z[0])**2 + (y[idy[j]]-y[0])**2 + (x[idx[i]]-x[0])**2 )
 

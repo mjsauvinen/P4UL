@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from utilities import filesFromList, vtkWriteDataStructured2d, vtkWriteHeaderAndGridStructured2d
 from utilities import vtkWritePointDataHeader, vtkWritePointDataStructured2D
 from utilities import writeLog
