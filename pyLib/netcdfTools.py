@@ -14,7 +14,7 @@ def asciiEncode(uList, uStr):
   if(n > 0):
     uList = list(uList)  # This might be a tuple coming in
     for i in range(len(uList)):
-      uList[i] = uList[i].encode('ascii')
+      if isinstance(uList[i], bytes): uList[i] = uList[i].decode()
   else:
     print(' Dictionary {} has zero length. Exiting ...'.format(uStr))
     sys.exit(1)
