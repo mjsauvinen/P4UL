@@ -87,7 +87,8 @@ def setColorbarLims( img, lMax=None, lMin=None ):
   # Specify the bounds in the colorbar
   if( (lMax is None) or (lMin is None) ):
     try:
-      lMin,lMax = map(float, raw_input(' Enter limits for colorbar: <min> <max> =').split())
+      mm = input(' Enter limits for colorbar: <min> <max> =')
+      lMin,lMax = list( map(float, mm.split()) )
       img.set_clim([lMin,lMax])
     except:
       pass
@@ -299,7 +300,6 @@ def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False, linemode=1 ):
   except: x = np.loadtxt(fileStr,delimiter=',')
   ax  = fig.add_axes( [0.15, 0.075 , 0.8 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
 
-
   labelStr = labelString( fileStr )
   #lStr = fileStr.rsplit(".", 1)[0]  # Remove the ".dat" 
   #rStr = lStr.rsplit("_")[-1]
@@ -442,7 +442,7 @@ def labelString( fname ):
     sL = ls.split('/')
     
     if( len(sL) > 1 ):
-      lL = map( len, sL )
+      lL = list(map( len, sL ))
       if(  (lL[0] > 1) and ("." not in sL[0]) ):
         ls = sL[0]
       elif((lL[1] > 1) and ("." not in sL[1]) ):

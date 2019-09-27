@@ -70,3 +70,4 @@ while 1:
     pfig.savefig( saveFig, format='jpg', dpi=300)
 
   plt.show()
+  pfig = None

@@ -60,12 +60,14 @@ def selectFromList( L ):
     Ids = []
     try:
         e = input(" Selection number(s): ")
+        if( e == ''): sys.exit(' Exiting program.')
+        
         if(isinstance(e,tuple)): Ids.extend(e)
         elif(isinstance(e,int)): Ids.append(e)
-        else: sys.exit("Invalid entry. Exiting ...")
+        else: sys.exit(' Invalid entry. Exiting ...')
     except:
-        try: input(" Select All? [1-9]=> Yes, [Empty]=> No: ")
-        except: sys.exit("Exiting Program ...")
+        s = input(" Select All? [1-9]=> Yes, [Empty]=> No: ")
+        if( s == ''): sys.exit(' Exiting program.')
     
     if( len(Ids) == 0 ): Ids.extend(range(len(L)))
     return Ids
@@ -76,7 +78,8 @@ def selectFromList( L ):
 def filesFromList( searchStr , allFiles=False):
   print(" Extracting files with search string (or path): {}".format(searchStr))
   fileList = []
-  files = glob.glob(searchStr)   # obtain the list of files 
+  files = glob.glob(searchStr)   # obtain the list of files
+  
   fileList.extend(files)              # Lists are iterable
   fileList.sort()                     # Sort the list alphabetically
 
@@ -98,14 +101,14 @@ def filesFromList( searchStr , allFiles=False):
     
     try:
       e = input(" File Numbers = ")
-      if(isinstance(e,tuple)): fileNos.extend(e)
-      elif(isinstance(e,int)): fileNos.append(e)
+      if( e == ''): sys.exit(' Exiting program.')
+      
+      try: fileNos = list( map( int, e.split(',') ) )
+      except: sys.exit(' Bad entry. Exiting ...')
+      
     except:
-      try:
-        select=input(" Select All? [1-9]=> Yes, [Empty]=> No: ")
-      except:
-        print(' Exiting program. ')
-        sys.exit(1)
+      select=input(" Select All? [1-9]=> Yes, [Empty]=> No: ")
+      if( select == ''): sys.exit(' Exiting program.')
 
     if( len(fileNos) == 0 ):
       fileNos.extend(range(len(fileList)))
