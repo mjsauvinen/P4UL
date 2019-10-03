@@ -44,7 +44,7 @@ fileout    = args.fileout
 scalars    = args.scalars
 suffix     = args.suffix
 zname      = args.zname
-nt         = args.ntimeskip
+ntskip     = args.ntimeskip
 cl         = abs(int(args.coarse))
 kcopy      = args.kcopy
 
@@ -72,7 +72,7 @@ dso = netcdfOutputDataset( fileout )
 Read cell center coordinates and time.
 Create the output independent variables right away and empty memory.
 '''
-time, time_dims = read1DVariableFromDataset('time', ds, nt, 0, 1 ) # All values.
+time, time_dims = read1DVariableFromDataset('time', ds, ntskip, 0, 1 ) # All values.
 tv = createNetcdfVariable( dso, time,'time', len(time),'s','f4',('time',), parameter )
 time = None
 
@@ -104,7 +104,7 @@ PALM netCDF4:
 '''
 
 # - - - - First, u-component - - - - - - - - - -
-u0, u0_dims = read3DVariableFromDataset( 'u'+suffix, ds, nt, 0, 0, cl ) # All values.
+u0, u0_dims = read3DVariableFromDataset( 'u'+suffix, ds, ntskip, 0, 0, cl ) # All values.
 
 ''' 
 New, cell-center dimension lengths: 
@@ -133,7 +133,7 @@ if( decompOn ):
 
 # - - - - Third, w-component - - - - - - - - - -
 
-w0, w0_dims = read3DVariableFromDataset( 'w'+suffix, ds, nt, 0, 0, cl ) # All values.
+w0, w0_dims = read3DVariableFromDataset( 'w'+suffix, ds, ntskip, 0, 0, cl ) # All values.
 
 wc = np.zeros( cc_dims )
 if( kcopy ):
@@ -154,7 +154,7 @@ if( decompOn ):
 
 # - - - - Second, v-component - - - - - - - - - -
 
-v0, v0_dims = read3DVariableFromDataset( 'v'+suffix, ds, nt, 0, 0, cl ) # All values.
+v0, v0_dims = read3DVariableFromDataset( 'v'+suffix, ds, ntskip, 0, 0, cl ) # All values.
 
 vc = np.zeros( cc_dims )
 vc, vm = interpolatePalmVectors( v0, cc_dims, 'j' , decompOn ); v0 = None
@@ -174,7 +174,7 @@ if( decompOn ):
 
 if( scalars ):
   for sn in scalars:
-    s0, s0_dims = read3DVariableFromDataset( sn+suffix, ds, nt, 0, 0, cl ) # All values.
+    s0, s0_dims = read3DVariableFromDataset( sn+suffix, ds, ntskip, 0, 0, cl ) # All values.
     sc_dims  = np.array( s0_dims )  # Change to numpy array for manipulation
     if( kcopy ): sc_dims[2:] -= 1   # Reduce the x, y dimensions by one. Note: time = sc_dims[0].
     else:        sc_dims[1:] -= 1   # Reduce all coord. dimensions by one.

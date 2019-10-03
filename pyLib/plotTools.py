@@ -914,7 +914,9 @@ def wavePlot( fig, fileStr, logOn ):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def userLabels( pFig ):
+  print('A) pFig.get_axes()[] ')
   ax=pFig.get_axes()[0]  # Get a handle on the first axes
+  print('B) pFig.get_axes()[] ')
   #pl.rc('text', usetex=True )
   #pl.rc('xtick', labelsize=24)
   #pl.rc('ytick', labelsize=24)
@@ -941,7 +943,7 @@ def userLabels( pFig ):
 
 def strEntry( questionStr , defaultStr ):
   try:
-    oStr = raw_input(str(questionStr))
+    oStr = input(str(questionStr))
   except:
     oStr = str(defaultStr)
 

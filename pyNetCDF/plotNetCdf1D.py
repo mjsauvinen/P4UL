@@ -68,7 +68,7 @@ while 1:
     # Read data
     y, xdict = readVariableFromDataset( varList[iy], ds, 1)
     
-    if('time' not in xdict.keys()): 
+    if('time' not in list(xdict.keys())): 
       print(' time not in dict = {} '.format(xdict.keys()))
       print(' adding time=[None] ...')
       xdict['time'] = np.array([None])
@@ -86,7 +86,7 @@ while 1:
     
     elif(len(np.shape(y)) == 2):
       time  = xdict['time']
-      xList = xdict.keys(); xList.remove('time') # remove time ...
+      xList = list(xdict.keys()); xList.remove('time') # remove time ...
       xStr = xList[0]                            # and take what is left ... z-something, typically
       tskip = min(tskip, len(time)-1)
       

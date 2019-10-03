@@ -58,20 +58,18 @@ def selectFromList( L ):
     
     #print("\n Enter the selection number(s): \n")
     Ids = []
-    try:
-        e = input(" Selection number(s): ")
-        if( e == ''): sys.exit(' Exiting program.')
-        
-        if(isinstance(e,tuple)): Ids.extend(e)
-        elif(isinstance(e,int)): Ids.append(e)
-        else: sys.exit(' Invalid entry. Exiting ...')
-    except:
-        s = input(" Select All? [1-9]=> Yes, [Empty]=> No: ")
-        if( s == ''): sys.exit(' Exiting program.')
+    e = input(" Selection number(s): ")
+    if( e == ''): 
+      select = input(" Select All? [1-9]=> Yes, [Empty]=> No: ")
+      
+      if( select == ''): sys.exit(' Exiting program.')
+      else: Ids.extend(range(len(L)))
+    else:
+      try: Ids.extend( list( map( int, e.split(','))) )
+      except: sys.exit(' Invalid entry. Exiting ...')
     
-    if( len(Ids) == 0 ): Ids.extend(range(len(L)))
     return Ids
-    
+
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 

@@ -62,6 +62,7 @@ while 1:
     pfig = plotXX( pfig, fileList[fn], logOn, factorX, factorY, revAxes, linemode )
 
   if( labelsOn ):
+    print(' userLabels ')
     pfig = userLabels( pfig )
   plt.grid(True)
   plt.legend(loc=0)
