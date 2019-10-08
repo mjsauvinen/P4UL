@@ -107,8 +107,8 @@ class wtDataset:
     """
     assert (ttype=="real" or ttype=="complex"), "Transform type can be only in a string format: \"real\" or \"complex\" "
 
-    if( self.omega0<5 ): 
-      raise ValueError, "invalid omega0 value"
+    if( self.omega0<5 ):
+      raise Exception("invalid omega0 value")
     
     dt=np.mean(self.t[1:]-self.t[:-1])
 
@@ -194,8 +194,8 @@ class wtDataset:
 
 
 
-    if( self.omega0<5 ): 
-      raise ValueError, "invalid omega0 value"  
+    if( self.omega0<5 ):
+      raise Exception("invalid omega0 value")
 
     output=abs(self.SigMorletSpectrogram(ttype=ttype,plot=False))**2
     
