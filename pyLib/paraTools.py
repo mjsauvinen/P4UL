@@ -13,7 +13,7 @@ def extractParaviewLineData( caseDir , varList, coords , calcDict,  csvOutputVar
         reader = ps.OpenFOAMReader( FileName=caseDir+'/case.foam')
         
     try:    reader.CellArrays= varList
-    except: print "Variables {} were not found in results. Exiting ...".format(varList)
+    except: print("Variables {} were not found in results. Exiting ...".format(varList))
         
     reader.MeshRegions = ['internalMesh']
     
@@ -23,7 +23,7 @@ def extractParaviewLineData( caseDir , varList, coords , calcDict,  csvOutputVar
         #view = ps.CreateRenderView()
         #view.ViewTime = time
     else:
-        print "Time-directory {} does not exist. Exiting ...".format(time)
+        print("Time-directory {} does not exist. Exiting ...".format(time))
         sys.exit(1)
        
     if( calcDict ): 
@@ -41,9 +41,9 @@ def extractParaviewLineData( caseDir , varList, coords , calcDict,  csvOutputVar
     writer = ps.CreateWriter(filePath, plotLine)
     writer.WriteAllTimeSteps = False
     writer.UseScientificNotation = 1
-    #print "Writing file tmp.csv ... "
+    #print("Writing file tmp.csv ... ")
     writer.UpdatePipeline()
-    #print "Done!"
+    #print("Done!")
     ps.Delete(reader); ps.Delete(calc)#; ps.Delete(writer)
     ps.Delete(plotLine)
     reader   = None; del reader
@@ -52,7 +52,7 @@ def extractParaviewLineData( caseDir , varList, coords , calcDict,  csvOutputVar
     del writer
     
     if( np.mod( (100.*time) , 1 ) == 0 ):
-        print "Disconnecting ... "
+        print("Disconnecting ... ")
         ps.Disconnect()  # Clear memory occasionally.
 
     data = extractFromCSV("tmp.csv", csvOutputVar )

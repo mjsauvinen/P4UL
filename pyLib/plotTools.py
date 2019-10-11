@@ -111,7 +111,7 @@ def userColormapSettings( fig, im, Rmax=None, Rmin=None ):
   im = setColormap( im )
     
   try:
-    uticks=input(' Enter ticks separated by comma (empty=default):')
+    uticks=list( map(float, input(' Enter ticks separated by comma (empty=default):').split(',')) )
   except:
     uticks=None
   
@@ -666,25 +666,23 @@ def plotCSV( fig, fileStr, revAxes=False, magY=False, globalValues=False ):
       n+=1
 
     try:  
-      xI = input(" X [index]  = ")
+      xI = int(input(" X [index]  = "))
     except:
-      print(' No selection. Exiting program. ')
-      sys.exit(1)
+      sys.exit(' No selection. Exiting program. ')
       
-    yLst = []
-    try:
-      yLst.extend(input(" Y [List] = "))
-    except:
-      try:
-        select=input(" Select All? [1-9]=> Yes, [Empty]=> No: ")
-      except:
-        print(' Exiting program. ')
-        sys.exit(1)
-
-    if( len(yLst) == 0 ):
-      yLst.extend(range(len(varList)))
-      
-      
+    e = input(" Y [List] = ")
+    
+    if( e == ''): 
+      select=input(" Select All? [1-9]=> Yes, [Empty]=> No: ")
+      if( select == ''): 
+        sys.exit(' Exiting program.')
+      else:
+        yLst = list(range(len(fileList)))
+        
+    else:
+      try: yLst = list( map( int, e.split(',') ) )
+      except: sys.exit(' Bad entry. Exiting program.')
+    
     if( globalValues and gxI == -1 ):
       gxI   = xI   # Store the global values
       gyLst = yLst

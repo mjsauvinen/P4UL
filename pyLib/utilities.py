@@ -86,9 +86,8 @@ def filesFromList( searchStr , allFiles=False):
     print(" # ["+str(n)+"]: "+ str(f))
     n+=1
   
-  fileNos = []   # Create empty list for file numbers
   if( allFiles ):
-    fileNos.extend(range(len(fileList)))
+    fileNos = range(len(fileList))
   else:
     infoStr = """ 
      Enter file number(s), use comma as separator:
@@ -97,21 +96,19 @@ def filesFromList( searchStr , allFiles=False):
     """ 
     print(infoStr)
     
-    try:
-      e = input(" File Numbers = ")
-      if( e == ''): sys.exit(' Exiting program.')
+    
+    e = input(" File Numbers = ")
       
+    if( e == ''): 
+      select=input(" Select All? [1-9]=> Yes, [Empty]=> No: ")
+      if( select == ''): 
+        sys.exit(' Exiting program.')
+      else:
+        fileNos = list(range(len(fileList)))
+        
+    else:
       try: fileNos = list( map( int, e.split(',') ) )
       except: sys.exit(' Bad entry. Exiting ...')
-      
-    except:
-      select=input(" Select All? [1-9]=> Yes, [Empty]=> No: ")
-      if( select == ''): sys.exit(' Exiting program.')
-
-    if( len(fileNos) == 0 ):
-      fileNos.extend(range(len(fileList)))
-  # end else
-
 
   return fileNos, fileList
 

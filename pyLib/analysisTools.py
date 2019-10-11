@@ -202,7 +202,8 @@ def calc_divergence( pk, rk, alpha=1. ):
 
 def discreteWaveletAnalysis( vx , wDict ):
   from utilities import dataFromDict
-  import pywt
+  try: import pywt
+  except: sys.exit(' Library pywt not installed. Exiting ...')
   
   # nlevel = 4
   order = 'freq'  # "normal"
@@ -227,7 +228,9 @@ def discreteWaveletAnalysis( vx , wDict ):
 
 def continuousWaveletAnalysis( vx, wDict ):
   from utilities import dataFromDict
-  import pywt
+  try: import pywt
+  except: sys.exit(' Library pywt not installed. Exiting ...')
+  
   
   wavelet = dataFromDict('wavelet', wDict, allowNone=False )
   nfreqs  = dataFromDict('nfreqs', wDict, allowNone=False )

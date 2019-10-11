@@ -42,7 +42,7 @@ def readNumpyZFootprintRaw( filename ):
   '''
   The saved .npz file contains 
   '''
-  print ' Read raw footprint file {} ...'.format(filename)
+  print(' Read raw footprint file {} ...'.format(filename))
   try: dat = np.load(filename)
   except: sys.exit(' Cannot read file {}. Exiting ...'.format(filename))
   
@@ -68,7 +68,7 @@ def writeNumpyZFootprint(filename, F, X, Y, Z, C, Ids=None ):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def readNumpyZFootprint( filename, IdsOn=False ):
-  print ' Read footprint file {} ...'.format(filename)
+  print(' Read footprint file {} ...'.format(filename))
   try: dat = np.load(filename)
   except: sys.exit(' Cannot read file {}. Exiting ...'.format(filename))
   

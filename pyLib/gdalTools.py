@@ -46,8 +46,7 @@ def UtmTileDims( level=1 ):
 def openGeoTiff( filename ):
   dataset = gdal.Open( filename, GA_ReadOnly)
   if (dataset is None):
-    print ' Unable to open file: {}. Exiting.'.format(filename)
-    sys.exit(1)
+    sys.exit(' Unable to open file: {}. Exiting.'.format(filename))
     
   return dataset
   
@@ -64,7 +63,7 @@ def getGeoTransform(ds):
     XO_TL = np.array([gt[3], gt[0]],int) # [N,E] top left origin
     dPxl  = np.array([gt[5], gt[1]],int) # [N,E]/[row/col] pixel size.
   except:
-    print 'Could not obtain geo transformation info.'
+    print('Could not obtain geo transformation info.')
     XO_TL = None; dPxl = None 
     
   return XO_TL, dPxl
@@ -75,7 +74,7 @@ def getGeoTransform(ds):
 def numberOfRasterBands( ds , printOn=False):
   nb = ds.RasterCount 
   if( printOn ):
-    print " RASTER BAND COUNT: {} ".format(nb)
+    print(" RASTER BAND COUNT: {} ".format(nb))
 
   return nb
 
@@ -84,8 +83,8 @@ def numberOfRasterBands( ds , printOn=False):
 def selectBand( nBands , promtUser=True, defInt=1):
   defInt = int(defInt)
   if( nBands > 1 and promptUser ):
-    ib = input('Select Band (1-{}): ib = '.format(nBands))
-    ib = int(np.min(abs(ib), nBands))
+    ib = int(input('Select Band (1-{}): ib = '.format(nBands)))
+    ib = min(abs(ib), nBands)
   else:
     ib = defInt
 
@@ -96,14 +95,13 @@ def selectBand( nBands , promtUser=True, defInt=1):
 def getRasterBand( dataset, iband ):
   ibandMax = dataset.RasterCount
   if( iband > ibandMax ):
-    print 'Error in extractRasterBand: iband > ibandMax'
-    sys.exit(1)
+    sys.exit('Error in extractRasterBand: iband > ibandMax')
   
   try:
     rBand = dataset.GetRasterBand(iband)
   except RuntimeError, e:
-    print 'Error in extracting band {}'.format(iband)
-    print e
+    print('Error in extracting band {}'.format(iband))
+    print('{}'.format(e))
     sys.exit(1)
 
   return rBand  
@@ -115,7 +113,7 @@ def printRasterBandStatistics(rBand):
     Rmin,Rmax,Rmean,Rstd = rBand.GetStatistics(True,True)
     Rscale = rBand.GetScale()
     Runit =  rBand.GetUnitType()
-    print '''
+    print('''
     [ STATS ]:  
               Minimum = {0:6.3f}
               Maximum = {1:6.3f}
@@ -123,9 +121,9 @@ def printRasterBandStatistics(rBand):
               Std     = {3:6.3f}
               Scale   = {4}
               Unit    = {5}
-    '''.format(Rmin,Rmax,Rmean,Rstd,Rscale,Runit)
+    '''.format(Rmin,Rmax,Rmean,Rstd,Rscale,Runit))
   except Exception, e:
-    print e
+    print('{}'.format(e))
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
@@ -166,10 +164,10 @@ def extractSubTile( rBand, tileCode, XOrg, dPx):
       for level in range(1,len(tileCode)-1):
         code+=tileChars[level+1]
         Xtmp, nPx = newTileCoords( Xtmp, tileChars, level, dPx )
-        print pStr.format(code,Xtmp,nPx)
+        print(pStr.format(code,Xtmp,nPx))
 
     nPxOffset = np.abs( (Xtmp-XOrg)/dPx )
-    print ' Number of Offset Pixels = {}'.format(nPxOffset)
+    print(' Number of Offset Pixels = {}'.format(nPxOffset))
   
   Rb = readAsNumpyArray( rBand, nPxOffset, nPx)
   Rdict = {'R' : Rb, 'GlobOrig' : Xtmp}
@@ -184,12 +182,12 @@ def newTileCoords( XOld, tileChars, level, dPx ):
   m = tileChars[1+level] # Min 2, skip 0,1.
   if (level == 4 ):
     if(m not in NStepUtmDict.keys()):
-      print ' Letter {} is not acceptable. Only A-H allowed.'.format(m)
+      print(' Letter {} is not acceptable. Only A-H allowed.'.format(m))
       sys.exit(1)
   else:
     m = int(m)
     if(m not in NStepUtmDict.keys()):
-      print ' Integer {} is not acceptable. Only 1-4 allowed.'.format(m)
+      print(' Integer {} is not acceptable. Only 1-4 allowed.'.format(m))
       sys.exit(1)
     
   nSteps = np.array([ NStepUtmDict[m],EStepUtmDict[m] ], int)
@@ -226,7 +224,7 @@ def extractSubTileFromNumpyArray(R, XO, LocCode, level, dPx ):
   nPx = Xdims/dPx   
   iPx1 =  np.abs(nSteps)   *Xdims/dPx  # Starting indecies.
   iPx2 = (np.abs(nSteps)+1)*Xdims/dPx  
-  print ' Start, Stop : {}, {} '.format(iPx1, iPx2)
+  print(' Start, Stop : {}, {} '.format(iPx1, iPx2))
     
     
   return R[iPx1[0]:iPx2[0], iPx1[1]:iPx2[1]], XOnew 
@@ -242,8 +240,7 @@ def readAsNumpyArray( rBand, nPxoff=None, nPx=None ):
     try:
       dat = rBand.ReadAsArray()
     except:
-      print 'Error in (2) readAsNumpyArray. Exiting.'
-      sys.exit(1)
+      sys.exit('Error in (2) readAsNumpyArray. Exiting.')
   else:
     try:
       #  ReadAsArray(xoff,yoff, xsize, ysize)
@@ -252,8 +249,7 @@ def readAsNumpyArray( rBand, nPxoff=None, nPx=None ):
       j1=int(nPx[1]);    j2=int(nPx[0])
       dat = rBand.ReadAsArray(i1,i2,j1,j2)
     except:
-      print 'Error in (1) readAsNumpyArray. Exiting.'
-      sys.exit(1)
+      sys.exit('Error in (1) readAsNumpyArray. Exiting.')
     
   return dat
 
