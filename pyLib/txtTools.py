@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys, fileinput
 
-def openIOFile( fileName , mode='r' ):
+def openIOFile( filename , mode='r' ):
   if(mode=='r'):
     message='reading.'
   elif(mode=='w'):
@@ -13,11 +13,10 @@ def openIOFile( fileName , mode='r' ):
     mode='r'
 
   try:
-    xfile=file(fileName, mode)
-    print(" Opening file {} for {}".format(fileName,message))
+    xfile=open(filename, mode)
+    print(" Opening file {} for {}".format(filename,message))
   except IndexError:
-    print(" Error: "+fileName+" does not exist. Exiting ...")
-    sys.exit(1)
+    sys.exit(" Error: "+filename+" does not exist. Exiting ...")
 
   return xfile
 

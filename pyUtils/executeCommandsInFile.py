@@ -12,13 +12,8 @@ args = parser.parse_args()
 # = = = = = = = = = Main Program = = = = = = = = = = = = = #
 filename = args.filename
 
-
-try:
-  inFile = openIOFile( filename, 'r' )
-except:
-  sys.exit("Cannot open file {}. Exiting ...".format(filename))
-
+inFile = openIOFile( filename, 'r' )
 
 for line in inFile:
-  print " Executing: "+line
+  print(" Executing: {}".format(line))
   subprocess.call( line , shell=True )

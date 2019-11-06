@@ -54,7 +54,7 @@ cmaps_new = { 1:'viridis', 2:'inferno', 3:'plasma',  4:'magma',     5:'Blues',
 
 def printDict( D , ncols=3 ):
   i = 0; pStr = str()
-  for k, v in D.iteritems():
+  for k, v in D.items():
     i+=1
     # use at least 13 chars to make columns line up
     pStr += ' {}: {:13s} \t'.format(k,v) 
@@ -71,8 +71,8 @@ def setColormap( img ):
   # Select the desired colormap
   try:
     printDict( cmaps_new, 3 )
-    icmap = input(' Enter integer key for the colormap = ')
-    try:    nc = input(' Number of discrete colors in colormap = ')
+    icmap = int(input(' Enter integer key for the colormap = '))
+    try:    nc = int(input(' Number of discrete colors in colormap = '))
     except: nc = None
     cm = plt.get_cmap( cmaps_new[icmap], nc )
     img.set_cmap(cm)
@@ -803,9 +803,9 @@ def addQuiver( X, Y, Ux, Uy , fc,  labelStr, titleStr=" " ):
 
 def addContourf( X, Y, Q, CfDict=None ):
   Xdims = np.array(X.shape)
-  #figDims = 12.*(Xdims[::-1].astype(float)/np.max(Xdims))
+  figDims = 12.*(Xdims[::-1].astype(float)/np.max(Xdims))
   #figDims  = (11,11)
-  figDims  = (9,11)
+  #figDims  = (9,11)
   fig = plt.figure(figsize=figDims)
   #fig, ax = plt.subplots()
   ax = fig.add_axes( [0.1, 0.08 , 0.88 , 0.85] ) #[left, up, width, height]
@@ -813,9 +813,11 @@ def addContourf( X, Y, Q, CfDict=None ):
   # Default values 
   labelStr = ' Q(X,Y) '
   titleStr = ' Title:  Q(X,Y) '
-  cmap_x = None
+  cm   = None
+  vx   = None
+  vn   = None
+  levels = None
   N = 12
-  vmax = None; vmin = None
   
   if( CfDict is not None ):
     titleStr = dataFromDict('title',  CfDict, allowNone=False)

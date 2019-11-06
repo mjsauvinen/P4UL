@@ -99,7 +99,7 @@ def getRasterBand( dataset, iband ):
   
   try:
     rBand = dataset.GetRasterBand(iband)
-  except RuntimeError, e:
+  except:
     print('Error in extracting band {}'.format(iband))
     print('{}'.format(e))
     sys.exit(1)
@@ -122,7 +122,7 @@ def printRasterBandStatistics(rBand):
               Scale   = {4}
               Unit    = {5}
     '''.format(Rmin,Rmax,Rmean,Rstd,Rscale,Runit))
-  except Exception, e:
+  except Exception as e:
     print('{}'.format(e))
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
@@ -156,7 +156,7 @@ def extractSubTile( rBand, tileCode, XOrg, dPx):
     tileChars = list(tileCode)
     code = tileChars[0]; code+=tileChars[1]
     pStr = '{}: XOrig = {}, nPx = {} [N,E]'
-    print pStr.format(code,Xtmp,None)
+    print(pStr.format(code,Xtmp,None))
   
     if( len(tileCode) == 2 ): # The user could ask for the entire tile.
       nPx = UtmTileDims()/np.abs(dPx)

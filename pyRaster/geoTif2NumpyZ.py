@@ -17,12 +17,12 @@ Author: Mikko Auvinen
         Finnish Meteorological Institute
 '''
 #==========================================================#
-parser = argparse.ArgumentParser(prog='utmTilesFromGeoTiff.py')
+parser = argparse.ArgumentParser(prog='geoTif2NumpyZ.py')
 parser.add_argument("-f", "--filename", type=str, help="Name of the target .tif file", \
   default=None)
 parser.add_argument("-nd", "--ndecimals",type=int,\
    help="Number of decimal places. Default = 1", default=1) 
-parser.add_argument("-b", "--bandSelect", help="Raster Band Selection. Default=1.",\
+parser.add_argument("-b", "--bandSelect", help="Raster Band Selection.",\
   action="store_true", default=False)
 parser.add_argument("-p", "--printOn", help="Print the extracted tile.",\
   action="store_true", default=False)
