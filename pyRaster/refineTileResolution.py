@@ -63,7 +63,7 @@ else:
   n2 = np.arange(maxDims[0]); e2 = np.arange(maxDims[1])
 
 # Modify the integer list for refining/coarsening
-n1/=dr1; e1/=dr1
+n1= n1/dr1; e1=e1/dr1
 n1 = n1.astype(int);  e1 = e1.astype(int)
 
 n2 = n2*fr2        ;  e2 = e2*fr2
