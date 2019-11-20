@@ -108,9 +108,6 @@ Rdict['GlobOrig'] = R2Orig
 Rdict['dPx'] = dPx2
 
 if( not args.printOnly ):
-  fx = open( fileout , 'w' )
-  np.savetxt(fx,np.round(R2),fmt='%g')
-  fx.close()
   saveTileAsNumpyZ( fileout, Rdict )
 
 if( args.printOn or args.printOnly ):

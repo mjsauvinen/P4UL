@@ -12,6 +12,16 @@ Author: Mikko Auvinen
         University of Helsinki &
         Finnish Meteorological Institute
 '''
+#==========================================================#
+def replaceValues( q, qa, qb ):
+  if( qa[0] != 1e9 ):
+    idr = (q > qa[0])
+    q[idr] = qa[1]
+  if( qb[0] != -1e9 ):
+    idr = (q < qb[0])
+    q[idr] = qb[1]
+    
+  return q
 
 #==========================================================#
 parser = argparse.ArgumentParser(prog='groupVectorDataNetCDF.py')
@@ -25,6 +35,10 @@ parser.add_argument("-zn", "--zname",type=str, default='zu_3d',\
   help="Name of z-coordinate. Default = 'zu_3d' ")
 parser.add_argument("-sx", "--suffix",type=str, default='',\
   help="Potential suffix to be appended to variable names. Example: '_xy'. ")
+parser.add_argument("-va", "--replValuesAbove", nargs=2, type=float, default=[1.e9,0.0],\
+  help="Entry <Max> <val> := replace values above given threshold <Max> by <val>. Default= 1.e9 0.0")
+parser.add_argument("-vb", "--replValuesBelow", nargs=2, type=float, default=[-1.e9,0.0],\
+  help="Entry <Min> <val> := replace values below given threshold <Min> by <val>. Default= -1.e9 0.0")
 parser.add_argument("-d", "--decomp", action="store_true", default=False,\
   help="Decomposed into mean (V_m) and fluctuating (V^prime) components.")
 parser.add_argument("-dd", "--decompOnly",action="store_true", default=False,\
@@ -47,6 +61,8 @@ zname      = args.zname
 ntskip     = args.ntimeskip
 cl         = abs(int(args.coarse))
 kcopy      = args.kcopy
+va         = args.replValuesAbove
+vb         = args.replValuesBelow
 
 # Boolean switch for the decomposition option.
 decompOn = args.decomp or args.decompOnly
@@ -105,6 +121,7 @@ PALM netCDF4:
 
 # - - - - First, u-component - - - - - - - - - -
 u0, u0_dims = read3DVariableFromDataset( 'u'+suffix, ds, ntskip, 0, 0, cl ) # All values.
+u0 = replaceValues(u0, va, vb)
 
 ''' 
 New, cell-center dimension lengths: 
@@ -134,6 +151,7 @@ if( decompOn ):
 # - - - - Third, w-component - - - - - - - - - -
 
 w0, w0_dims = read3DVariableFromDataset( 'w'+suffix, ds, ntskip, 0, 0, cl ) # All values.
+w0 = replaceValues(w0, va, vb)
 
 wc = np.zeros( cc_dims )
 if( kcopy ):
@@ -155,6 +173,7 @@ if( decompOn ):
 # - - - - Second, v-component - - - - - - - - - -
 
 v0, v0_dims = read3DVariableFromDataset( 'v'+suffix, ds, ntskip, 0, 0, cl ) # All values.
+v0 = replaceValues(v0, va, vb)
 
 vc = np.zeros( cc_dims )
 vc, vm = interpolatePalmVectors( v0, cc_dims, 'j' , decompOn ); v0 = None
@@ -175,6 +194,8 @@ if( decompOn ):
 if( scalars ):
   for sn in scalars:
     s0, s0_dims = read3DVariableFromDataset( sn+suffix, ds, ntskip, 0, 0, cl ) # All values.
+    s0 = replaceValues(s0, va, vb)
+    
     sc_dims  = np.array( s0_dims )  # Change to numpy array for manipulation
     if( kcopy ): sc_dims[2:] -= 1   # Reduce the x, y dimensions by one. Note: time = sc_dims[0].
     else:        sc_dims[1:] -= 1   # Reduce all coord. dimensions by one.
