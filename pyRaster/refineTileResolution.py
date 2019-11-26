@@ -66,11 +66,14 @@ else:
 n1= n1/dr1; e1=e1/dr1
 n1 = n1.astype(int);  e1 = e1.astype(int)
 
-n2 = n2*fr2        ;  e2 = e2*fr2
-n2 = n2.astype(int);  e2 = e2.astype(int)
+n2 = np.round(n2*fr2, decimals=2);  e2 = np.round(e2*fr2, decimals=2)
+#print(' n2 = {} '.format(n2))
+#print(' n1 = {} '.format(n1))
 
-#print ' n2 = {} '.format(n2)
-#print ' n1 = {} '.format(n1)
+
+n2 = n2.astype(int);  e2 = e2.astype(int)
+#np.savetxt('n2.dat', n2, fmt='%g')
+#np.savetxt('n1.dat', n1, fmt='%g')
 
 
 
@@ -85,7 +88,12 @@ else:
   for k in range(maxDims[0]):
     for l in range(maxDims[1]):
       R2[ n2[k], e2[l] ] +=  R1[ n1[k] ,e1[l] ]
+      if( n2[k] == 0  and e2[l] == 0): 
+        print(' R2 = {} , R1 = {} '.format( R2[ n2[k], e2[l] ], R1[ n1[k] ,e1[l] ]))
 
+
+#print(' TL:{} TR:{} BL:{} BR:{} '.format( R2[0,0], R2[0,-1], R2[-1,0], R2[-1,-1]))
+#print(' TL+1:{} TR+1:{} BL+1:{} BR+1:{} '.format( R2[1,0], R2[1,-1], R2[-1,1], R2[-1,-2]))
 
 # NOTE! The global origin is the coordinate of the top left cell center. 
 # Therefore, it must be shifted by in accordance to the top left cc's new location.

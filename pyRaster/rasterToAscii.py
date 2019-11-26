@@ -46,10 +46,10 @@ print(' Rdims = {} '.format(Rdims))
 print(' ROrig = {} '.format(ROrig))
 
 if( not printOnly ):
-  fx = open( fileout , 'w' )
-  if( round2Int ): np.savetxt(fx,np.round(R),fmt='%g')
-  else:            np.savetxt(fx,R,fmt='%g')
-  fx.close()
+  #fx = open( fileout , 'w' )
+  if( round2Int ): np.savetxt(fileout,np.round(R),fmt='%g')
+  else:            np.savetxt(fileout,R,fmt='%g')
+  #fx.close()
 
 if( args.printOn or args.printOnly ):
   figDims = 13.*(Rdims[::-1].astype(float)/np.max(Rdims))

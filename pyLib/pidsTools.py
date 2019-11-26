@@ -2,7 +2,7 @@ import netCDF4 as nc
 import sys
 import argparse
 import numpy as np
-import ConfigParser
+import configparser
 from itertools import islice, chain, repeat
 
 from netcdfTools import *
@@ -63,7 +63,7 @@ def readConfigSection(config, name):
 def readConfigVariable(config, section, name):
   try:
     var = config.get(section, name)
-  except ConfigParser.NoOptionError:
+  except configparser.NoOptionError:
     return None
 
   return var

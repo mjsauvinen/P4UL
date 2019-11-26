@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import argparse
-import ConfigParser
+import configparser
 import numpy as np
 import os.path
 
@@ -29,6 +29,9 @@ sasu.karttunen@helsinki.fi
 Institute for Atmospheric and Earth System Research (INAR) / Physics
 University of Helsinki
 
+UPDATE:
+- Mikko: In python3 the ConfigParser library is renamed configparser
+
 '''
 
 #==========================================================#
@@ -37,7 +40,7 @@ parser.add_argument("config", type=str, default=None, help="Name of the input co
 args = parser.parse_args()
 #==========================================================#
 
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 config.read(args.config)
 
 '''
