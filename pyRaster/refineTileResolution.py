@@ -105,7 +105,7 @@ dPx2 = dPx1/rr
 dPm  = np.minimum( dPx1, dPx2 )
 dPm[1] *= -1.  # When coarsening, the offset should be negative in N and positive in E
 R2Orig = R1Orig.copy()
-R2Orig += np.sign(N)*(2.*np.abs(N) - 1.) * (dPm/2.)  # N<0 coarsens, N>0 refines
+R2Orig += np.sign(N)*(2.**np.abs(N) - 1.) * (dPm/2.)  # N<0 coarsens, N>0 refines
 
 # Rotate the newly shifted global origin to the global coord. system using the R1Orig as pivot.
 R2Orig = rotatePoint(R1Orig, R2Orig, gridRot1)

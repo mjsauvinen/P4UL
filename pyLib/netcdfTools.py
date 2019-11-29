@@ -40,6 +40,8 @@ def netcdfDataset(filename, verbose=True):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def netcdfOutputDataset(filename, mode='w'):
+  if( isinstance( filename, bytes ) ):
+    filename = filename.decode()
   dso = nc.Dataset(filename, mode, format='NETCDF4')
   return dso
 
