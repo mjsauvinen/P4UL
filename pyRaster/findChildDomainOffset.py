@@ -84,7 +84,7 @@ print('\n# - - - - - OFFSETS - - - - - - - - #')
 print(' Bottom left origo offsets:')
 OrigOffsetLocal = np.round( OrigOffset / dPxParent , decimals=1 )
 print(' Parent domain\'s grid: [dN,dE] = [{}, {}]  \n'.format(*OrigOffset))
-print(' Enter this into PARIN -->    {:.1f}, {:.1f} \n'.format(OrigOffset[1],OrigOffset[0]))
+print(' Enter this into PARIN (&nesting_parameters) -->  {:.1f}, {:.1f} \n'.format(OrigOffset[1],OrigOffset[0]))
 print(' Pixels in parent domain\'s grid: [jN,iE]= [{}, {}]'.format(*OrigOffsetLocal))
 
 # Help the user to move the child domain to match the parent's grid
@@ -95,7 +95,7 @@ else:
   # Check if the grid dimensions match, i.e. the edges align with the parent grid
   xRatio = np.round( nPxChild[1] * dPxChild[1] / dPxParent[1] , decimals=1)
   yRatio = np.round( nPxChild[0] * dPxChild[0] / dPxParent[0] , decimals=1)
-  if (not(xRatio.is_integer() and yRatio.is_integer())):
+  if (not(xRatio.is_integer()) and not(yRatio.is_integer()) ):
     print(' WARNING: Child domain\'s grid edges don\'t align with the parent. Check your resolutions and dimensions.')
   else:
-    print(' Child\'s grid aligns with the parent\'s grid.')
+    print(' Child\'s grid aligns with the parent\'s grid. Buenos!')
