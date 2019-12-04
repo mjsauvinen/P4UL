@@ -848,7 +848,7 @@ def addContourf( X, Y, Q, CfDict=None ):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*  
 def addScatterPlot(fig, X, Y, C, fc=4 ):
   ax = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height]
-  dims = np.array(np.shape(X))/fc
+  dims = np.array(np.shape(X))//fc  # NOTE: integer division necessary
   N = np.prod(dims)
   ax.scatter(X[::fc,::fc].reshape(N), Y[::fc,::fc].reshape(N), s=10, \
              c=C[::fc,::fc].reshape(N), marker=',', cmap=plt.cm.rainbow)
