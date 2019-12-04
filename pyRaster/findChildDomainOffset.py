@@ -86,7 +86,7 @@ print(' Enter this into PARIN -->    {:.1f}, {:.1f} \n'.format(OrigOffset[1],Ori
 print(' Pixels in parent domain\'s grid: [jN,iE]= [{}, {}]'.format(*OrigOffsetLocal))
 
 # Help the user to move the child domain to match the parent's grid
-if (not(OrigOffsetLocal[0].is_integer() and not(OrigOffsetLocal[1].is_integer()))):
+if (not(OrigOffsetLocal[0].is_integer()) and not(OrigOffsetLocal[1].is_integer()) ):
   print(' WARNING: The offset in pixel count is not an integer: {} '.format(OrigOffsetLocal))
 
 else:
