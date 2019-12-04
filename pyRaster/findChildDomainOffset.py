@@ -81,12 +81,13 @@ OrigOffset = np.round( ROrigChildBL - ROrigParentBL , decimals=1 )
 print('\n# - - - - - OFFSETS - - - - - - - - #') 
 print(' Bottom left origo offsets:')
 OrigOffsetLocal = np.round( OrigOffset / dPxParent , decimals=1 )
-print(' Parent domain\'s grid: [dN,dE] = [{}, {}]  <-- Enter this into PARIN!'.format(*OrigOffset))
+print(' Parent domain\'s grid: [dN,dE] = [{}, {}]  \n'.format(*OrigOffset))
+print(' Enter this into PARIN -->    {:.1f}, {:.1f} \n'.format(OrigOffset[1],OrigOffset[0]))
 print(' Pixels in parent domain\'s grid: [jN,iE]= [{}, {}]'.format(*OrigOffsetLocal))
 
 # Help the user to move the child domain to match the parent's grid
 if (not(OrigOffsetLocal[0].is_integer() and not(OrigOffsetLocal[1].is_integer()))):
-  print(' WARNING: Child\'s origo doesn\'t match to the parent\'s grid.')
+  print(' WARNING: The offset in pixel count is not an integer: {} '.format(OrigOffsetLocal))
 
 else:
   # Check if the grid dimensions match, i.e. the edges align with the parent grid
