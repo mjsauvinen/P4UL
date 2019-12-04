@@ -25,16 +25,14 @@ parser.add_argument("-s", "--size", type=float, default=13.,\
   help="Size of the figure (length of the longer side). Default=13.")
 parser.add_argument("--lims", help="User specified limits.", action="store_true",\
   default=False)
-parser.add_argument("--grid", help="Turn on grid.", action="store_true",\
-  default=False)
-parser.add_argument("--labels", help="User specified labels.", action="store_true",\
-  default=False)
-parser.add_argument("--footprint", help="Plot footprint data.", action="store_true",\
-  default=False)
-parser.add_argument("--save", metavar="FORMAT" ,type=str,\
-  default='', help="Save the figure in specified format. Formats available: jpg, png, pdf, ps, eps and svg")
-parser.add_argument("--dpi", metavar="DPI" ,type=int,\
-  default=100, help="Desired resolution in DPI for the output image. Default: 100")
+parser.add_argument("--grid", help="Turn on grid.", action="store_true", default=False)
+parser.add_argument("--labels", help="User specified labels.", action="store_true", default=False)
+parser.add_argument("--footprint", help="Plot footprint data.", action="store_true", default=False)
+parser.add_argument("-i","--infoOnly", help="Print only info to the screen.", action="store_true", default=False)
+parser.add_argument("--save", metavar="FORMAT" ,type=str, default='', \
+  help="Save the figure in specified format. Formats available: jpg, png, pdf, ps, eps and svg")
+parser.add_argument("--dpi", metavar="DPI" ,type=int, default=100,\
+  help="Desired resolution in DPI for the output image. Default: 100")
 args = parser.parse_args() 
 #writeLog( parser, args )
 #==========================================================#
@@ -43,6 +41,7 @@ rasterfile  = args.filename
 size        = args.size
 limsOn      = args.lims
 gridOn      = args.grid
+infoOnly    = args.infoOnly
 labels      = args.labels
 footprintOn = args.footprint
 save        = args.save
@@ -74,19 +73,22 @@ info = ''' Info:
 
 print(info)
 
-figDims = size*(Rdims[::-1].astype(float)/np.max(Rdims))
-fig = plt.figure(num=1, figsize=figDims)
-fig = addImagePlot( fig, R , rasterfile, gridOn, limsOn)
-R = None
+if( not infoOnly ):
+  figDims = size*(Rdims[::-1].astype(float)/np.max(Rdims))
+  fig = plt.figure(num=1, figsize=figDims)
+  fig = addImagePlot( fig, R , rasterfile, gridOn, limsOn)
+  R = None
 
-if(labels):
-  fig = userLabels( fig )
+  if(labels):
+    fig = userLabels( fig )
 
-if(not(save=='')):
-  filename = rasterfile.split('/')[-1]  # Remove the path in Linux system
-  filename = filename.split('\\')[-1]   # Remove the path in Windows system
-  filename = filename.strip('.npz')+'.'+save
-  fig.savefig( filename, format=save, dpi=args.dpi)
+  if(not(save=='')):
+    filename = rasterfile.split('/')[-1]  # Remove the path in Linux system
+    filename = filename.split('\\')[-1]   # Remove the path in Windows system
+    filename = filename.strip('.npz')+'.'+save
+    fig.savefig( filename, format=save, dpi=args.dpi)
   
-plt.show()
+  plt.show()
+else:
+  R = None
 
