@@ -76,11 +76,11 @@ ROrigChildBL[1] -= dPxChild[1]/2.
 print('\n Bottom Left Origos.\n Parent = {} vs.\n Child = {}'.format(ROrigParentBL,ROrigChildBL))
 
 # Offset of global bottom left origo coordinates
-OrigOffset = ROrigChildBL - ROrigParentBL
+OrigOffset = np.round( ROrigChildBL - ROrigParentBL , decimals=2 )
 
 print('\n# - - - - - OFFSETS - - - - - - - - #') 
 print(' Bottom left origo offsets:')
-OrigOffsetLocal = OrigOffset / dPxParent
+OrigOffsetLocal = np.round( OrigOffset / dPxParent , decimals=2 )
 print(' Parent domain\'s grid: [dN,dE] = [{}, {}]  <-- Enter this into PARIN!'.format(*OrigOffset))
 print(' Pixels in parent domain\'s grid: [jN,iE]= [{}, {}]'.format(*OrigOffsetLocal))
 
@@ -90,8 +90,8 @@ if (not(OrigOffsetLocal[0].is_integer() and not(OrigOffsetLocal[1].is_integer())
 
 else:
   # Check if the grid dimensions match, i.e. the edges align with the parent grid
-  xRatio = nPxChild[1] * dPxChild[1] / dPxParent[1]
-  yRatio = nPxChild[0] * dPxChild[0] / dPxParent[0]
+  xRatio = np.round( nPxChild[1] * dPxChild[1] / dPxParent[1] , decimals=2)
+  yRatio = np.round( nPxChild[0] * dPxChild[0] / dPxParent[0] , decimals=2)
   if (not(xRatio.is_integer() and yRatio.is_integer())):
     print(' WARNING: Child domain\'s grid edges don\'t align with the parent. Check your resolutions and dimensions.')
   else:
