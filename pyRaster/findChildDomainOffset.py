@@ -29,6 +29,7 @@ childFile  = args.child
 
 
 # Read grid information from both files
+print('\n# - - - - - PARENT INFO - - - - - - - - #')
 RdictParent = readNumpyZTile(parentFile)
 nPxParent   = np.shape(RdictParent['R'])
 ROrigParent = RdictParent['GlobOrig']  # Top left cell-center origin
@@ -37,12 +38,13 @@ dPxParent   = RdictParent['dPx']
 if( 'gridRot' in RdictParent.keys()): gridRot = RdictParent['gridRot'] 
 RdictParent = None
 
-print('\n# - - - - - PARENT INFO - - - - - - - - #')
 print(' Global origo (Top Left): [N,E] = [{}, {}]'.format(*ROrigParent))
 print(' Size: [N,E] = [{}, {}]'.format(*nPxParent))
 print(' Resolution: [dPy,dPx] = [{}, {}]'.format(*dPxParent))
 print(' Grid rotation: [deg] = {}\n'.format(gridRot / (np.pi / 180.)))
 
+
+print('\n# - - - - - CHILD INFO - - - - - - - - #')
 RdictChild = readNumpyZTile(childFile)
 nPxChild   = np.shape(RdictChild['R'])
 ROrigChild = RdictChild['GlobOrig']
@@ -50,7 +52,7 @@ dPxChild   = RdictChild['dPx']
 if( 'gridRot' in RdictChild.keys()): gridRotChild = RdictChild['gridRot']
 RdictChild = None
 
-print('\n# - - - - - CHILD INFO - - - - - - - - #')
+
 print(' Global origo (Top Left): [N,E] = [{}, {}]'.format(*ROrigChild))
 print(' Size: [N,E] = [{}, {}]'.format(*nPxChild))
 print(' Resolution: [dPy,dPx] = [{}, {}]'.format(*dPxChild))
