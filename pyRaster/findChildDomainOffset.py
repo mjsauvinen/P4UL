@@ -37,6 +37,7 @@ dPxParent   = RdictParent['dPx']
 if( 'gridRot' in RdictParent.keys()): gridRot = RdictParent['gridRot'] 
 RdictParent = None
 
+print('\n# - - - - - PARENT INFO - - - - - - - - #')
 print(' Global origo (Top Left): [N,E] = [{}, {}]'.format(*ROrigParent))
 print(' Size: [N,E] = [{}, {}]'.format(*nPxParent))
 print(' Resolution: [dPy,dPx] = [{}, {}]'.format(*dPxParent))
@@ -49,6 +50,7 @@ dPxChild   = RdictChild['dPx']
 if( 'gridRot' in RdictChild.keys()): gridRotChild = RdictChild['gridRot']
 RdictChild = None
 
+print('\n# - - - - - CHILD INFO - - - - - - - - #')
 print(' Global origo (Top Left): [N,E] = [{}, {}]'.format(*ROrigChild))
 print(' Size: [N,E] = [{}, {}]'.format(*nPxChild))
 print(' Resolution: [dPy,dPx] = [{}, {}]'.format(*dPxChild))
@@ -71,15 +73,16 @@ print(' Rotated ROrigChild = {}'.format( ROrigChildT ))
 ROrigChildBL = ROrigChildT.copy()
 ROrigChildBL[0] -= ((nPxChild[0]-1) * dPxChild[0] + dPxChild[0]/2.)
 ROrigChildBL[1] -= dPxChild[1]/2.
-print(' Bottom Left Origos.\n Parent = {} vs.\n Child = {}'.format(ROrigParentBL,ROrigChildBL))
+print('\n Bottom Left Origos.\n Parent = {} vs.\n Child = {}'.format(ROrigParentBL,ROrigChildBL))
 
 # Offset of global bottom left origo coordinates
 OrigOffset = ROrigChildBL - ROrigParentBL
-  
+
+print('\n# - - - - - OFFSETS - - - - - - - - #') 
 print(' Bottom left origo offsets:')
 OrigOffsetLocal = OrigOffset / dPxParent
-print(' Parent domain\'s grid: [N,E] = [{}, {}]'.format(*OrigOffset))
-print(' Pixels in parent domain\'s grid: [N,E]= [{}, {}]'.format(*OrigOffsetLocal))
+print(' Parent domain\'s grid: [dN,dE] = [{}, {}]  <-- Enter this into PARIN!'.format(*OrigOffset))
+print(' Pixels in parent domain\'s grid: [jN,iE]= [{}, {}]'.format(*OrigOffsetLocal))
 
 # Help the user to move the child domain to match the parent's grid
 if (not(OrigOffsetLocal[0].is_integer() and not(OrigOffsetLocal[1].is_integer()))):

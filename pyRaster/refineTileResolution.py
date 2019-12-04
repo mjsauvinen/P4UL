@@ -88,8 +88,8 @@ else:
   for k in range(maxDims[0]):
     for l in range(maxDims[1]):
       R2[ n2[k], e2[l] ] +=  R1[ n1[k] ,e1[l] ]
-      if( n2[k] == 0  and e2[l] == 0): 
-        print(' R2 = {} , R1 = {} '.format( R2[ n2[k], e2[l] ], R1[ n1[k] ,e1[l] ]))
+      #if( n2[k] == 0  and e2[l] == 0): 
+      #  print(' R2 = {} , R1 = {} '.format( R2[ n2[k], e2[l] ], R1[ n1[k] ,e1[l] ]))
 
 
 #print(' TL:{} TR:{} BL:{} BR:{} '.format( R2[0,0], R2[0,-1], R2[-1,0], R2[-1,-1]))
