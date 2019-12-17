@@ -15,14 +15,26 @@ Author: Mikko Auvinen
         University of Helsinki &
         Finnish Meteorological Institute
 '''
-
-
+#==========================================================#
+def replaceValues( q, qa, qb ):
+  if( qa[0] != 1e9 ):
+    idr = (q > qa[0])
+    q[idr] = qa[1]
+  if( qb[0] != -1e9 ):
+    idr = (q < qb[0])
+    q[idr] = qb[1]
+    
+  return q
 #==========================================================#
 parser = argparse.ArgumentParser(prog='processDomain.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of the comp domain data file.")
 parser.add_argument("-fo", "--fileout",type=str, help="Name of output Palm topography file.")
 parser.add_argument("-i0","--iZero", help="Pixel ids [N,E] for the zero level.",\
   type=int,nargs=2,default=[None,None])
+parser.add_argument("-va", "--replValsAbove", nargs=2, type=float, default=[1.e9,0.0],\
+  help="Entry <Max> <val> := replace values above given threshold <Max> by <val>. Default= 1.e9 0.0")
+parser.add_argument("-vb", "--replValsBelow", nargs=2, type=float, default=[-1.e9,0.0],\
+  help="Entry <Min> <val> := replace values below given threshold <Min> by <val>. Default= -1.e9 0.0")
 parser.add_argument("-mw","--mrgnW", help="Zero or non-zero margin widths as ratios (0-1): [L,R,B,T]",\
   type=float,nargs=4,default=[None,None,None,None])
 parser.add_argument("-mr","--mrgnR", help="Margin ramp widths as ratios (0-1): [L,R,B,T]",\
@@ -48,6 +60,8 @@ writeLog( parser, args, args.printOnly )
 
 filename= args.filename
 fileout = args.fileout
+va      = args.replValsAbove
+vb      = args.replValsBelow
 i0      = args.iZero    # Rename
 mw      = args.mrgnW
 mr      = args.mrgnR
@@ -72,6 +86,8 @@ Rdims = np.array(np.shape(R))
 ROrig = Rdict['GlobOrig']
 print(' Rdims = {} '.format(Rdims))
 print(' ROrig = {} '.format(ROrig))
+
+R = replaceValues( R, va, vb)
 
 
 # Set the zero level according to the given pixel value.
