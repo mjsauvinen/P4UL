@@ -51,9 +51,8 @@ def readConfigSection(config, name):
     configSection = config._sections[name]
   except KeyError:
     return None
-
-  del configSection['__name__']
-  for attr, val in configSection.iteritems():
+  
+  for attr, val in configSection.items():
     print("{}: {}".format(attr,val))
 
   return configSection
