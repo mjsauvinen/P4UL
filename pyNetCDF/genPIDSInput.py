@@ -31,6 +31,7 @@ University of Helsinki
 
 UPDATE:
 - Mikko: In python3 the ConfigParser library is renamed configparser
+- Jani Stromberg: Added building type and surface fractions
 
 '''
 
@@ -184,6 +185,10 @@ if(not all(v is None for v in [topoConfig, surfConfig, vegConfig])):
       if(buildIDFile is not None and buildIDFile!=""):
         buildIDVar = processBuildingIDs(buildIDFile,pidsStaticDS,staticVars,staticDims)
 
+      buildingTypeFile = readConfigVariable(config, 'Surface', 'building_type')
+      if (buildingTypeFile is not None and buildingTypeFile != ""):
+        buildingTypeVar = processBuildingType(buildingTypeFile, pidsStaticDS, staticVars, staticDims)
+
       pavementTypeFile = readConfigVariable(config, 'Surface', 'pavement_type')
       if(pavementTypeFile is not None and pavementTypeFile!=""):
         pavementTypeVar = processPavementType(pavementTypeFile,pidsStaticDS,staticVars,staticDims)
@@ -200,6 +205,9 @@ if(not all(v is None for v in [topoConfig, surfConfig, vegConfig])):
       if(streetTypeFile is not None and streetTypeFile!=""):
         streetTypeVar = processStreetType(streetTypeFile,pidsStaticDS,staticVars,staticDims)
 
+      surfaceFractionFile = readConfigVariable(config, 'Surface', 'surface_fraction')
+      if (surfaceFractionFile is not None and surfaceFractionFile != ""):
+        surfaceFractionVar = processSurfaceFraction(surfaceFractionFile, pidsStaticDS, staticVars, staticDims)
 
     if(vegConfig is not None):
       ladFile = readConfigVariable(config, 'Vegetation', 'lad')
