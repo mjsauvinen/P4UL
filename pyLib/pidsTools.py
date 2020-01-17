@@ -17,24 +17,29 @@ Sasu Karttunen
 sasu.karttunen@helsinki.fi
 Institute for Atmospheric and Earth System Research (INAR) / Physics
 University of Helsinki
+
+- Jani Stromberg: Added building type and surface fraction type/dimension. Fixed a bug in building ids.
 '''
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def setPIDSGlobalAtrributes(ds, globalAttributes):
   ''' Set PIDS global attributes to data set file '''
-  strAttributeKeys = ['Conventions', 'palm_version', 'title', 'acronym', 'campaign',\
-                   'institution', 'author', 'contact_person', 'licence', 'history',\
-                   'keywords', 'references', 'comment', 'data_content', 'source',\
-                   'dependencies', 'location', 'site', 'origin_time']
+  strAttributeKeys = ['acronym', 'author', 'campaign', 'contact_person', 'creation_time',\
+                      'comment', 'Conventions', 'data_content', 'dependencies', 'history'\
+                      'keywords', 'license', 'location', 'origin_time', 'references', 'site',\
+                      'source', 'title']
   floatAttributeKeys = ['origin_x', 'origin_y', 'origin_z', 'origin_lat', 'origin_lon',\
                         'rotation_angle']
+  intAttributeKeys = ['version']
   for key in strAttributeKeys:
     try:
       setattr(ds, key, globalAttributes[key])
     except KeyError:
       if(getattr(ds, key, "")==""):
         setattr(ds, key, "")
+  # Mandatory
+  setattr(ds, 'Conventions', "CF-1.7")
 
   for key in floatAttributeKeys:
     try:
@@ -42,6 +47,13 @@ def setPIDSGlobalAtrributes(ds, globalAttributes):
     except KeyError:
       if(getattr(ds, key, 0.0)==0.0):
         setattr(ds, key, 0.0)
+
+  for key in intAttributeKeys:
+    try:
+      setattr(ds, key, int(globalAttributes[key]))
+    except KeyError:
+      if(getattr(ds, key, 0)==0):
+        setattr(ds, key, 0)
 
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
@@ -159,6 +171,19 @@ def createZLADDim(ds, nPx, dPx, dims):
 
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def createZnsurfaceFractionDim(ds, nPx, dPx, dims):
+  # Creates a new nsurface_fraction-axis unless it already exists
+  if('nsurface_fraction' not in dims):
+    znsurfaceFraction_dim = createCoordinateAxis(ds, nPx, dPx, 2, 'nsurface_fraction', 'i4', '', True, False, verbose=False)
+    znsurfaceFraction_dim.long_name = "height above origin"
+    dims.append('nsurface_fraction')
+    return znsurfaceFraction_dim
+  else:
+    znsurfaceFraction_dim = ds.variables['nsurface_fraction']
+    return znsurfaceFraction_dim
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
 def processOrography(fname,ds,vars,dims):
   # Write orography data to given ds
   oroDict = readNumpyZTile(fname,verbose=False)
@@ -174,7 +199,7 @@ def processOrography(fname,ds,vars,dims):
     x_dim = createXDim(ds, oroNPx, oroDPx, dims)
     y_dim = createYDim(ds, oroNPx, oroDPx, dims)
 
-    oroNCVar = createNetcdfVariable(ds, oroR, 'zt', 0, 'm', 'f4', ('y','x'), False, False, fill_value=-9999.9, verbose=False)
+    oroNCVar = createNetcdfVariable(ds, oroR, 'zt', 0, 'm', 'f4', ('y','x'), False, False, fill_value=-9999., verbose=False)
     oroNCVar.long_name= "terrain_height"
 
     return oroNCVar
@@ -196,7 +221,7 @@ def processBuildings(fname,ds,vars,dims):
     else:
       x_dim = createXDim(ds, buildNPx, buildDPx, dims)
       y_dim = createYDim(ds, buildNPx, buildDPx, dims)
-      buildNCVar = createNetcdfVariable(ds, buildR, 'buildings_2d', 0, 'm', 'f4', ('y','x'), False, False, fill_value=-9999.9, verbose=False)
+      buildNCVar = createNetcdfVariable(ds, buildR, 'buildings_2d', 0, 'm', 'f4', ('y','x'), False, False, fill_value=-9999., verbose=False)
       buildNCVar.long_name= "building_height"
       buildNCVar.lod = int(buildLOD)
       return buildNCVar
@@ -235,7 +260,7 @@ def processBuildingIDs(fname,ds,vars,dims):
     x_dim = createXDim(ds, buildIDNPx, buildIDDPx, dims)
     y_dim = createYDim(ds, buildIDNPx, buildIDDPx, dims)
 
-    buildIDNCVar = createNetcdfVariable(ds, buildIDR, 'building_id', 0, 'm', 'b', ('y','x'), False, False, fill_value=-127, verbose=False)
+    buildIDNCVar = createNetcdfVariable(ds, buildIDR, 'building_id', 0, 'm', 'i4', ('y','x'), False, False, fill_value=-9999, verbose=False)
     buildIDNCVar.long_name= "building id numbers"
 
     return buildIDNCVar
@@ -339,8 +364,8 @@ def processLAD(fname,ds,vars,dims):
     y_dim = createYDim(ds, ladNPx, ladDPx, dims)
     zlad_dim = createZLADDim(ds, ladNPx, ladDPx, dims)
 
-    ladNCVar = createNetcdfVariable(ds, ladR, 'lad', 0, 'm', 'f4', ('zlad','y','x'), False, False, fill_value=-9999.9, verbose=False)
-    ladNCVar.long_name= "leaf area density"
+    ladNCVar = createNetcdfVariable(ds, ladR, 'lad', 0, 'm', 'f4', ('zlad','y','x'), False, False, fill_value=-9999., verbose=False)
+    ladNCVar.long_name= "basal area density"
 
     return ladNCVar
 
@@ -348,7 +373,7 @@ def processLAD(fname,ds,vars,dims):
 
 def processVegetationType(fname,ds,vars,dims):
   vegetationTypeDict = readNumpyZTile(fname,verbose=False)
-  vegetationTypeR = vegetationTypeDict['R']
+  vegetationTypeR = vegetationTypeDict['R'][::-1,:]
   vegetationTypeDPx = vegetationTypeDict['dPx']
   vegetationTypeNPx = np.shape(vegetationTypeR)
 
@@ -363,6 +388,57 @@ def processVegetationType(fname,ds,vars,dims):
     vegetationTypeNCVar.long_name= "vegetation type classification"
 
     return vegetationTypeNCVar
+
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def processBuildingType(fname, ds, vars, dims):
+  buildingTypeDict = readNumpyZTile(fname, verbose=False)
+  buildingTypeR = buildingTypeDict['R'][::-1, :]
+  buildingTypeDPx = buildingTypeDict['dPx']
+  buildingTypeNPx = np.shape(buildingTypeR)
+
+  if ('building_type' in vars):
+    ds.variables['building_type'][:] = buildingTypeR
+    return ds.variables['building_type']
+  else:
+    x_dim = createXDim(ds, buildingTypeNPx, buildingTypeDPx, dims)
+    y_dim = createYDim(ds, buildingTypeNPx, buildingTypeDPx, dims)
+
+    buildingTypeNCVar = createNetcdfVariable(ds, buildingTypeR, 'building_type', 0, 'm', 'b', ('y', 'x'), False, False,
+                                             fill_value=-127, verbose=False)
+    buildingTypeNCVar.long_name = "building type classification"
+
+    return buildingTypeNCVar
+
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+
+def processSurfaceFraction(fname, ds, vars, dims):
+  surfaceFractionDict = readNumpyZTile(fname, verbose=False)
+  surfaceFractionR = surfaceFractionDict['R'][::-1, :, :]
+  surfaceFractionDPx = surfaceFractionDict['dPx']
+  surfaceFractionNPx = np.shape(surfaceFractionR)
+
+  # Same here as in buildings_3d, idk why this has to be done for 3D arrays
+  surfaceFractionR = np.swapaxes(surfaceFractionR, 0, 2)
+  surfaceFractionR = np.swapaxes(surfaceFractionR, 2, 1)
+
+  if ('surface_fraction' in vars):
+    ds.variables['surface_fraction'][:] = surfaceFractionR
+    return ds.variables['surface_fraction']
+  else:
+    x_dim = createXDim(ds, surfaceFractionNPx, surfaceFractionDPx, dims)
+    y_dim = createYDim(ds, surfaceFractionNPx, surfaceFractionDPx, dims)
+    znsurface_fraction_dim = createZnsurfaceFractionDim(ds, surfaceFractionNPx, surfaceFractionDPx, dims)
+
+    surfaceFractionNCVar = createNetcdfVariable(ds, surfaceFractionR, 'surface_fraction', 0, 'm', 'f4',
+                                                ('nsurface_fraction', 'y', 'x'), False, False, fill_value=-9999.,
+                                                verbose=False)
+    surfaceFractionNCVar.long_name = "surface fraction"
+
+    return surfaceFractionNCVar
 
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 #                    PIDS_AERO                      #
@@ -623,7 +699,7 @@ def processAerosolEmissionValues(emiStr,fname,emiDmid,ds,vars,dims):
     dmid_Dim = createNetcdfVariable( ds, emiDmids, 'Dmid', len(emiDmids), '', 'f4', ('Dmid',), parameter=True, verbose=False )
     dims.append('Dmid')
 
-    emiValVar = createNetcdfVariable(ds, aerosol_emission_values, 'aerosol_emission_values', 0, 'm', 'f4', ('Dmid','ncat','y','x',), False, False, fill_value=-9999.9, verbose=False) # FIX: dimensions
+    emiValVar = createNetcdfVariable(ds, aerosol_emission_values, 'aerosol_emission_values', 0, 'm', 'f4', ('Dmid','ncat','y','x',), False, False, fill_value=-9999., verbose=False) # FIX: dimensions
     emiValVar.long_name= 'aerosol emission values'
     emiValVar.standard_name = 'aerosol_emission_values'
     emiValVar.lod = 2 # FIX: lod
@@ -637,11 +713,11 @@ def processEmissionMassFractions(ds):
 
   compIndexDim.units = ""
   emiMassFracsD = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-  emiMassFracs = np.zeros([1,len(emiMassFracsD)])-9999.9
+  emiMassFracs = np.zeros([1,len(emiMassFracsD)])-9999.
   for i in range(len(emiMassFracsD)):
     emiMassFracs[0,i]=emiMassFracsD[i]
 
-  emiMassFracsVar = createNetcdfVariable(ds, emiMassFracs, 'emission_mass_fracs', 0, 'm', 'f4', ('ncat','composition_index',), False, False, fill_value=-9999.9, verbose=False)
+  emiMassFracsVar = createNetcdfVariable(ds, emiMassFracs, 'emission_mass_fracs', 0, 'm', 'f4', ('ncat','composition_index',), False, False, fill_value=-9999., verbose=False)
   emiMassFracsVar.long_name = "mass fractions of aerosol emissions: H2SO4,OC,BC,DU,SS,NO,NH"
   emiMassFracsVar.stardard_name = "emission_mass_fractions"
   emiMassFracsVar.units = ""
