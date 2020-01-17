@@ -69,7 +69,7 @@ print(' Rdims = {} '.format(Rdims))
 print(' ROrig = {} '.format(ROrig))
 
 print(' Value at top left: {} '.format(R[p1[0],p1[1]]))
-print(' Value at bottom right: {} '.format(R[p2[0],p2[1]]))
+print(' Value at bottom right: {} '.format(R[p2[0]-1,p2[1]-1]))
 
 if( filereplace is not None ):
   Rrdict = readNumpyZTile( filereplace )
