@@ -118,7 +118,7 @@ if(not all(v is None for v in [topoConfig, surfConfig, vegConfig])):
   # Check what the user really wants if an existing output file is found
   if (os.path.isfile(pidsStaticFN)):
     while True:
-      outputMode = str(raw_input("Existing "+ pidsStaticFN +" file found. Overwrite, append, skip or exit? [o/a/s/e] "))
+      outputMode = str(input("Existing "+ pidsStaticFN +" file found. Overwrite, append, skip or exit? [o/a/s/e] "))
       if (outputMode in ["e","E"]):
         print("Exit.")
         exit()
@@ -234,7 +234,7 @@ if(chemConfig is not None):
   chemAppend=False
   if (os.path.isfile(pidsChemFN)):
     while True:
-      outputMode = str(raw_input("Existing "+ pidsChemFN +" file found. Overwrite, append, skip or exit? [o/a/s/e] "))
+      outputMode = str(input("Existing "+ pidsChemFN +" file found. Overwrite, append, skip or exit? [o/a/s/e] "))
       if (outputMode in ["e","E"]):
         print("Exit.")
         exit()
@@ -315,7 +315,7 @@ if(aeroConfig is not None):
   aeroAppend=False
   if (os.path.isfile(pidsAeroFN)):
     while True:
-      outputMode = str(raw_input("Existing "+ pidsAeroFN +" file found. Overwrite, append, skip or exit? [o/a/s/e] "))
+      outputMode = str(input("Existing "+ pidsAeroFN +" file found. Overwrite, append, skip or exit? [o/a/s/e] "))
       if (outputMode in ["e","E"]):
         print("Exit.")
         exit()
