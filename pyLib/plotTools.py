@@ -150,7 +150,7 @@ def linestyle_stack(lm=1, il=None):
   # '-.' : dash-dot line style, ':' : dotted line style
   
   if( lm == 1 ):
-    lstyleList = ['-','--',':','-.']
+    lstyleList = ['-','--',':','.']
   else:
     lstyleList = ['-','--']
 
@@ -493,7 +493,7 @@ def plotCiXY( fig, pDict ):
     else:
       fillbf = ax.fill_between
   
-  lines = plotf( xp, yp, linestyle_stack(lm=linemode), lw=3.5, \
+  lines = plotf( xp, yp, linestyle_stack(lm=linemode), lw=3., \
     label=labelStr, color=color_stack(lm=linemode))
   linef = fillbf( d, v_u, v_l, facecolor='white', edgecolor='white', alpha=0.25)
   ax.set_ybound(lower=ylims[0], upper=ylims[1] )
