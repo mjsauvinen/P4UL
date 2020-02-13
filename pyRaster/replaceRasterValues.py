@@ -121,6 +121,7 @@ if( not args.printOnly ):
   saveTileAsNumpyZ( fileout, Rdict )
 
 if( args.printOn or args.printOnly ):
+  R[idR] = 0.
   figDims = 13.*(Rdims[::-1].astype(float)/np.max(Rdims))
   fig = plt.figure(num=1, figsize=figDims)
   fig = addImagePlot( fig, R, fileout )

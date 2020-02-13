@@ -57,8 +57,16 @@ parser.add_argument("-m","--mode", type=str, default='d', choices=methodList,\
   help=helpStr)
 parser.add_argument("-w", "--writeFile", action="store_true", default=False,\
   help="Write the root-mean-square of the differences to a file.")
-parser.add_argument("-nx", "--nexcl", type=int, nargs=2, default=[0,1],\
-  help="Exclude the [first,last] number of nodes from analysis in x-direction.")
+parser.add_argument("-nxx1", "--nexclx1", type=int, nargs=2, default=[0,1],\
+  help="For -f1, exclude the [first,last] number of nodes from analysis in x-direction.")
+parser.add_argument("-nxy1", "--nexcly1", type=int, nargs=2, default=[0,1],\
+  help="For -f1, exclude the [first,last] number of nodes from analysis in y-direction.")
+parser.add_argument("-nxx2", "--nexclx2", type=int, nargs=2, default=[0,1],\
+  help="For -f2, exclude the [first,last] number of nodes from analysis in x-direction.")
+parser.add_argument("-nxy2", "--nexcly2", type=int, nargs=2, default=[0,1],\
+  help="For -f2, exclude the [first,last] number of nodes from analysis in y-direction.")
+parser.add_argument("-xs", "--exclsmall", help="Exclude values below |0.01| from analysis.",\
+  action="store_true", default=False)
 parser.add_argument("-p", "--printOn", help="Print the numpy array data.",\
   action="store_true", default=False)
 parser.add_argument("-s", "--save", action="store_true", default=False,\
@@ -75,7 +83,11 @@ varname  = args.varname
 v0       = np.array(args.vref )
 vs       = np.array(args.vstar)
 mode     = args.mode
-nx       = args.nexcl
+nxx1     = args.nexclx1
+nxy1     = args.nexcly1
+nxx2     = args.nexclx2
+nxy2     = args.nexcly2
+exclSmall= args.exclsmall 
 writeFile= args.writeFile
 printOn  = args.printOn
 saveOn   = args.save
@@ -102,23 +114,14 @@ else:
   v1, x1, y1, z1 = U_hd( f1, 1, dirOn )  
   v2, x2, y2, z2 = U_hd( f2, 1, dirOn )
 
-dims1  = np.array( v1.shape )
-dims2  = np.array( v2.shape )
-
 if( not dirOn ):
   v1 -= v0[0]; v1 /= vs[0]
   v2 -= v0[1]; v2 /= vs[1]
 
-
-if( all( dims1 == dims2 ) ):
-  print(' Dimensions of the two datasets match!: dims = {}'.format(dims1))  
-else:
-  print(' Caution! Dataset dimensions do not match. dims_1 = {} vs. dims_1 = {}'.format(dims1, dims2))
-
 idk = selectFromList( z1 )
 
 if( writeFile ):
-  fout = file('{}_d{}.dat'.format(Sdict[mode],vn), 'wb')
+  fout = open('{}_d{}.dat'.format(Sdict[mode],vn), 'wb')
   fout.write('# file1 = {}, file2 = {}\n'.format(f1, f2))
   fout.write('# z_coord \t {}(d{})\n'.format(Sdict[mode],vn))
   
@@ -134,12 +137,21 @@ for k1 in idk:
     k2 = k2[0]    # Take always the first term
   
   
-  if( len( dims1 ) == 4 ): v1x  = v1[0,k1,:,nx[0]:-nx[1]]
-  else:                    v1x  = v1[  k1,:,nx[0]:-nx[1]]
+  if( len(v1.shape) == 4): v1x  = v1[-1,k1,nxy1[0]:-nxy1[1],nxx1[0]:-nxx1[1]]
+  else:                    v1x  = v1[   k1,nxy1[0]:-nxy1[1],nxx1[0]:-nxx1[1]]
     
-  if( len( dims2 ) == 4 ): v2x =  v2[0,k2,:,nx[0]:-nx[1]]
-  else:                    v2x =  v2[  k2,:,nx[0]:-nx[1]]
-  
+  if( len(v2.shape) == 4): v2x =  v2[-1,k2,nxy2[0]:-nxy2[1],nxx2[0]:-nxx2[1]]
+  else:                    v2x =  v2[   k2,nxy2[0]:-nxy2[1],nxx2[0]:-nxx2[1]]
+
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+  dims1  = np.array( v1x.shape )
+  dims2  = np.array( v2x.shape )
+  if( all( dims1 == dims2 ) ):
+    print(' Dimensions of the two datasets match!: dims = {}'.format(dims1))  
+  else:
+    print(' Caution! Dataset dimensions do not match. dims_1 = {} vs. dims_1 = {}'.format(dims1, dims2))
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
   if( not np.ma.isMaskedArray(v1x) and not np.ma.isMaskedArray(v2x) ):
     idm = (v1x == v2x)
     v1x = np.ma.masked_array( v1x, mask=idm ) 
@@ -150,7 +162,7 @@ for k1 in idk:
   v1x  = np.ma.round( v1x, decimals=2 )
   
   
-  if( 1 ):
+  if( exclSmall ):
     # Take values that are above 0.01 or below -0.01
     idx = np.array( (v1x < 5.E-2) )
     #idx = np.array( (v1x > -0.1) )
@@ -159,7 +171,6 @@ for k1 in idk:
   
     m2 = np.ma.getmask(v2x)
     m2 += idx
-  
   
   '''
   id2x = np.array( np.abs(v2x) > 1E-2 ) 

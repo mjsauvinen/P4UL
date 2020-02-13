@@ -11,21 +11,11 @@ Description:
 
 
 Author: Mikko Auvinen
-        mikko.auvinen@helsinki.fi
-        University of Helsinki &
+        mikko.auvinen@fmi.fi
         Finnish Meteorological Institute
 '''
 #==========================================================#
-def replaceByNans( Rt, a, b ):
-  if( a is not None ):
-    idr = (Rt > a )
-    Rt[idr] = np.nan
-  if( b is not None ):
-    idr = (Rt < b )
-    Rt[idr] = np.nan
-    
-  return Rt
-#==========================================================#
+
 parser = argparse.ArgumentParser(prog='processDomain.py')
 parser.add_argument("-f", "--filename",type=str, help="Name of the comp domain data file.")
 parser.add_argument("-fo", "--fileout",type=str, help="Name of output Palm topography file.")

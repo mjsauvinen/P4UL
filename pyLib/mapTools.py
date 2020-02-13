@@ -684,7 +684,27 @@ def planAreaFractions( Ri, mlist ):
   return r
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def replaceByNans( Rt, a, b ):
+  if( a is not None ):
+    idr = (Rt > a )
+    Rt[idr] = np.nan
+  if( b is not None ):
+    idr = (Rt < b )
+    Rt[idr] = np.nan
+    
+  return Rt
+
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def interpolateOverNans( R ):
+  idOk = ~np.isnan(R)
+  xp = idOk.ravel().nonzero()[0] # An increasing list of indices
+  fp = R[idOk]                   # Corresponding list of values
+  x  = np.isnan(R).ravel().nonzero()[0] # Indices for which values are missing
+  R[~idOk] = np.interp(x, xp, fp)    # Fill in values where missing.
+  return R
+
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
