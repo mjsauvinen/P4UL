@@ -43,7 +43,7 @@ ROrig = Rdict['GlobOrig']
 print(' Rdims = {} '.format(Rdims))
 print(' ROrig = {} '.format(ROrig))
 
-idm = (R==np.nan)
+idm = np.isnan(R)
 Rt2 = R.copy()   # Make a copy
 
 if( Nbd > 0 ):
