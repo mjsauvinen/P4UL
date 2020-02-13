@@ -121,7 +121,7 @@ if( not dirOn ):
 idk = selectFromList( z1 )
 
 if( writeFile ):
-  fout = file('{}_d{}.dat'.format(Sdict[mode],vn), 'wb')
+  fout = open('{}_d{}.dat'.format(Sdict[mode],vn), 'wb')
   fout.write('# file1 = {}, file2 = {}\n'.format(f1, f2))
   fout.write('# z_coord \t {}(d{})\n'.format(Sdict[mode],vn))
   
