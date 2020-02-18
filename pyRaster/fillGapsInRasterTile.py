@@ -3,7 +3,7 @@ import sys
 import argparse
 import numpy as np
 from utilities import writeLog
-from mapTools import readNumpyZTile, interpolateOverNans
+from mapTools import readNumpyZTile, interpolateOverNans, saveTileAsNumpyZ
 from plotTools import  addImagePlot 
 import matplotlib.pyplot as plt
 import scipy.ndimage as sn # contains the filters

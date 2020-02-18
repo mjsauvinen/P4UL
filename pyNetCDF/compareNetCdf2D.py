@@ -121,7 +121,7 @@ if( not dirOn ):
 idk = selectFromList( z1 )
 
 if( writeFile ):
-  fout = open('{}_d{}.dat'.format(Sdict[mode],vn), 'wb')
+  fout = open('{}_d{}.dat'.format(Sdict[mode],vn), 'w')
   fout.write('# file1 = {}, file2 = {}\n'.format(f1, f2))
   fout.write('# z_coord \t {}(d{})\n'.format(Sdict[mode],vn))
   
@@ -137,10 +137,10 @@ for k1 in idk:
     k2 = k2[0]    # Take always the first term
   
   
-  if( len(v1.shape) == 4): v1x  = v1[-1,k1,nxy1[0]:-nxy1[1],nxx1[0]:-nxx1[1]]
+  if( len(v1.shape) == 4): v1x  = np.mean(v1[:,k1,nxy1[0]:-nxy1[1],nxx1[0]:-nxx1[1]], axis=0)
   else:                    v1x  = v1[   k1,nxy1[0]:-nxy1[1],nxx1[0]:-nxx1[1]]
     
-  if( len(v2.shape) == 4): v2x =  v2[-1,k2,nxy2[0]:-nxy2[1],nxx2[0]:-nxx2[1]]
+  if( len(v2.shape) == 4): v2x =  np.mean(v2[:,k2,nxy2[0]:-nxy2[1],nxx2[0]:-nxx2[1]], axis=0)
   else:                    v2x =  v2[   k2,nxy2[0]:-nxy2[1],nxx2[0]:-nxx2[1]]
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - #

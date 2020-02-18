@@ -232,7 +232,7 @@ def addImagePlot( fig, R, titleStr, gridOn=False, limsOn=False ):
     vmin = min( np.abs(minval), np.abs(maxval) )
     vmax = max( np.abs(minval), np.abs(maxval) )
     
-    if( vmax/vmin < 1.5 ):
+    if( vmax/(vmin+1.E-5) < 1.5 ):
       vmax *= maxSign; vmin = minSign * vmax 
     else:
       vmax *= maxSign; vmin *= minSign

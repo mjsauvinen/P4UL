@@ -89,10 +89,12 @@ rr1 = int(dPc/dPx2)
 rr2 = int(dPc/dPx1)
 
 i1,j1 = np.ogrid[0:maxDims[0], 0:maxDims[1]]
-i1/=rr1; j1/=rr1
+i1=i1/rr1;         j1=j1/rr1
+i1=i1.astype(int); j1=j1.astype(int)
 
 i2,j2 = np.ogrid[0:maxDims[0], 0:maxDims[1]]
-i2/=rr2; j2/=rr2
+i2=i2/rr2;         j2=j2/rr2
+i2=i2.astype(int); j2=j2.astype(int)
 
 print(' index dims 1: {}, {} '.format(np.max(i1),np.max(j1)))
 print(' index dims 2: {}, {} '.format(np.max(i2),np.max(j2)))
