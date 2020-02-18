@@ -266,11 +266,23 @@ def readNumpyZTile( filename, dataOnly=False, verbose=True):
     #Rdict['R'] = []
 
   # Backwards compatibility for variable name change.
+  if(not('gridRot' in Rdict)):
+    Rdict['gridRot'] = 0.0
+  
   if ('XOrig' in Rdict and not('GlobOrig' in Rdict)):
-    Rdict['GlobOrig']=Rdict['XOrig'];
+    Rdict['GlobOrig']=Rdict['XOrig']
+  
   # For some reason dPx arrays were saved as 'dpx' in the past hardcoded versions of saveTileAsNumpyZ.
   if ('dpx' in Rdict and not('dPx' in Rdict)):
     Rdict['dPx']=Rdict['dpx']
+  
+  # Add bottom left origin only if the transformation is trivial (i.e. no rotation required). 
+  # Otherwise the extractDomainFromTile.py script ought to be used. 
+  if(not('GlobOrigBL' in Rdict) and Rdict['gridRot']==0.0):
+    BLN = Rdict['GlobOrig'][0] + Rdict['dPx'][0]*np.shape(Rdict['R'])[0]
+    BLE = Rdict['GlobOrig'][1]
+    Rdict['GlobOrigBL'] = np.array([ BLN , BLE ]) 
+  
   return Rdict
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*

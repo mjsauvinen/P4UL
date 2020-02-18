@@ -217,6 +217,7 @@ R = None
 theta2 = gridRot/(np.pi/180.)
 XTRM,YTRM = rotateGridAroundPivot(XTRM,YTRM, ROrig[1], ROrig[0],theta2, deg=True)
 PROrig = np.array([ YTRM[-1,0], XTRM[-1,0] ])  # Reset top left origo
+PROrigBL = np.array([ YTRM[0,0], XTRM[0,0] ])  # Reset top left origo
 print(' Top left origo coords. (cell centers!): [N,E] = {}'.format(PROrig))
 rotation = (theta+theta2)*(np.pi/180.)
 #print((theta+theta2)*(np.pi/180.))
@@ -225,7 +226,8 @@ rotation = (theta+theta2)*(np.pi/180.)
 PRdict = Rdict.copy()
 Rdict = None
 PRdict['R'] = PR
-PRdict['GlobOrig'] = PROrig
+PRdict['GlobOrig']   = PROrig
+PRdict['GlobOrigBL'] = PROrigBL 
 PRdict['gridRot'] = rotation
 PRdict['dPx'] = np.array([dxG[0],dxG[1]])
 

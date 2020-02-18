@@ -23,12 +23,15 @@ parser.add_argument("-f","--filename", type=str, default=None,\
   help="Name of the raster file.")
 parser.add_argument("-s", "--size", type=float, default=13.,\
   help="Size of the figure (length of the longer side). Default=13.")
-parser.add_argument("--lims", help="User specified limits.", action="store_true",\
-  default=False)
+parser.add_argument("--lims", action="store_true", default=False,\
+  help="User specified limits.")
 parser.add_argument("--grid", help="Turn on grid.", action="store_true", default=False)
-parser.add_argument("--labels", help="User specified labels.", action="store_true", default=False)
-parser.add_argument("--footprint", help="Plot footprint data.", action="store_true", default=False)
-parser.add_argument("-i","--infoOnly", help="Print only info to the screen.", action="store_true", default=False)
+parser.add_argument("--labels", action="store_true", default=False,\
+  help="User specified labels.")
+parser.add_argument("--footprint", action="store_true", default=False,\
+  help="Plot footprint data.")
+parser.add_argument("-i","--infoOnly", action="store_true", default=False,\
+  help="Print only info to the screen.")
 parser.add_argument("--save", metavar="FORMAT" ,type=str, default='', \
   help="Save the figure in specified format. Formats available: jpg, png, pdf, ps, eps and svg")
 parser.add_argument("--dpi", metavar="DPI" ,type=int, default=100,\
@@ -56,6 +59,10 @@ if( not footprintOn ):
   Rdims = np.array(np.shape(R))
   ROrig = Rdict['GlobOrig']
   dPx = Rdict['dPx']
+  gridRot = Rdict['gridRot']
+  ROrigBL = None
+  if( 'GlobOrigBL' in Rdict ):
+    ROrigBL = Rdict['GlobOrigBL']
   Rdict = None
 else:
   R, X, Y, Z, C = readNumpyZFootprint(rasterfile)
@@ -66,10 +73,12 @@ else:
   
 
 info = ''' Info:
- Dimensions [rows, cols] = {}
- Origin (top-left) [N,E] = {}
- Resolution        [dX,dY] = {}
-'''.format(Rdims,ROrig,dPx)
+ Dimensions    [rows, cols] = {}
+ Origin (top-left)    [N,E] = {}
+ Origin (bottom-left) [N,E] = {}
+ Resolution         [dX,dY] = {}
+ Grid rotation (deg)        = {} deg
+'''.format(Rdims,ROrig,ROrigBL,dPx,gridRot*(180./np.pi))
 
 print(info)
 
