@@ -41,14 +41,18 @@ parser.add_argument("-p1","--pixels1", type=int,nargs=2,default=[None,None],\
   help="Pixel ids [N,E] for the top left or start of line if --line opt is used.")
 parser.add_argument("-p2","--pixels2",type=int,nargs=2,default=[None,None],\
   help="Pixel ids [N,E] for the bottom right or end of line if --line opt is used.")
-parser.add_argument("-v","--value", help="Replacement value. Default=nan",\
-  type=float, default=np.nan)
+parser.add_argument("-v","--value", type=float, default=None, \
+  help="Replacement value. If None, other actions may apply. Default=None")
+parser.add_argument("-c","--coef", type=float, default=1.0,\
+  help="Multiplication coefficient with which masked values are multiplied. Default=1.")
+parser.add_argument("-na", "--nans", action="store_true", default=False,\
+  help="Use Nans as replacement values. Overrides the --value specified above.")
 parser.add_argument("-l", "--line", action="store_true", default=False,\
   help="Replace values along line from -p1 to -p2.")
 parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
   action="store_true", default=False)
-parser.add_argument("-pp", "--printOnly", help="Only print the resulting data. Don't save.",\
-  action="store_true", default=False)
+parser.add_argument("-pp", "--printOnly", action="store_true", default=False,\
+  help="Only print the resulting data. Don't save.")
 parser.add_argument("-gt", "--gt", type=float, default=None,\
   help="Replace values greater than the given value.")
 parser.add_argument("-lt", "--lt", type=float, default=None,\
@@ -60,6 +64,8 @@ writeLog( parser, args, args.printOnly )
 p1       = np.array( args.pixels1 )
 p2       = np.array( args.pixels2 )
 val      = args.value        # Replacement value
+useNans  = args.nans
+cf       = args.coef         # Multiplication coefficient
 gtval    = args.gt           # value greater than which will be replaced by [val]
 ltval    = args.lt           # value less than which will be replaced by [val]
 filename = args.filename
@@ -67,6 +73,7 @@ filereplace = args.filereplace
 fileout  = args.fileout
 lineMode = args.line 
 
+if( useNans ): val = np.nan
 
 if( not lineMode ):
   NonesExist = (list(p1).count(None) != 0) or (list(p2).count(None) != 0) 
@@ -97,22 +104,33 @@ if( filereplace is not None ):
   if( any( Rrdims != Rdims ) ):
     sys.exit(' Rasters {} and {} are not the same size. Exiting ...'.format(filename, filereplace))
   print(' Values from {} are used to replace values in {}.'.format(filereplace, filename))
-  R[idR] = Rr[idR]
+  R[idR] = cf*Rr[idR]
   Rr = None
   
 elif( (gtval is not None) or (ltval is not None) ):
   idx = np.zeros( R.shape, bool )
+
   if( gtval is not None ):
     idx = (R > gtval) * idR
-    print(' {} values > {} will be replaced.'.format(np.count_nonzero(idx),gtval)) 
-    R[idx] = val
+    if( val is not None ):
+      print(' {} values > {} will be replaced.'.format(np.count_nonzero(idx),gtval))
+      R[idx] = val
+    if( not useNans ): R[idx] *= cf
     idx[:,:] = False  # Reset
+
   if( ltval is not None ):
     idx = (R < ltval) * idR
-    print(' {} values < {} will be replaced.'.format(np.count_nonzero(idx),ltval))
-    R[idx] = val 
-else:
+    if( val is not None ):
+      print(' {} values < {} will be replaced.'.format(np.count_nonzero(idx),ltval))
+      R[idx] = val
+    if( not useNans ): R[idx] *= cf
+
+elif( val is not None):
   R[idR] = val
+  if( not useNans ): R[idR] *= cf
+
+else: # val is None
+  R[idR] *= cf
 
 
 Rdict['R'] = R
