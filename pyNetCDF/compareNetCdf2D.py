@@ -52,7 +52,9 @@ parser.add_argument("-v", "--varname",  type=str, default='u',\
 parser.add_argument("-v0", "--vref", type=float, nargs=2, default=[0.,0.],\
   help="Reference values 'v0' in v+ = (v - v0)/v* for -f1 and -f2. Default = [0,0]")
 parser.add_argument("-vs", "--vstar", type=float, nargs=2, default=[1.,1.],\
-  help="Characteristic value 'v*' in v+ = (v - v0)/v* for -f1 and -f2. Default = [1,1]")
+  help="Characteristic value 'v*' in v+ = (v - v0)/v* for -f1 and -f2. Default = [1.,1.]")
+parser.add_argument("-c", "--coarsen", type=int, nargs=2, default=[1,1],\
+  help="Factor for coarsening the -f1 and -f2 data when read from file. Default = [1,1]")
 parser.add_argument("-m","--mode", type=str, default='d', choices=methodList,\
   help=helpStr)
 parser.add_argument("-w", "--writeFile", action="store_true", default=False,\
@@ -82,6 +84,7 @@ f2       = args.filename2      # './DATA_2D_XY_AV_NETCDF_N02-2.nc'
 varname  = args.varname
 v0       = np.array(args.vref )
 vs       = np.array(args.vstar)
+cl       = np.array(args.coarsen)
 mode     = args.mode
 nxx1     = args.nexclx1
 nxy1     = args.nexcly1
@@ -107,12 +110,12 @@ horizOn = 'UH' in varname.upper()
 
 if( (not horizOn) and (not dirOn) ):
   #print('{}'.format(varname))
-  v1, x1, y1, z1 = readVar( f1, varname, 1 )
-  v2, x2, y2, z2 = readVar( f2, varname, 1 )
+  v1, x1, y1, z1 = readVar( f1, varname, cl[0] )
+  v2, x2, y2, z2 = readVar( f2, varname, cl[1] )
   
 else:
-  v1, x1, y1, z1 = U_hd( f1, 1, dirOn )  
-  v2, x2, y2, z2 = U_hd( f2, 1, dirOn )
+  v1, x1, y1, z1 = U_hd( f1, cl[0], dirOn )  
+  v2, x2, y2, z2 = U_hd( f2, cl[1], dirOn )
 
 if( not dirOn ):
   v1 -= v0[0]; v1 /= vs[0]
