@@ -132,19 +132,19 @@ if( writeFile ):
 
 for k1 in idk:
   
-  k2 = np.where(z2==z1[k1])[0] # This outputs a list 
+  #k2 = np.where(z2==z1[k1])[0] # This outputs a list 
+  k2 = np.where(np.abs(z2-z1[k1])==np.min(np.abs(z2-z1[k1])))[0]
   if( len(k2) == 0 ):
-    print(' Coordinate {} not in file {}. Skipping.'.format(z1[k1],filename2))
+    print(' Coordinate {} not in file {}. Skipping.'.format(z1[k1],f2))
     continue
   else:
     k2 = k2[0]    # Take always the first term
   
-  
   if( len(v1.shape) == 4): v1x  = np.mean(v1[:,k1,nxy1[0]:-nxy1[1],nxx1[0]:-nxx1[1]], axis=0)
-  else:                    v1x  = v1[   k1,nxy1[0]:-nxy1[1],nxx1[0]:-nxx1[1]]
+  else:                    v1x  =         v1[  k1,nxy1[0]:-nxy1[1],nxx1[0]:-nxx1[1]]
     
   if( len(v2.shape) == 4): v2x =  np.mean(v2[:,k2,nxy2[0]:-nxy2[1],nxx2[0]:-nxx2[1]], axis=0)
-  else:                    v2x =  v2[   k2,nxy2[0]:-nxy2[1],nxx2[0]:-nxx2[1]]
+  else:                    v2x =          v2[  k2,nxy2[0]:-nxy2[1],nxx2[0]:-nxx2[1]]
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - #
   dims1  = np.array( v1x.shape )
@@ -153,6 +153,22 @@ for k1 in idk:
     print(' Dimensions of the two datasets match!: dims = {}'.format(dims1))  
   else:
     print(' Caution! Dataset dimensions do not match. dims_1 = {} vs. dims_1 = {}'.format(dims1, dims2))
+    dx1 = (x1[2]-x1[1]); dy1 = (y1[2]-y1[1])
+    dx2 = (x2[2]-x2[1]); dy2 = (y2[2]-y2[1])
+    rr  = np.round(dx2/dx1, decimals=2); rry = np.round(dy2/dy1, decimals=2) 
+    if( rr != rry ): sys.exit(' Resolution ratios are dissimilar. Exiting ...')
+    v2f = np.zeros( dims1 )
+    n1,e1 = np.ogrid[ 0:dims1[0]-1 , 0:dims1[1]-1 ]  # northing, easting
+    n2,e2 = np.ogrid[ 0:dims1[0]-1 , 0:dims1[1]-1 ]  # northing, easting
+    
+    n1=n1/rr; e1=e1/rr 
+    
+    n1 = n1.astype(int);  e1 = e1.astype(int)
+    n2 = n2.astype(int);  e2 = e2.astype(int)
+    n1 = np.minimum( n1 , dims1[0]-1); n2 = np.minimum( n2 , dims1[0]-1)
+    e1 = np.minimum( e1 , dims1[1]-1); e2 = np.minimum( e2 , dims1[1]-1)
+    v2f[n2, e2] += v2x[n1,e1]; v2x = None
+    v2x = v2f
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - #
 
   if( not np.ma.isMaskedArray(v1x) and not np.ma.isMaskedArray(v2x) ):
@@ -249,10 +265,14 @@ for k1 in idk:
     labelStr = '({0}_2 - {0}_1)(z={1} m)'.format(vn, z1[k1])
     fig = addImagePlot( fig, dv[::-1,:], labelStr, gridOn, limsOn )
     
+    
     fig2 = plt.figure(num=2, figsize=figDims)
     lbl = '(Ref {0})(z={1} m)'.format(vn, z1[k1])
     fig2 = addImagePlot( fig2, v1x[::-1,:], lbl, gridOn, limsOn )
     
+    fig3 = plt.figure(num=3, figsize=figDims)
+    lbl = '(f2 {0})(z={1} m)'.format(vn, z1[k1])
+    fig3 = addImagePlot( fig3, v2x[::-1,:], lbl, gridOn, limsOn )
     
     #fig3 = plt.figure(num=3)
     #plt.hist( np.ravel(dv[idnn]), bins=25, \
@@ -263,6 +283,8 @@ for k1 in idk:
       print(' Saving = {}'.format(figname))
       fig.savefig( figname, format='jpg', dpi=150)
       fig2.savefig( 'REF_'+figname, format='jpg', dpi=150)
+      fig3.savefig( 'F2_'+figname, format='jpg', dpi=150)
+      
       #fig3.savefig( figname.replace("RES","Hist"), format='jpg', dpi=150)
     plt.show()
 
