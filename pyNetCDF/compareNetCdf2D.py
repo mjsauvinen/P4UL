@@ -59,13 +59,13 @@ parser.add_argument("-m","--mode", type=str, default='d', choices=methodList,\
   help=helpStr)
 parser.add_argument("-w", "--writeFile", action="store_true", default=False,\
   help="Write the root-mean-square of the differences to a file.")
-parser.add_argument("-nxx1", "--nexclx1", type=int, nargs=2, default=[0,1],\
+parser.add_argument("-nxx1", "--nexclx1", type=int, nargs=2, default=[None,None],\
   help="For -f1, exclude the [first,last] number of nodes from analysis in x-direction.")
-parser.add_argument("-nxy1", "--nexcly1", type=int, nargs=2, default=[0,1],\
+parser.add_argument("-nxy1", "--nexcly1", type=int, nargs=2, default=[None,None],\
   help="For -f1, exclude the [first,last] number of nodes from analysis in y-direction.")
-parser.add_argument("-nxx2", "--nexclx2", type=int, nargs=2, default=[0,1],\
+parser.add_argument("-nxx2", "--nexclx2", type=int, nargs=2, default=[None,None],\
   help="For -f2, exclude the [first,last] number of nodes from analysis in x-direction.")
-parser.add_argument("-nxy2", "--nexcly2", type=int, nargs=2, default=[0,1],\
+parser.add_argument("-nxy2", "--nexcly2", type=int, nargs=2, default=[None,None],\
   help="For -f2, exclude the [first,last] number of nodes from analysis in y-direction.")
 parser.add_argument("-xs", "--exclsmall", help="Exclude values below |0.01| from analysis.",\
   action="store_true", default=False)
@@ -107,6 +107,12 @@ vn = varname.split('_')[0]
 dirOn   = 'UD' in varname.upper()
 horizOn = 'UH' in varname.upper()
 
+# Default for excluded indices is [None,None]. If numerical values are given, 
+# the latter needs to be made negative.
+if( nxx1.count(None) == 0 ): nxx1[1]*=-1
+if( nxy1.count(None) == 0 ): nxy1[1]*=-1
+if( nxx2.count(None) == 0 ): nxx2[1]*=-1
+if( nxy2.count(None) == 0 ): nxy2[1]*=-1
 
 if( (not horizOn) and (not dirOn) ):
   #print('{}'.format(varname))
@@ -140,11 +146,11 @@ for k1 in idk:
   else:
     k2 = k2[0]    # Take always the first term
   
-  if( len(v1.shape) == 4): v1x  = np.mean(v1[:,k1,nxy1[0]:-nxy1[1],nxx1[0]:-nxx1[1]], axis=0)
-  else:                    v1x  =         v1[  k1,nxy1[0]:-nxy1[1],nxx1[0]:-nxx1[1]]
+  if( len(v1.shape) == 4): v1x  = np.mean(v1[:,k1,nxy1[0]:nxy1[1],nxx1[0]:nxx1[1]], axis=0)
+  else:                    v1x  =         v1[  k1,nxy1[0]:nxy1[1],nxx1[0]:nxx1[1]]
     
-  if( len(v2.shape) == 4): v2x =  np.mean(v2[:,k2,nxy2[0]:-nxy2[1],nxx2[0]:-nxx2[1]], axis=0)
-  else:                    v2x =          v2[  k2,nxy2[0]:-nxy2[1],nxx2[0]:-nxx2[1]]
+  if( len(v2.shape) == 4): v2x =  np.mean(v2[:,k2,nxy2[0]:nxy2[1],nxx2[0]:nxx2[1]], axis=0)
+  else:                    v2x =          v2[  k2,nxy2[0]:nxy2[1],nxx2[0]:nxx2[1]]
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - #
   dims1  = np.array( v1x.shape )
@@ -152,22 +158,32 @@ for k1 in idk:
   if( all( dims1 == dims2 ) ):
     print(' Dimensions of the two datasets match!: dims = {}'.format(dims1))  
   else:
-    print(' Caution! Dataset dimensions do not match. dims_1 = {} vs. dims_1 = {}'.format(dims1, dims2))
+    print(' Caution! Dataset dimensions do not match. dims1 = {} vs. dims2 = {}'.format(dims1, dims2))
     dx1 = (x1[2]-x1[1]); dy1 = (y1[2]-y1[1])
     dx2 = (x2[2]-x2[1]); dy2 = (y2[2]-y2[1])
-    rr  = np.round(dx2/dx1, decimals=2); rry = np.round(dy2/dy1, decimals=2) 
+    rr  = int(np.round(dx2/dx1, decimals=0)); rry = int(np.round(dy2/dy1, decimals=0))
+    
     if( rr != rry ): sys.exit(' Resolution ratios are dissimilar. Exiting ...')
-    v2f = np.zeros( dims1 )
-    n1,e1 = np.ogrid[ 0:dims1[0]-1 , 0:dims1[1]-1 ]  # northing, easting
-    n2,e2 = np.ogrid[ 0:dims1[0]-1 , 0:dims1[1]-1 ]  # northing, easting
+    v2f = np.zeros( dims1 ) # Fine resolution
+    nc,ec = np.ogrid[ 0:dims1[0] , 0:dims1[1] ]  # northing, easting ... fine resolution
+    nf,ef = np.ogrid[ 0:dims1[0] , 0:dims1[1] ]  # northing, easting ... fine resolution
     
-    n1=n1/rr; e1=e1/rr 
+    nc=nc//rr; ec=ec//rr  # coarse indices
     
-    n1 = n1.astype(int);  e1 = e1.astype(int)
-    n2 = n2.astype(int);  e2 = e2.astype(int)
-    n1 = np.minimum( n1 , dims1[0]-1); n2 = np.minimum( n2 , dims1[0]-1)
-    e1 = np.minimum( e1 , dims1[1]-1); e2 = np.minimum( e2 , dims1[1]-1)
-    v2f[n2, e2] += v2x[n1,e1]; v2x = None
+    #nc = nc.astype(int);  ec = ec.astype(int)
+    #nf = nf.astype(int);  ef = ef.astype(int)
+    
+    #np.savetxt('n.dat',np.c_[nf,nc], fmt='%.1f')
+    #np.savetxt('e.dat',np.c_[ef.T,ec.T], fmt='%.1f')
+    
+    # Check bounds
+    nf = np.minimum( nf , dims1[0]-1)
+    ef = np.minimum( ef , dims1[1]-1)
+    nc = np.minimum( nc , dims2[0]-1)
+    ec = np.minimum( ec , dims2[1]-1)
+    
+    # Perform value placement
+    v2f[nf, ef] += v2x[nc,ec]; v2x = None
     v2x = v2f
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - #
 
@@ -177,8 +193,16 @@ for k1 in idk:
     v2x = np.ma.masked_array( v2x, mask=idm )  
     idm = None 
   
-  v2x  = np.ma.round( v2x, decimals=2 )
-  v1x  = np.ma.round( v1x, decimals=2 )
+  idm = np.ma.getmask(v1x); print(' Nm = {}'.format(np.count_nonzero(idm)))
+  idz = (v2x == 0.0)
+  idm += idz
+  #idm = sn.binary_dilation(idm); print(' Nm = {}'.format(np.count_nonzero(idm)))
+  v1x = np.ma.masked_array( v1x, mask=idm)
+  v2x = np.ma.masked_array( v2x, mask=idm)
+  
+  #v2x  = np.ma.round( v2x, decimals=2 )
+  #v1x  = np.ma.round( v1x, decimals=2 )
+  
   
   
   if( exclSmall ):
