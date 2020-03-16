@@ -23,6 +23,10 @@ parser.add_argument("-f","--filename", type=str, default=None,\
   help="Name of the raster file.")
 parser.add_argument("-s", "--size", type=float, default=13.,\
   help="Size of the figure (length of the longer side). Default=13.")
+parser.add_argument("-ib", "--ibounds", nargs=2 , type=int, default=[None,None],\
+  help="Index bounds in x-direction (easting) for the raster. By default no bounds imposed.")
+parser.add_argument("-jb", "--jbounds", nargs=2 , type=int, default=[None,None],\
+  help="Index bounds in y-direction (northing) for the raster. By default no bounds imposed.")
 parser.add_argument("--lims", action="store_true", default=False,\
   help="User specified limits.")
 parser.add_argument("--grid", help="Turn on grid.", action="store_true", default=False)
@@ -42,6 +46,8 @@ args = parser.parse_args()
 # Renaming ... that's all.
 rasterfile  = args.filename
 size        = args.size
+ib          = args.ibounds
+jb          = args.jbounds
 limsOn      = args.lims
 gridOn      = args.grid
 infoOnly    = args.infoOnly
@@ -72,7 +78,7 @@ else:
   X = None; Y = None; Z = None; C = None  # Clear memory
   
 
-info = ''' Info:
+info = ''' Info (Orig):
  Dimensions    [rows, cols] = {}
  Origin (top-left)    [N,E] = {}
  Origin (bottom-left) [N,E] = {}
@@ -81,6 +87,24 @@ info = ''' Info:
 '''.format(Rdims,ROrig,ROrigBL,dPx,gridRot*(180./np.pi))
 
 print(info)
+
+imod = False; jmod = False
+if( np.count_nonzero( jb ) > 0 ):
+  jb[0] = max(         0 , jb[0] )
+  jb[1] = min( Rdims[0]-1, jb[1] )
+  jmod = True
+
+if( np.count_nonzero( ib ) > 0 ):
+  ib[0] = max( 0         , ib[0] )
+  ib[1] = min( Rdims[1]-1, ib[1] )
+  imod = True
+
+if( imod or jmod ):
+  R = R[jb[0]:jb[1],ib[0]:ib[1]]
+  Rdims = np.array( R.shape )
+  print('\n Plot dimensions [rows, cols] = {}'.format(Rdims))
+
+
 
 if( not infoOnly ):
   figDims = size*(Rdims[::-1].astype(float)/np.max(Rdims))

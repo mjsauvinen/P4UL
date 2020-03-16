@@ -29,7 +29,7 @@ def addBlocks( T, stride, Lx, h ):
       if( ix2 > Tdims[1] or jy2 > Tdims[0] ):
         break
       else:
-        #print(' ix2 = {}, jy2 = {} '.format(ix2,jy2))
+        #print(' ix1: ix2 = {}:{}, jy1:jy2 = {}:{} '.format(ix,ix2,jy,jy2))
         T[jy:jy2, ix:ix2] += h
 
   return T
