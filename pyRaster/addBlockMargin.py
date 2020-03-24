@@ -108,9 +108,8 @@ if( not args.printOnly ):
   Rdict['R'] = R
   saveTileAsNumpyZ( fileout, Rdict )
   if( writeAscii ):
-    fx = open( 'TOPOGRAPHY_DATA_BLOCK' , 'w' )
-    np.savetxt(fx,np.round(R),fmt='%g')
-    fx.close()
+    fout= 'TOPOGRAPHY_DATA_BLOCK'
+    np.savetxt(fout,np.round(R),fmt='%g')
   
 
 if( args.printOn or args.printOnly ):
