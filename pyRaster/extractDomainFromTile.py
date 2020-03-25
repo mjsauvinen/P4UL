@@ -94,7 +94,7 @@ if (args.useGlobCoords==True):
   iPv[0] = ROrig[0]-iPv[0]
 
 
-dPx = entry2Int( Rdict['dPx'] )
+dPx = Rdict['dPx']; dPx = np.abs(dPx[0])
 if( verbose ): print(' dPx = {} '.format(dPx))
 
 
