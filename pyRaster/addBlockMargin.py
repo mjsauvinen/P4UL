@@ -93,6 +93,7 @@ if( zeroAll ):
 
 
 L12, R12, B12, T12 = marginIds( Rdims, mw )
+print(' Margins: L={}, R={}, T={}, B={}'.format(L12,R12,T12,B12))
 L1 = L12[0]; L2 = L12[1]
 R1 = R12[0]; R2 = R12[1]
 B1 = B12[0]; B2 = B12[1]
