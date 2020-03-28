@@ -70,7 +70,8 @@ dPx2 = Rdict2['dPx']
 Rdict2 = None 
 
 
-dPx1 = entry2Int( dPx1 ); dPx2 = entry2Int( dPx2 )
+#dPx1 = entry2Int( dPx1 ); dPx2 = entry2Int( dPx2 )
+dPx1 = np.abs(dPx1[0])  ; dPx2 = np.abs( dPx2[0] )
 dPc = max( dPx1, dPx2 )   # Coarser resolution.
 dPf = min( dPx1, dPx2 )   # Finer resolution.
 
