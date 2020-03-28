@@ -105,6 +105,14 @@ if( not all( R12 == 0 ) ): R[:,R1:R2] = addBlocks( R[:,R1:R2], stride, Lb, mh[1]
 if( not all( T12 == 0 ) ): R[T1:T2,:] = addBlocks( R[T1:T2,:], stride, Lb, mh[2] )
 if( not all( B12 == 0 ) ): R[B1:B2,:] = addBlocks( R[B1:B2,:], stride, Lb, mh[3] )
 
+if( printOn or printOnly ):
+  
+  figDims = 13.*(Rdims[::-1].astype(float)/np.max(Rdims))
+  fig = plt.figure(num=1, figsize=figDims)
+  fig = addImagePlot( fig, R, filename )
+
+  plt.show()
+
 if( not args.printOnly ):
   Rdict['R'] = R
   saveTileAsNumpyZ( fileout, Rdict )
@@ -113,12 +121,6 @@ if( not args.printOnly ):
     np.savetxt(fout,np.round(R),fmt='%g')
   
 
-if( args.printOn or args.printOnly ):
-  
-  figDims = 13.*(Rdims[::-1].astype(float)/np.max(Rdims))
-  fig = plt.figure(num=1, figsize=figDims)
-  fig = addImagePlot( fig, R, filename )
 
-  plt.show()
 
 
