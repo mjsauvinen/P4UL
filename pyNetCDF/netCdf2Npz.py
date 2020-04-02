@@ -3,6 +3,7 @@ from netcdfTools import *
 import sys
 import argparse
 import numpy as np
+from utilities import partialMatchFromList
 ''' 
 Description:
 
@@ -51,18 +52,18 @@ if( meanOn ):
 else:
   time, time_dims = read1DVariableFromDataset('time', ds, paramList, 0, 0, 1 )
 
-
-x, x_dims = read1DVariableFromDataset( 'x' , ds, paramList, 0, 0, cl ) 
-y, y_dims = read1DVariableFromDataset( 'y' , ds, paramList, 0, 0, cl ) 
-z, z_dims = read1DVariableFromDataset( 'z' , ds, paramList, 0, 0, cl )
+uStr = partialMatchFromList( 'u', varList )
+x, x_dims = read1DVariableFromDataset( 'x', uStr, ds, paramList, 0, 0, cl ) 
+y, y_dims = read1DVariableFromDataset( 'y', uStr, ds, paramList, 0, 0, cl ) 
+z, z_dims = read1DVariableFromDataset( 'z', uStr, ds, paramList, 0, 0, cl )
 
 # - - - - velocity components - - - - - - - - - - - -
 sa = ''
 if( meanOn ): sa = 'm'
   
-u, u_dims = read3DVariableFromDataset( 'um', ds, varList, 0, 0, cl, meanOn )
-v, v_dims = read3DVariableFromDataset( 'vm', ds, varList, 0, 0, cl, meanOn )
-w, w_dims = read3DVariableFromDataset( 'wm', ds, varList, 0, 0, cl, meanOn )
+u, u_dims = read3DVariableFromDataset( 'u', ds, varList, 0, 0, cl, meanOn )
+v, v_dims = read3DVariableFromDataset( 'v', ds, varList, 0, 0, cl, meanOn )
+w, w_dims = read3DVariableFromDataset( 'w', ds, varList, 0, 0, cl, meanOn )
 
 infoStr = '''
   time_dims = {}

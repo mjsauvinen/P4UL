@@ -4,6 +4,7 @@ import netCDF4 as nc
 import sys
 import argparse
 import numpy as np
+from utilities import partialMatchFromList
 
 debug = True
 
@@ -60,18 +61,21 @@ def netcdfWriteAndClose(dso, verbose=True):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 
-def read1DVariableFromDataset(varStr, ds, iLOff=0, iROff=0, cl=1):
+def read1DVariableFromDataset( dimStr, varStr, ds, iLOff=0, iROff=0, cl=1):
   # iLOff: left offset
   # iROff: right offset
   # cl   : coarsening level
   if(varStr in ds.variables.keys()):
-
+    vs = ds.variables[varStr]
+    dimList = vs.dimensions   # return a list of variable dimensions ('time', 'x', 'y', etc.)
+    vdim = partialMatchFromList( dimStr, dimList )
+    
     try:
-      print(' Reading variable {} ... '.format(varStr))
-      if(iROff == 0):
-        var = ds.variables[varStr][(0 + iLOff):]
+      print(' Reading variable {} ... '.format(vdim))
+      if(iROff == 0 or (iROff is None) ):
+        var = ds.variables[vdim][(0 + iLOff):]
       else:
-        var = ds.variables[varStr][(0 + iLOff):-abs(iROff)]
+        var = ds.variables[vdim][(0 + iLOff):-abs(iROff)]
       print(' ... done.')
     except:
       print(' Cannot read the array of variable: {}.'.format(varStr))
@@ -124,9 +128,11 @@ def readVariableFromDataset(varStr, ds, cl=1 ):
 
 
 def read3DVariableFromDataset(varStr, ds, iTOff=0, iLOff=0, iROff=0, cl=1, meanOn=False):
+  
   # iLOff: left offset
   # iROff: right offset
   # cl   : coarsening level
+  varStr = partialMatchFromList( varStr , ds.variables.keys() )
   print(' Reading variable {} ... '.format(varStr))
   var, dDict = readVariableFromDataset(varStr, ds, cl=1 )
   print(' ... done.')
@@ -165,6 +171,7 @@ def read3dDataFromNetCDF( fname, varStr, cl=1 ):
   and independent (dimList) variables.
   '''
   ds, varList, paramList = netcdfDataset(fname)
+  varStr = partialMatchFromList( varStr , varList )
   print(' Extracting {} from dataset in {} ... '.format( varStr, fname ))
   var, dDict = readVariableFromDataset(varStr, ds, cl )
   print(' {}_dims = {}\n Done!'.format(varStr, var.shape ))
@@ -309,8 +316,8 @@ def createCoordinateAxis(dso, Rdims, Rdpx, axis, varname, formatstr, unit, param
   for i in range(Rdims[axis]):
     # dpx is in [N,E], see getGeoTransform() in gdalTools.py
     arr[i] = i * Rdpx[axis]
-  axvar = createNetcdfVariable(dso, arr, varname, len(
-      arr), unit, formatstr, (varname,), parameter, zlib, verbose=verbose)
+  axvar = createNetcdfVariable( \
+    dso, arr, varname, len(arr), unit, formatstr, (varname,), parameter, zlib, verbose=verbose )
   arr = None
   return axvar
 
@@ -351,10 +358,10 @@ def read3dDictVarFromNetCDF( fname, nameDict, cl=1 ):
   Read cell center coordinates and time.
   Create the output independent variables right away and empty memory.
   '''
-  time, time_dims = read1DVariableFromDataset('time', ds, 0, 0, 1 ) # All values.
-  x, x_dims = read1DVariableFromDataset(nameDict['xname'], ds, 0, 0, cl )
-  y, y_dims = read1DVariableFromDataset(nameDict['yname'], ds, 0, 0, cl )
-  z, z_dims = read1DVariableFromDataset(nameDict['zname'], ds, 0, 0, cl )
+  time, time_dims = read1DVariableFromDataset('time', nameDict['varname'], ds, 0, 0, 1 ) # All values.
+  x, x_dims = read1DVariableFromDataset(nameDict['xname'], nameDict['varname'], ds, 0, 0, cl )
+  y, y_dims = read1DVariableFromDataset(nameDict['yname'], nameDict['varname'], ds, 0, 0, cl )
+  z, z_dims = read1DVariableFromDataset(nameDict['zname'], nameDict['varname'], ds, 0, 0, cl )
   x[np.isnan(x)] = 0.  # Clear away NaNs
   y[np.isnan(y)] = 0.  #
   z[np.isnan(z)] = 0.  #

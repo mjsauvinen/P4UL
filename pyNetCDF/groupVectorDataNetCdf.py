@@ -31,8 +31,6 @@ parser.add_argument("-fo", "--fileout",type=str, default="U-VECTOR.nc",\
   help="Name of the output NETCDF file.")
 parser.add_argument("-sn", "--scalars",type=str, nargs='+', default=None,\
   help="(Optional) Scalars to be included.")
-parser.add_argument("-zn", "--zname",type=str, default='zu_3d',\
-  help="Name of z-coordinate. Default = 'zu_3d' ")
 parser.add_argument("-sx", "--suffix",type=str, default='',\
   help="Potential suffix to be appended to variable names. Example: '_xy'. ")
 parser.add_argument("-va", "--replValuesAbove", nargs=2, type=float, default=[1.e9,0.0],\
@@ -57,7 +55,6 @@ filename   = args.filename
 fileout    = args.fileout
 scalars    = args.scalars
 suffix     = args.suffix
-zname      = args.zname
 ntskip     = args.ntimeskip
 cl         = abs(int(args.coarse))
 kcopy      = args.kcopy
@@ -88,15 +85,15 @@ dso = netcdfOutputDataset( fileout )
 Read cell center coordinates and time.
 Create the output independent variables right away and empty memory.
 '''
-time, time_dims = read1DVariableFromDataset('time', ds, ntskip, 0, 1 ) # All values.
+time, time_dims = read1DVariableFromDataset('time','u'+suffix, ds, ntskip, 0, 1 ) # All values.
 tv = createNetcdfVariable( dso, time,'time', len(time),'s','f4',('time',), parameter )
 time = None
 
-x, x_dims = read1DVariableFromDataset( 'x',ds, 0, 1, cl ) # Exclude the last value.
+x, x_dims = read1DVariableFromDataset( 'x','v'+suffix, ds, 0, 1, cl ) # Exclude the last value.
 xv = createNetcdfVariable( dso, x   , 'x'   , len(x)   , 'm', 'f4', ('x',)   , parameter )
 x = None
 
-y, y_dims = read1DVariableFromDataset( 'y',ds, 0, 1, cl ) # Exclude the last value.
+y, y_dims = read1DVariableFromDataset( 'y','u'+suffix, ds, 0, 1, cl ) # Exclude the last value.
 print(' y_dims = {} '.format(y_dims))
 y[np.isnan(y)] = 0.  # Special treatment.
 yv = createNetcdfVariable( dso, y   , 'y'   , len(y)   , 'm', 'f4', ('y',)   , parameter )
@@ -104,7 +101,7 @@ y = None
 
 if( kcopy ): xk = 0
 else:        xk = 1
-z, z_dims = read1DVariableFromDataset( zname ,ds, xk, 0, cl )
+z, z_dims = read1DVariableFromDataset('z','u'+suffix, ds, xk, 0, cl )
 zv = createNetcdfVariable( dso, z   , 'z'   , len(z)   , 'm', 'f4', ('z',)   , parameter )
 print(' z_dims = {} '.format(z_dims))
 z = None
