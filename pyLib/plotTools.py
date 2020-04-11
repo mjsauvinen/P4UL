@@ -52,6 +52,17 @@ cmaps_new = { 1:'viridis', 2:'inferno', 3:'plasma',  4:'magma',     5:'Blues',
 # =*=*=*=* FUNCTION DEFINITIONS *=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def addFigAxes( fig ):
+  
+  if( len(fig.get_axes()) == 0 ):
+    ax = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height]
+  else:
+    ax = fig.get_axes()[0]
+
+  return ax
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
 def printDict( D , ncols=3 ):
   i = 0; pStr = str()
   for k, v in D.items():
@@ -205,7 +216,7 @@ def color_stack(lm=1, ic=None):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def plotBar(fig, xb, yb, labelStr, plotStr=["","",""], wb=0.6, errb=0):
-  ax = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height]
+  ax = addFigAxes( fig )
   bars=ax.bar(xb,yb,width=wb, label=labelStr, yerr=errb, ecolor='r')
   ax.set_title( plotStr[0], fontsize=22)
   ax.set_xlabel(plotStr[1], fontsize=22)
@@ -217,7 +228,7 @@ def plotBar(fig, xb, yb, labelStr, plotStr=["","",""], wb=0.6, errb=0):
 
 def addImagePlot( fig, R, titleStr, gridOn=False, limsOn=False ):
   global cmaps
-  ax = fig.add_axes( [0.1, 0.075 , 0.875 , 0.81] ) #[left, up, width, height]
+  ax = addFigAxes( fig )
   im = ax.imshow(np.real(R), aspect='auto')       
 
   ax.set_title(titleStr)
@@ -257,7 +268,7 @@ def addImagePlotDict(fig, RDict ):
   cm   = dataFromDict('cmap',   RDict, allowNone=True)
   orig = dataFromDict('origin', RDict, allowNone=True)
   
-  ax = fig.add_axes( [0.1, 0.075 , 0.875 , 0.81] ) #[left, top, width, height]
+  ax = addFigAxes( fig )
   im = ax.imshow(np.real(R), origin=orig, extent=ex, aspect='auto', cmap=cm)
   
   ax.set_title(ttl); ax.set_xlabel(xlbl); ax.set_ylabel(ylbl)
@@ -276,7 +287,8 @@ def addToPlot(fig, x,y,labelStr, plotStr=["","",""], logOn=False):
   Add variables x,y to a given plot.
   Test whether y has multiple columns --> Require different treatment.
   '''
-  ax = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height]
+  ax = addFigAxes( fig )
+  
   d = np.size(np.shape(y)) # Test if y has multiple columns
 
   for i in range(d):
@@ -298,7 +310,9 @@ def addToPlot(fig, x,y,labelStr, plotStr=["","",""], logOn=False):
 def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False, linemode=1 ):
   try:    x = np.loadtxt(fileStr)
   except: x = np.loadtxt(fileStr,delimiter=',')
-  ax  = fig.add_axes( [0.15, 0.075 , 0.8 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
+  
+  
+  ax = addFigAxes( fig )
 
   labelStr = labelString( fileStr )
   #lStr = fileStr.rsplit(".", 1)[0]  # Remove the ".dat" 
@@ -471,7 +485,7 @@ def plotCiXY( fig, pDict ):
   
   d, v, v_l, v_u = ciDataFromFile( fn )
   
-  ax  = fig.add_axes( [0.15, 0.075 , 0.8 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
+  ax = addFigAxes( fig )
   
   d, xp, yp, v_l, v_u = ciScaleVals( d, v, v_l, v_u, Cx, Cy, revAxes )
   
@@ -549,8 +563,8 @@ def plotCiDiffXY( fig, pDict ):
   if( revAxes ): xlb = 'D(d)'; ylb = 'd'
   else:          ylb = 'D(d)'; xlb = 'd'
   
+  ax = addFigAxes( fig )
   
-  ax  = fig.add_axes([0.15, 0.075 , 0.8 , 0.81]) #[left, up, width, height], fig.add_subplot(111)
   if( logOn ):
     if( revAxes ):
       plotf  = ax.semilogx
@@ -588,7 +602,9 @@ def plotDY( fig, fileStr, dim=3,  revAxes=False ):
     r += (x[:,i]-x0)**2 
     
   d = np.sqrt(r)
-  ax  = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
+  
+  ax = addFigAxes( fig )
+  
 
   labelStr = labelString( fileStr )
 
@@ -613,7 +629,7 @@ def plotDY( fig, fileStr, dim=3,  revAxes=False ):
 def plotYX( fig, fileStr, logOn ):
   x = np.loadtxt(fileStr)
   y = x[:,1]
-  ax  = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
+  ax  = addFigAxes( fig )
 
   # Print each column separately
   for i in range((x.shape[1]-3)):
@@ -632,7 +648,7 @@ def plotYX( fig, fileStr, logOn ):
 def fullPlotXY(fig,fileStr,figStr,xlabelStr,ylabelStr,lwidth=1.2,fsize=16,logOn=False):
   x = np.loadtxt(fileStr)
   y = x[:,1]
-  ax  = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
+  ax  = addFigAxes( fig )
 
   # Print each column separately
   for i in range((x.shape[1]-3)):
@@ -695,7 +711,7 @@ def plotCSV( fig, fileStr, revAxes=False, magY=False, globalValues=False ):
 
   labelStr = fileStr.split(".")[0]
 
-  ax = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height]
+  ax = addFigAxes( fig )
   
   if( not magY ):
     yLbl = ""   # Start with empty label
@@ -808,7 +824,7 @@ def addContourf( X, Y, Q, CfDict=None ):
   #figDims  = (9,11)
   fig = plt.figure(figsize=figDims)
   #fig, ax = plt.subplots()
-  ax = fig.add_axes( [0.1, 0.08 , 0.88 , 0.85] ) #[left, up, width, height]
+  ax = addFigAxes( fig )
   
   # Default values 
   labelStr = ' Q(X,Y) '
@@ -847,7 +863,7 @@ def addContourf( X, Y, Q, CfDict=None ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*  
 def addScatterPlot(fig, X, Y, C, fc=4 ):
-  ax = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height]
+  ax = addFigAxes( fig )
   dims = np.array(np.shape(X))//fc  # NOTE: integer division necessary
   N = np.prod(dims)
   ax.scatter(X[::fc,::fc].reshape(N), Y[::fc,::fc].reshape(N), s=10, \
@@ -866,7 +882,7 @@ def arrow2DPlot( fig, fileStr , scale=1.0, ic=0, fillOn=True ):
     print(' The file must contain (at least) 4 columns: x, y, dx, dy ')
     sys.exit(1)
     
-  ax  = fig.add_axes( [0.075, 0.075 , 0.85 , 0.85] ) #[left, up, width, height], fig.add_subplot(111)
+  ax  = addFigAxes( fig )
   
   lx = max(scale, 0.825 )*0.0008
   lx = min( lx, 0.0016 )
@@ -889,7 +905,7 @@ def writeXY( x , y , fileName ):
 
 def wavePlot( fig, fileStr, logOn ):
   x = np.loadtxt(fileStr)
-  ax  = fig.add_axes( [0.15, 0.075 , 0.8 , 0.81] ) #[left, up, width, height], fig.add_subplot(111)
+  ax  = addFigAxes( fig )
 
   labelStr = fileStr.split(".")[0]
 
@@ -979,7 +995,7 @@ def addToPlot_marker(fig, x,y,labelStr, plotStr=["","",""], logOn=False, marker=
   
   e.g. marker = '-' or '--' or 'v-'
   '''
-  ax = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height]
+  ax = addFigAxes( fig )
   d = np.size(np.shape(y)) # Test if y has multiple columns
 
   for i in range(d):
