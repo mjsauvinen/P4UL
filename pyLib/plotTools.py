@@ -297,9 +297,10 @@ def addToPlot(fig, x,y,labelStr, plotStr=["","",""], logOn=False):
     else:
       yt = y[:,i]; labelStr+='['+str(i)+']'
     if(logOn):
-      lines=ax.loglog(x,yt,'-', linewidth=1.3, label=labelStr)
+      lines=ax.semilogy(x,yt,linestyle_stack(lm=linemode), linewidth=1.3, label=labelStr)
+      #lines=ax.loglog(x,yt,'-', linewidth=1.3, label=labelStr)
     else:
-      lines=ax.plot(x,yt,'-', linewidth=1.6, label=labelStr)
+      lines=ax.plot(x,yt,linestyle_stack(lm=linemode), linewidth=1.6, label=labelStr)
   ax.set_title( plotStr[0], fontsize=22)
   ax.set_xlabel(plotStr[1], fontsize=22)
   ax.set_ylabel(plotStr[2], fontsize=22); ax.grid(True)  
