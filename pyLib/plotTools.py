@@ -297,7 +297,7 @@ def addToPlot(fig, x,y,labelStr, plotStr=["","",""], logOn=False):
     else:
       yt = y[:,i]; labelStr+='['+str(i)+']'
     if(logOn):
-      lines=ax.semilogy(x,yt,linestyle_stack(lm=linemode), linewidth=1.3, label=labelStr)
+      lines=ax.semilogy(x,yt,linestyle_stack(), linewidth=1.3, label=labelStr)
       #lines=ax.loglog(x,yt,'-', linewidth=1.3, label=labelStr)
     else:
       lines=ax.plot(x,yt,linestyle_stack(lm=linemode), linewidth=1.6, label=labelStr)
