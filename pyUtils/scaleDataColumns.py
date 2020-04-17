@@ -94,7 +94,7 @@ for fn in fileNos:
     
     if(an[j] != 0.0):
       N = np.shape(dat[:,i])
-      dat[:,i] += (an * np.random.rand(N) -an/2.)
+      dat[:,i] += (an * np.random.random_sample(N) -an/2.)
     
     j += 1
     
