@@ -93,7 +93,7 @@ for fn in fileNos:
     dat[:,i] = cf[j]*( dat[:,i] - v0[j] )/vs[j]
     
     if(an[j] != 0.0):
-      N = len(dat[:,1])
+      N = np.shape(dat[:,i])
       dat[:,i] += (an * np.random.rand(N) -an/2.)
     
     j += 1
