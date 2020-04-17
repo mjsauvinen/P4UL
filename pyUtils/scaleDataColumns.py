@@ -29,6 +29,8 @@ parser.add_argument("-cf", "--cfactor", type=float, nargs='+', default=[1.0],\
   help="Multiplication coef 'cf' in v+ = cf*(v - v0)/v* for each column in --icols. Default = [1.]")
 parser.add_argument("-an", "--anoise", type=float, nargs='+', default=[0.0],\
   help="Amplitude of added white noise for each column in --icols. Default = [0.]")
+parser.add_argument('-sr', '--skiprows', type=int, default=0,\
+  help='Skip rows when reading files. Default=0.')
 
 args = parser.parse_args()
 #==========================================================#
@@ -40,6 +42,7 @@ cf      = np.array( args.cfactor )
 icols   = args.icols
 an      = np.array( args.anoise )
 prefix  = args.prefix
+sr      = args.skiprows
 #==========================================================#
 
 vx0 = np.zeros( np.shape(icols), float )
@@ -79,8 +82,8 @@ strKey = inputIfNone( strKey , " Enter search string: " )
 fileNos, fileList = filesFromList( strKey+"*")
 
 for fn in fileNos:
-  try:    dat = np.loadtxt(fileList[fn])
-  except: dat = np.loadtxt(fileList[fn], delimiter=',')
+  try:    dat = np.loadtxt(fileList[fn], skiprows=sr)
+  except: dat = np.loadtxt(fileList[fn], delimiter=',', skiprows=sr)
   
   j = 0
   for i in icols:
@@ -98,7 +101,12 @@ for fn in fileNos:
   fileout = prefix+fileList[fn]
   print(' Writing out file: {} '.format( fileout ) )
   
-  hStr = 'Scaling v+ = cf(v - v0)/v* done with cf={}, v0={} and v*={} for cols={}'.format(cf,v0,vs,icols)
+  if( sr > 0 ):
+    with open(fileList[fn]) as f: hStr = f.readline()
+  else:
+    hStr = 'Scaling v+ = cf(v - v0)/v* done with cf={}, v0={} and v*={} for cols={}'.format(cf,v0,vs,icols)
+  
+
   np.savetxt(fileout, dat[:,:], fmt='%3.6e', header=hStr, delimiter=',')
   dat = None
 
