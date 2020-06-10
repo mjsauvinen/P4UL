@@ -94,7 +94,7 @@ for fn in fileNos:
     
     if(an[j] != 0.0):
       N = np.shape(dat[:,i])
-      dat[:,i] += (an * np.random.random_sample(N) -an/2.)
+      dat[:,i] += (an[j] * np.random.random_sample(N) -an[j]/2.)
     
     j += 1
     
@@ -102,7 +102,8 @@ for fn in fileNos:
   print(' Writing out file: {} '.format( fileout ) )
   
   if( sr > 0 ):
-    with open(fileList[fn]) as f: hStr = f.readline()
+    with open(fileList[fn]) as f: 
+      hStr = f.readline(); hStr.rstrip()
   else:
     hStr = 'Scaling v+ = cf(v - v0)/v* done with cf={}, v0={} and v*={} for cols={}'.format(cf,v0,vs,icols)
   
