@@ -11,6 +11,7 @@ from  matplotlib.ticker import FormatStrFormatter
 plt.rc('xtick', labelsize=24); #plt.rc('ytick.major', size=10)
 plt.rc('ytick', labelsize=24); #plt.rc('ytick.minor', size=6)
 plt.rcParams["font.family"] = "serif"
+plt.rcParams["legend.fontsize"] = "large"
 #plt.rcParams["font.serif"] = "Utopia"
 #plt.rcParams["font.family"] = "monospace"
 #plt.rcParams["font.monospace"] = "Courier"
@@ -55,7 +56,7 @@ cmaps_new = { 1:'viridis', 2:'inferno', 3:'plasma',  4:'magma',     5:'Blues',
 def addFigAxes( fig ):
   
   if( len(fig.get_axes()) == 0 ):
-    ax = fig.add_axes( [0.115, 0.075 , 0.85 , 0.81] ) #[left, up, width, height]
+    ax = fig.add_axes( [0.115, 0.09 , 0.85 , 0.81] ) #[left, up, width, height]
   else:
     ax = fig.get_axes()[0]
 
@@ -161,15 +162,17 @@ def linestyle_stack(lm=1, il=None):
   # '-.' : dash-dot line style, ':' : dotted line style
   
   if( lm == 1 ):
-    lstyleList = ['-','--',':','.']
+    lstyleList = ['-','--','-.']
   else:
-    lstyleList = ['-','--']
+    lstyleList = ['-','--'] # ['x','+'] # ['-','--'] #
 
   nlinestyles = len(lstyleList)
   
   if( il is not None and np.isscalar(il) ):
     iLg = min( int(il) , (nlinestyles-1) )
+  
   lstyle = lstyleList[iLg] 
+  
   iLg += 1
   if( iLg > (nlinestyles-1) ):
     iLg = 0
@@ -297,13 +300,13 @@ def addToPlot(fig, x,y,labelStr, plotStr=["","",""], logOn=False):
     else:
       yt = y[:,i]; labelStr+='['+str(i)+']'
     if(logOn):
-      lines=ax.semilogy(x,yt,linestyle_stack(2, None), linewidth=2.0, label=labelStr)
+      lines=ax.semilogy(x,yt,linestyle_stack(1, None), linewidth=2.0, label=labelStr)
       #lines=ax.loglog(x,yt,'-', linewidth=1.3, label=labelStr)
     else:
-      lines=ax.plot(x,yt,linestyle_stack(2, None), linewidth=2.0, label=labelStr)
+      lines=ax.plot(x,yt,linestyle_stack(1, None), linewidth=2.0, label=labelStr)
   ax.set_title( plotStr[0], fontsize=22)
-  ax.set_xlabel(plotStr[1], fontsize=22)
-  ax.set_ylabel(plotStr[2], fontsize=22); ax.grid(True)  
+  ax.set_xlabel(plotStr[1], fontsize=28)
+  ax.set_ylabel(plotStr[2], fontsize=28); ax.grid(True)  
   return fig
   
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
