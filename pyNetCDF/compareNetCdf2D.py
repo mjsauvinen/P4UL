@@ -34,9 +34,9 @@ def U_hd( fn, cl=1, direction=False ):
 #==========================================================#
 helpStr = '''
 Diff mode: 
-'d': delta, 
-'r': relative delta, 
-'s': scaled, 
+'d': root mean square diff (RMSD), 
+'r': RMSD (relative delta), 
+'s': RMSD (scaled delta), 
 'n': root normalized mean square diff.,
 'f': fractional bias
 'v': geometric variance
