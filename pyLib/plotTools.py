@@ -162,7 +162,7 @@ def linestyle_stack(lm=1, il=None):
   # '-.' : dash-dot line style, ':' : dotted line style
   
   if( lm == 1 ):
-    lstyleList = ['-','--','-.']
+    lstyleList = ['-','--','-.',':']
   else:
     lstyleList = ['-','--'] # ['x','+'] # ['-','--'] #
 
@@ -311,10 +311,19 @@ def addToPlot(fig, x,y,labelStr, plotStr=["","",""], logOn=False):
   
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False, linemode=1 ):
+def plotXX( fig, pDict ):
+  fileStr = dataFromDict('filename', pDict, allowNone=False)
+  logOn   = dataFromDict('logOn',    pDict, allowNone=False)
+  Cx      = dataFromDict('Cx',       pDict, allowNone=False)
+  Cy      = dataFromDict('Cy',       pDict, allowNone=False)
+  revAxes = dataFromDict('revAxes',  pDict, allowNone=False)
+  linemode = dataFromDict('lm',      pDict, allowNone=False)
+  linewidth= dataFromDict('lw',      pDict, allowNone=False)
+  ylims   = dataFromDict('ylims',    pDict, allowNone=True)
+  xlims   = dataFromDict('xlims',    pDict, allowNone=True)
+  
   try:    x = np.loadtxt(fileStr)
   except: x = np.loadtxt(fileStr,delimiter=',')
-  
   
   ax = addFigAxes( fig )
 
@@ -357,7 +366,7 @@ def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False, linemode=1 ):
     
     
     lines = plotf( xp, yp, \
-      linestyle_stack(lm=linemode), linewidth=2.5 , \
+      linestyle_stack(lm=linemode), linewidth=linewidth, \
         label=labelXX, color=color_stack(lm=linemode))
     
     lmax = np.abs(np.max(dp))  # Local maximum
@@ -366,6 +375,9 @@ def plotXX( fig, fileStr, logOn, Cx=1., Cy=1., revAxes=False, linemode=1 ):
   #if( amax <5.e-4 and revAxes): 
   #  if( revAxes ): ax.xaxis.set_major_formatter(FormatStrFormatter('%.2e'))
   #  else:          ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
+  
+  ax.set_ybound(lower=ylims[0], upper=ylims[1] )
+  ax.set_xbound(lower=xlims[0], upper=xlims[1] )
   
   ax.set_xlabel(" X ")
   ax.set_ylabel(" Y ")
