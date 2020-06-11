@@ -171,6 +171,17 @@ def extractMatchingTerms( trialList , targetList , verbose=False ):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def partialMatchFromList( matchStr, strList ):
+  w = None
+  nw = len(matchStr)
+  for word in strList:
+    l = min( nw , len(word) )
+    if( matchStr in word[:l] ):
+      w = word; break
+  return w
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 def dataFromDict( keyStr, dataDict, allowNone=True ):
   data = None
   if( keyStr in dataDict.keys() ):

@@ -38,6 +38,8 @@ parser.add_argument("-ft1","--filter1",type=str,nargs=2,default=[None,None],\
 parser.add_argument("-ft2","--filter2",type=str,nargs=2,default=[None,None],\
   help="See help for -ft1 above.")
 parser.add_argument("-fo", "--fileout",type=str, help="Name of output .npz file.")
+parser.add_argument("-F", "--Force", help="Force the operation despite mismatch in origos.",\
+  action="store_true", default=False)
 parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
   action="store_true", default=False)
 parser.add_argument("-pp", "--printOnly", help="Only print the resulting data. Don't save.",\
@@ -50,6 +52,7 @@ writeLog( parser, args, args.printOnly )
 file1 = args.file1;     file2 = args.file2
 s1    = args.scale1;       s2 = args.scale2
 flt1  = args.filter1;    flt2 = args.filter2
+Force = args.Force
 printOn   = args.printOn
 printOnly = args.printOnly
 
@@ -70,15 +73,17 @@ dPx2 = Rdict2['dPx']
 Rdict2 = None 
 
 
-dPx1 = entry2Int( dPx1 ); dPx2 = entry2Int( dPx2 )
+#dPx1 = entry2Int( dPx1 ); dPx2 = entry2Int( dPx2 )
+dPx1 = np.abs(dPx1[0])  ; dPx2 = np.abs( dPx2[0] )
 dPc = max( dPx1, dPx2 )   # Coarser resolution.
 dPf = min( dPx1, dPx2 )   # Finer resolution.
 
 if( (R1Orig == R2Orig).all() ):
   print(' Excellent! The origos match.')
 else:
-  print(' The tiles do not have identical origos. Exiting.')
-  sys.exit(1)
+  print(' Warning: The tiles do not have identical origos: O1={} vs. O2={}'.format(R1Orig,R2Orig))
+  if( not Force ): sys.exit('Exiting ...')
+  else: print(' Forcing the operation nonetheless.')
 
 maxDims = np.array([ max(R1dims[0],R2dims[0]) , max(R1dims[1],R2dims[1]) ]).astype(int)
 print(' maxDims = {}'.format(maxDims))

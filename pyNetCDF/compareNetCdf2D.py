@@ -194,8 +194,6 @@ for k1 in idk:
     idm = None 
   
   idm = np.ma.getmask(v1x); print(' Nm = {}'.format(np.count_nonzero(idm)))
-  
-  
   idz = (v2x == 0.0)
   idm += idz
   #idm = sn.binary_dilation(idm); print(' Nm = {}'.format(np.count_nonzero(idm)))
@@ -203,7 +201,6 @@ for k1 in idk:
   v2x = np.ma.masked_array( v2x, mask=idm)
   #v2x  = np.ma.round( v2x, decimals=2 )
   #v1x  = np.ma.round( v1x, decimals=2 )
-  
   
   
   if( exclSmall ):

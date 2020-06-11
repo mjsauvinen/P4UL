@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from netcdfTools import *
 from mapTools import *
-from utilities import writeLog
+from utilities import writeLog, partialMatchFromList
 import sys
 import argparse
 import numpy as np
@@ -70,16 +70,18 @@ Read cell center coordinates and time.
 Create the output independent variables right away and empty memory.
 '''
 
-time, time_dims = read1DVariableFromDataset('time', ds, paramList, 0, 0, 1 ) # All values.
+uStr = partialMatchFromList( 'u', varList )
+
+time, time_dims = read1DVariableFromDataset('time', uStr, ds, paramList, 0, 0, 1 ) # All values.
 tv = createNetcdfVariable( dso, time,'time', len(time),'s','f4',('time',), parameter )
 time = None  
 
-x, x_dims = read1DVariableFromDataset( 'x',ds, paramList, 0, 0, cl ) # All values.
+x, x_dims = read1DVariableFromDataset( 'x', uStr,ds, paramList, 0, 0, cl ) # All values.
 print(' x_dims = {} '.format(x_dims))
 x[np.isnan(x)] = 0.  # Special treatment.
 xv = createNetcdfVariable( dso, x   , 'x'   , len(x)   , 'm', 'f4', ('x',)   , parameter )
 
-y, y_dims = read1DVariableFromDataset( 'y',ds, paramList, 0, 0, cl )
+y, y_dims = read1DVariableFromDataset( 'y', uStr, ds, paramList, 0, 0, cl )
 print(' y_dims = {} '.format(y_dims))
 y[np.isnan(y)] = 0.  # Special treatment.
 yv = createNetcdfVariable( dso, y   , 'y'   , len(y)   , 'm', 'f4', ('y',)   , parameter )
@@ -88,13 +90,13 @@ yv = createNetcdfVariable( dso, y   , 'y'   , len(y)   , 'm', 'f4', ('y',)   , p
 xb, yb, dx, dy = domainBoundsAndResolution( x, y )
 x = None; y = None # Clear memory ASAP.
 
-z, z_dims = read1DVariableFromDataset( 'z',ds, paramList, 0, 0, cl )
+z, z_dims = read1DVariableFromDataset( 'z', uStr, ds, paramList, 0, 0, cl )
 print(' z_dims = {} '.format(z_dims))
 zv = createNetcdfVariable( dso, z   , 'z'   , len(z)   , 'm', 'f4', ('z',)   , parameter )
 z = None
 
 # - - - - First, read u-component - - - - - - - - - -
-u, u_dims = read3DVariableFromDataset( 'u', ds, varList, 0, 0, cl ) # All values.
+u, u_dims = read3DVariableFromDataset( uStr, ds, varList, 0, 0, cl ) # All values.
 print(' u_dims = {} '.format(u_dims))
 yx_dims = np.array(u_dims[2:])
 z_dim   = u_dims[1]; t_dim = u_dims[0]

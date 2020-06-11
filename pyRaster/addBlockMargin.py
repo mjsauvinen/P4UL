@@ -93,6 +93,7 @@ if( zeroAll ):
 
 
 L12, R12, B12, T12 = marginIds( Rdims, mw )
+print(' Margins: L={}, R={}, T={}, B={}'.format(L12,R12,T12,B12))
 L1 = L12[0]; L2 = L12[1]
 R1 = R12[0]; R2 = R12[1]
 B1 = B12[0]; B2 = B12[1]
@@ -104,21 +105,22 @@ if( not all( R12 == 0 ) ): R[:,R1:R2] = addBlocks( R[:,R1:R2], stride, Lb, mh[1]
 if( not all( T12 == 0 ) ): R[T1:T2,:] = addBlocks( R[T1:T2,:], stride, Lb, mh[2] )
 if( not all( B12 == 0 ) ): R[B1:B2,:] = addBlocks( R[B1:B2,:], stride, Lb, mh[3] )
 
-if( not args.printOnly ):
-  Rdict['R'] = R
-  saveTileAsNumpyZ( fileout, Rdict )
-  if( writeAscii ):
-    fx = open( 'TOPOGRAPHY_DATA_BLOCK' , 'w' )
-    np.savetxt(fx,np.round(R),fmt='%g')
-    fx.close()
-  
-
-if( args.printOn or args.printOnly ):
+if( printOn or printOnly ):
   
   figDims = 13.*(Rdims[::-1].astype(float)/np.max(Rdims))
   fig = plt.figure(num=1, figsize=figDims)
   fig = addImagePlot( fig, R, filename )
 
   plt.show()
+
+if( not args.printOnly ):
+  Rdict['R'] = R
+  saveTileAsNumpyZ( fileout, Rdict )
+  if( writeAscii ):
+    fout= 'TOPOGRAPHY_DATA_BLOCK'
+    np.savetxt(fout,np.round(R),fmt='%g')
+  
+
+
 
 

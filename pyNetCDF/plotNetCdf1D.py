@@ -11,8 +11,7 @@ Description:
 
 
 Author: Mikko Auvinen
-        mikko.auvinen@helsinki.fi 
-        University of Helsinki &
+        mikko.auvinen@fmi.fi
         Finnish Meteorological Institute
 '''
 
@@ -26,6 +25,8 @@ parser.add_argument("--tavg", help="Time-averaged values (if applicable).", acti
 parser.add_argument("-ts", "--timeskip",type=int, default=0, \
   help="Number of skipped time instances (if applicable).")
 parser.add_argument("--labels", help="User specified labels.", action="store_true",\
+  default=False)
+parser.add_argument("-np", "--noplot", help="Do not plot the figure. Use with -wa or -waa options.", action="store_true",\
   default=False)
 parser.add_argument("-wa", "--writeAscii", help="Write X, Y[-1,:] (or time averaged Y) data to an ascii file.",\
   action="store_true", default=False)
@@ -42,6 +43,7 @@ logOn    = args.log
 timeAverageOn = args.tavg
 writeAscii = args.writeAscii or args.writeAllAscii
 writeAll   = args.writeAllAscii
+noPlot     = args.noplot
 
 '''
 Establish two boolean variables which indicate whether the created variable is an
@@ -82,7 +84,7 @@ while 1:
       fig = addToPlot(fig, xdict[xStr], y, labelStr, plotTxt, logOn)
       if( writeAscii ):
         print(' (1) Writing data to ascii file: {}.dat'.format(varList[iy])) 
-        np.savetxt(varList[iy]+'.dat', np.c_[xdict[xStr],y] )   # x,y,z equal sized 1D arrays
+        np.savetxt(varList[iy]+'_ts.dat', np.c_[xdict[xStr],y] )   # x,y,z equal sized 1D arrays
     
     elif(len(np.shape(y)) == 2):
       time  = xdict['time']
@@ -131,9 +133,12 @@ while 1:
       sys.exit(' Plotting of profiles with more than one spatial dimension not supported.')
 
   
-  if(labelsOn):
-    fig = userLabels( fig )
-  plt.legend(loc=0)
-  plt.show()
+  if( noPlot ):
+    break
+  else:
+    if(labelsOn): fig = userLabels( fig )
+    plt.legend(loc=0)
+    plt.show()
+
 
 print(' Bye! ')
