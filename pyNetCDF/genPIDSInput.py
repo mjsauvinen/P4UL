@@ -15,6 +15,8 @@ This grid generates input files for PALM simulations following PALM Input Data S
 
 PIDS version: 1.9
 
+See the documentation: https://palm.muk.uni-hannover.de/trac/wiki/doc/app/iofiles/pids
+
 WARNING: I haven't had time to test this thoroughly so please check your PIDS files before using them.
 
 TODOS:
@@ -32,6 +34,7 @@ University of Helsinki
 UPDATE:
 - Mikko: In python3 the ConfigParser library is renamed configparser
 - Jani Stromberg: Added building type and surface fractions
+- Mona Kurppa: Added and modified chemistry and salsa variables
 
 '''
 
@@ -84,8 +87,8 @@ if(chemConfig is None):
   print("No chemistry specified.")
 
 print("\n== Aerosols ==")
-aeroConfig = readConfigSection(config, 'Aerosols')
-if(aeroConfig is None):
+salsaConfig = readConfigSection(config, 'Aerosols')
+if (salsaConfig is None):
   print("No aerosols specified.")
 
 
@@ -164,7 +167,7 @@ if(not all(v is None for v in [topoConfig, surfConfig, vegConfig])):
     setPIDSGlobalAtrributes(pidsStaticDS, globalAttributes)
 
     '''
-    Write topography with it's dimensions into PIDS_STATIC
+    Write topography with its dimensions into PIDS_STATIC
     '''
 
     if(topoConfig is not None):
@@ -207,7 +210,8 @@ if(not all(v is None for v in [topoConfig, surfConfig, vegConfig])):
 
       surfaceFractionFile = readConfigVariable(config, 'Surface', 'surface_fraction')
       if (surfaceFractionFile is not None and surfaceFractionFile != ""):
-        surfaceFractionVar = processSurfaceFraction(surfaceFractionFile, pidsStaticDS, staticVars, staticDims)
+        surfaceFractionVar = processSurfaceFraction(surfaceFractionFile, pidsStaticDS, staticVars,
+                                                    staticDims)
 
     if(vegConfig is not None):
       ladFile = readConfigVariable(config, 'Vegetation', 'lad')
@@ -277,122 +281,180 @@ if(chemConfig is not None):
 
     setPIDSGlobalAtrributes(pidsChemDS, globalAttributes)
 
+    # Level-of-detail (LOD) of the emissions
+    emissionLod = readConfigVariable(config, 'Chemistry', 'emission_values_lod')
+
+    # Emission category index
     emiCatInds = readConfigVariable(config, 'Chemistry', 'emission_category_index')
     if(emiCatInds is not None and emiCatInds!=""):
       emiCatIndsVar = processEmissionCategoryIndices(emiCatInds, pidsChemDS, chemVars, chemDims)
 
-    emiInds = readConfigVariable(config, 'Chemistry', 'emission_index')
-    if(emiInds is not None and emiInds!=""):
-      emiInds = processEmissionIndices(emiInds, pidsChemDS, chemVars, chemDims)
-
+   # Names of the emission categories
     emiCatName = readConfigVariable(config, 'Chemistry', 'emission_category_name')
     if(emiCatName is not None and emiCatName!=""):
       emiCatName = processEmissionCategoryNames(emiCatName, pidsChemDS, chemVars, chemDims)
 
-    emiSpeName = readConfigVariable(config, 'Chemistry', 'emission_species_name')
-    if(emiSpeName is not None and emiSpeName!=""):
-      emiSpeName = processEmissionSpeciesNames(emiSpeName, pidsChemDS, chemVars, chemDims)
+    # Emission index per emitted chemical species
+    emiInds = readConfigVariable(config, 'Chemistry', 'emission_index')
+    if(emiInds is not None and emiInds!=""):
+      emiInds = processEmissionIndices(emiInds, pidsChemDS, chemVars, chemDims)
 
-    emiTimeFactors = readConfigVariable(config, 'Chemistry', 'emission_time_factors')
-    emiTimeFactorsLod = readConfigVariable(config, 'Chemistry', 'emission_time_factors_lod')
-    if(emiTimeFactors is not None and emiTimeFactors!=""):
-      if(emiTimeFactorsLod==""):
-        emiTimeFactorsLod = None
-      emiTimeFactors = processEmissionTimeFactors(emiTimeFactors, emiTimeFactorsLod, pidsChemDS, chemVars, chemDims)
+    # Names of the chemical species
+    emiName = readConfigVariable(config, 'Chemistry', 'emission_name')
+    if (emiName is not None and emiName!=""):
+      emiName = processEmissionNames(emiName, pidsChemDS, chemVars, chemDims)
+
+    # If emission_values_lod=1, emission_values are rescaled using emission time factors
+    if (emissionLod == '1'):
+      emiTimeFactorsFile = readConfigVariable(config, 'Chemistry', 'emission_time_factors')
+      emiTimeFactorsLod = readConfigVariable(config, 'Chemistry', 'emission_time_factors_lod')
+      if(emiTimeFactorsFile is not None and emiTimeFactorsFile!=""):
+        if(emiTimeFactorsLod==""):
+          emiTimeFactorsLod = None
+        emiTimeFactors = processEmissionTimeFactors(emiTimeFactorsFile, emiTimeFactorsLod,
+                                                    pidsChemDS, chemVars, chemDims)
+
+    # If emission_values_lod=2, emissions can vary with time
+    elif (emissionLod == '2'):
+      emiTimes = readConfigVariable(config, 'Chemistry', 'emission_time')
+      if (emiTimes is not None and emiTimes != ""):
+        time_dim = createTimeDim(pidsChemDS, emiTimes, chemDims)
+      emiTimestamp = readConfigVariable(config, 'Chemistry', 'emission_timestamp')
+      if ('True' in emiTimestamp):
+        print('create timestamp')
+        originTimeStr = readConfigVariable(config, 'Global', 'origin_time')
+        timestamp = processEmissionTimestamp(pidsChemDS, originTimeStr, chemVars, chemDims)
+
+    # Emission value map
+    emiStr = readConfigVariable(config, 'Chemistry', 'emission_values')
+    if (emiStr is not None and emiStr != ""):
+      sourceArea = readConfigVariable(config, 'Chemistry', 'source_area')
+      if (sourceArea is not None and sourceArea != ""):
+        emissionUnit = readConfigVariable(config, 'Chemistry', 'emission_unit')
+        aeroEminVar = processEmissionValues(emiStr, sourceArea, emissionUnit, emissionLod,
+                                            pidsChemDS, chemVars, chemDims)
 
 
     netcdfWriteAndClose(pidsChemDS, verbose=False)
     print("Chemistry output file "+ pidsChemFN +" closed.")
 
 '''
-Move on to PIDS_AERO
+Move on to PIDS_SALSA
 '''
 
-if(aeroConfig is not None):
-  pidsAeroFN = "PIDS_SALSA" + nest_id
-  print("\n===== Aerosol input file "+ pidsAeroFN +" =====")
-  skipAeroFile = False
-  aeroAppend=False
-  if (os.path.isfile(pidsAeroFN)):
+if (salsaConfig is not None):
+  pidsSalsaFN = "PIDS_SALSA" + nest_id
+  print("\n===== Aerosol input file "+ pidsSalsaFN +" =====")
+  skipSalsaFile = False
+  salsaAppend = False
+  if (os.path.isfile(pidsSalsaFN)):
     while True:
-      outputMode = str(input("Existing "+ pidsAeroFN +" file found. Overwrite, append, skip or exit? [o/a/s/e] "))
+      outputMode = str(input("Existing "+ pidsSalsaFN + " file found. " +
+                             "Overwrite, append, skip or exit? [o/a/s/e] "))
       if (outputMode in ["e","E"]):
         print("Exit.")
         exit()
       elif (outputMode in ["s","S"]):
-        skipAeroFile=True
+        skipSalsaFile = True
         print("Skipping aerosol input.")
         break
       elif (outputMode in ["o","O"]):
-        aeroAppend=False
-        print("Overwriting an existing "+ pidsAeroFN +" file.")
+        salsaAppend = False
+        print("Overwriting an existing " + pidsSalsaFN + " file.")
         break
       elif (outputMode in ["a","A"]):
-        aeroAppend=True
+        salsaAppend=True
         break
       else:
         print("Invalid selection.")
         continue
   else:
-    print("No existing "+ pidsAeroFN +" found, creating a new one.")
+    print("No existing " + pidsSalsaFN + " found, creating a new one.")
 
-  if (not skipAeroFile):
-    if(aeroAppend):
-      pidsAeroDS = netcdfOutputDataset(pidsAeroFN, mode="r+")
-      aeroDims = pidsAeroDS.dimensions.keys()
-      aeroVars = pidsAeroDS.variables.keys()
+  if (not skipSalsaFile):
+    if (salsaAppend):
+      pidsSalsaDS = netcdfOutputDataset(pidsSalsaFN, mode = "r+")
+      salsaDims = pidsSalsaDS.dimensions.keys()
+      salsaVars = pidsSalsaDS.variables.keys()
       # Remove dims from vars with a filter
-      aeroVars = filter(lambda key: key not in aeroDims, aeroVars)
-      print("Existing PIDS_AERO file found, using append/update mode.")
+      salsaVars = filter(lambda key: key not in salsaDims, salsaVars)
+      print("Existing PIDS_SALSA file found, using append/update mode.")
 
-      if(len(aeroDims)>0):
-        print("Dimensions: " + ', '.join(str(key) for key in aeroDims))
-        print("Variables: " + ', '.join(str(key) for key in aeroVars))
+      if (len(salsaDims)>0):
+        print("Dimensions: " + ', '.join(str(key) for key in salsaDims))
+        print("Variables: " + ', '.join(str(key) for key in salsaVars))
         print("Warning: using old dimensions for new variables")
       else:
         print("No existing dimensions or variables found.")
     else:
-      pidsAeroDS = netcdfOutputDataset(pidsAeroFN, mode="w")
-      aeroDims = []
-      aeroVars = []
+      pidsSalsaDS = netcdfOutputDataset(pidsSalsaFN, mode = "w")
+      salsaDims = []
+      salsaVars = []
 
-    setPIDSGlobalAtrributes(pidsAeroDS, globalAttributes)
+    setPIDSGlobalAtrributes(pidsSalsaDS, globalAttributes)
 
-    compAeroStr = readConfigVariable(config, 'Aerosols', 'composition_aerosol')
-    if(compAeroStr is not None and compAeroStr!=""):
-      compAeroVar = processCompositionAerosol(compAeroStr, pidsAeroDS, aeroVars, aeroDims)
+    # Level-of-detail (LOD) of the emissions
+    aeroEmissionLod = readConfigVariable(config, 'Aerosols', 'aerosol_emission_values_lod')
 
-    aeroEmiStr = readConfigVariable(config, 'Aerosols', 'aerosol_emission_values')
-    if (aeroEmiStr is not None and aeroEmiStr!=""):
-      aeroSourceArea = readConfigVariable(config, 'Aerosols', 'aerosol_source_area')
-      if(aeroSourceArea is not None and aeroSourceArea!=""):
-        aeroEmissionDmid= readConfigVariable(config, 'Aerosols', 'aerosol_emission_dmid')
-        if(aeroEmissionDmid is not None and aeroEmissionDmid!=""):
-          aeroEminVar = processAerosolEmissionValues(aeroEmiStr, aeroSourceArea, aeroEmissionDmid, pidsAeroDS, aeroVars, aeroDims)
-
-    emiMassFracsVar = processEmissionMassFractions(pidsAeroDS)
-
-    emiCatInds = readConfigVariable(config, 'Chemistry', 'emission_category_index')
+    # Emission category index
+    emiCatInds = readConfigVariable(config, 'Aerosols', 'aerosol_emission_category_index')
     if(emiCatInds is not None and emiCatInds!=""):
-      emiCatIndsVar = processEmissionCategoryIndices(emiCatInds, pidsAeroDS, aeroVars, aeroDims)
+      emiCatIndsVar = processEmissionCategoryIndices(emiCatInds, pidsSalsaDS, salsaVars, salsaDims)
 
-    emiInds = readConfigVariable(config, 'Chemistry', 'emission_index')
-    if(emiInds is not None and emiInds!=""):
-      emiInds = processEmissionIndices(emiInds, pidsAeroDS, aeroVars, aeroDims)
-
-    emiCatName = readConfigVariable(config, 'Chemistry', 'emission_category_name')
+    # Names of the emission categories
+    emiCatName = readConfigVariable(config, 'Aerosols', 'aerosol_emission_category_name')
     if(emiCatName is not None and emiCatName!=""):
-      emiCatName = processEmissionCategoryNames(emiCatName, pidsAeroDS, aeroVars, aeroDims)
+      emiCatName = processEmissionCategoryNames(emiCatName, pidsSalsaDS, salsaVars, salsaDims)
 
-    emiSpeName = readConfigVariable(config, 'Chemistry', 'emission_species_name')
-    if(emiSpeName is not None and emiSpeName!=""):
-      emiSpeName = processEmissionSpeciesNames(emiSpeName, pidsAeroDS, aeroVars, aeroDims)
+    # Names of the chemical components
+    compNameStr = readConfigVariable(config, 'Aerosols', 'composition_name')
+    if (compNameStr is not None and compNameStr != ""):
+      compNameVar = processCompositionNames(compNameStr, pidsSalsaDS, salsaVars, salsaDims)
 
+    # Mass fractions of chemical components in aerosol emissions
+    emiMassFracsStr = readConfigVariable(config, 'Aerosols', 'emission_mass_fracs')
+    if (emiMassFracsStr is not None and emiMassFracsStr != ""):
+      emiMassFracsVar = processEmissionMassFracs(emiMassFracsStr, pidsSalsaDS, salsaVars, salsaDims)
 
+    # If aerosol_emission_values_lod=1, aerosol_emission_values are rescaled using emission time
+    # factors
+    if (aeroEmissionLod == '1'):
+      emiTimeFactorsFile = readConfigVariable(config, 'Aerosols', 'aerosol_emission_time_factors')
+      emiTimeFactorsLod = readConfigVariable(config, 'Aerosols', 'aerosol_emission_time_factors_lod')
+      if (emiTimeFactorsFile is not None and emiTimeFactorsFile!=""):
+        if (emiTimeFactorsLod==""):
+          emiTimeFactorsLod = None
+        emiTimeFactors = processEmissionTimeFactors(emiTimeFactorsFile, emiTimeFactorsLod,
+                                                    pidsSalsaDS, salsaVars, salsaDims)
 
-    netcdfWriteAndClose(pidsAeroDS, verbose=False)
-    print("Aerosol output file "+ pidsAeroFN +" closed.")
+    # If aerosol_emission_values_lod=2, emissions can vary with time. Also, the aerosol size
+    # distribution of the emission is given using emission_number_fracs
+    elif (aeroEmissionLod == '2'):
+      emiTimes = readConfigVariable(config, 'Aerosols', 'aerosol_emission_time')
+      if (emiTimes is not None and emiTimes != ""):
+        time_dim = createTimeDim(pidsSalsaDS, emiTimes, salsaDims)
+
+      # Number fractions of aerosol size bins in aerosol emissions
+      emiNumberFracsStr = readConfigVariable(config, 'Aerosols', 'emission_number_fracs')
+      if (emiNumberFracsStr is not None and emiNumberFracsStr != ""):
+        aeroEmissionDmid = readConfigVariable(config, 'Aerosols', 'Dmid')
+        if (aeroEmissionDmid is not None and aeroEmissionDmid!=""):
+          emiNumberFracsVar = processEmissionNumberFracs(emiNumberFracsStr, aeroEmissionDmid,
+                                                         pidsSalsaDS, salsaVars, salsaDims)
+    # Aerosol emission value map
+    aeroEmiStr = readConfigVariable(config, 'Aerosols', 'aerosol_emission_values')
+    if (aeroEmiStr is not None and aeroEmiStr != ""):
+      aeroSourceArea = readConfigVariable(config, 'Aerosols', 'aerosol_source_area')
+      if (aeroSourceArea is not None and aeroSourceArea != ""):
+        aeroEmissionUnit = readConfigVariable(config, 'Aerosols', 'aerosol_emission_unit')
+        aeroEminVar = processAerosolEmissionValues(aeroEmiStr, aeroSourceArea, aeroEmissionUnit,
+                                                   aeroEmissionLod, pidsSalsaDS, salsaVars,
+                                                   salsaDims)
+
+    # Close the output file PIDS_SALSA
+    netcdfWriteAndClose(pidsSalsaDS, verbose=False)
+    print("Aerosol output file "+ pidsSalsaFN +" closed.")
 
 '''
-Close PIDS_AERO
+Close PIDS_SALSA
 '''
