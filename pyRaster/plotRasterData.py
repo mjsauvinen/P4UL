@@ -27,6 +27,8 @@ parser.add_argument("-ib", "--ibounds", nargs=2 , type=int, default=[None,None],
   help="Index bounds in x-direction (easting) for the raster. By default no bounds imposed.")
 parser.add_argument("-jb", "--jbounds", nargs=2 , type=int, default=[None,None],\
   help="Index bounds in y-direction (northing) for the raster. By default no bounds imposed.")
+parser.add_argument("--abs", action="store_true", default=False,\
+  help="Plot absolute values.")
 parser.add_argument("--lims", action="store_true", default=False,\
   help="User specified limits.")
 parser.add_argument("--grid", help="Turn on grid.", action="store_true", default=False)
@@ -48,6 +50,7 @@ rasterfile  = args.filename
 size        = args.size
 ib          = args.ibounds
 jb          = args.jbounds
+absOn       = args.abs
 limsOn      = args.lims
 gridOn      = args.grid
 infoOnly    = args.infoOnly
@@ -77,6 +80,7 @@ else:
   dPx   = np.array([ (X[0,1]-X[0,0]) , (Y[1,0]-Y[0,0]) ])
   X = None; Y = None; Z = None; C = None  # Clear memory
   
+if( absOn ): R = np.abs(R)
 
 info = ''' Info (Orig):
  Dimensions    [rows, cols] = {}
