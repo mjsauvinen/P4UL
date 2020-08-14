@@ -51,11 +51,14 @@ Now the scripts can be run everywhere in your system.
 #########################
 ### Who do I talk to? ###
 
-* Mikko Auvinen, University of Helsinki / Finnish Meteorological Institute.
+* Mikko Auvinen, Finnish Meteorological Institute.
 
 #########################
 ##### Contributors ######
 
-* Mikko Auvinen, University of Helsinki / Finnish Meteorological Institute.
+* Mikko Auvinen, Finnish Meteorological Institute.
 
 * Sasu Karttunen, University of Helsinki
+
+* Mona Kurppa, University of Helsinki
+
