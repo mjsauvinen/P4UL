@@ -61,8 +61,12 @@ for fn in fileNos:
   # Read in data.
   dataDict = read3dDataFromNetCDF( fileList[fn] , vnames[0], cl )
   up = dataDict['v']
+  
+  # Commented out temporarily by Mikko #
+  '''
   dataDict = read3dDataFromNetCDF( fileList[fn] , vnames[1], cl )
   vp = dataDict['v']
+  '''
   dataDict = read3dDataFromNetCDF( fileList[fn] , vnames[2], cl )
   wp = dataDict['v']
 
@@ -115,17 +119,17 @@ for fn in fileNos:
 
 
   # First resolved TKE:
-  tns = 0.5*( up**2 + vp**2 + wp**2 )
+  tns = 0.5*( up**2 + wp**2 ) ## 0.5*( up**2 + vp**2 + wp**2 )
   tkeo = createNetcdfVariable(\
     dso, tns, 'tns', time_dim, 'm^2 s^(-2)', 'f4',('time','z','y','x',) , variable )
   tns = None
 
-  tke = 0.5*( np.mean(up**2, axis=0) + np.mean(vp**2, axis=0) + np.mean(wp**2, axis=0) )
+  tke = 0.5*( np.mean(up**2, axis=0) + np.mean(wp**2, axis=0) )  #0.5*( np.mean(up**2, axis=0) + np.mean(vp**2, axis=0) + np.mean(wp**2, axis=0) )
   rtke = createNetcdfVariable(\
     dso, tke, 'tke', time_dim, 'm^2 s^(-2)', 'f4',('z','y','x',) , variable )
   tke = None 
 
-
+  # uu 
   uu  = up * up
   uuo = createNetcdfVariable(\
     dso, uu, 'cov_uu', time_dim, 'm^2 s^(-2)', 'f4',('time','z','y','x',) , variable )
@@ -134,13 +138,17 @@ for fn in fileNos:
     dso, np.mean(uu, axis=0), 'r_uu', time_dim, 'm^2 s^(-2)', 'f4',('z','y','x',) , variable )
   uu  = None
 
+  '''
+  # uv 
   uv  = up * vp
   uvo = createNetcdfVariable(\
     dso, uv, 'cov_uv', time_dim, 'm^2 s^(-2)', 'f4',('time','z','y','x',) , variable )
   ruv = createNetcdfVariable(\
     dso, np.mean(uv, axis=0), 'r_uv', time_dim, 'm^2 s^(-2)', 'f4',('z','y','x',) , variable )
   uv  = None
+  '''
 
+  # uw 
   uw  = up * wp
   uwo = createNetcdfVariable(\
     dso, uw, 'cov_uw', time_dim, 'm^2 s^(-2)', 'f4',('time','z','y','x',) , variable )
@@ -148,6 +156,8 @@ for fn in fileNos:
     dso, np.mean(uw, axis=0), 'r_uw', time_dim, 'm^2 s^(-2)', 'f4',('z','y','x',) , variable )
   uw  = None
 
+  '''
+  # vv 
   vv  = vp * vp
   vvo = createNetcdfVariable(\
     dso, vv, 'cov_vv', time_dim, 'm^2 s^(-2)', 'f4',('time','z','y','x',) , variable )
@@ -161,7 +171,9 @@ for fn in fileNos:
   rvw = createNetcdfVariable(\
     dso, np.mean(vw, axis=0), 'r_vw', time_dim, 'm^2 s^(-2)', 'f4',('z','y','x',) , variable )
   vw  = None
-
+  '''
+  
+  # ww 
   ww  = wp * wp
   wwo = createNetcdfVariable(\
     dso, ww, 'cov_ww', time_dim, 'm^2 s^(-2)', 'f4',('time','z','y','x',) , variable )

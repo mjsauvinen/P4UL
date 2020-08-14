@@ -120,19 +120,34 @@ for fn in fileNos:
   nvx = (ijk2[0]-ijk1[0])+1; idx = range(ijk1[0],ijk2[0]+1)
   Cv = np.zeros( ( nt, nvz, nvy, nvx ) )
   d  = np.zeros( (     nvz, nvy, nvx ) )
+  zd = np.zeros( (     nvz           ) )
   # - - - - - - - - - - - - - - - - - - - - - - - - - -  #
   # Compute covariance
   for i in range(nvx):
     for j in range(nvy):
       for k in range(nvz):
-        Cv[:,k,j,i] = v1[ :,idz[k], idy[j], idx[i] ] * v2[ :,idz[k], idy[j], idx[i] ]
+        
+        if( np.abs(v1[1,idz[k],idy[j],idx[i]])>1e-7 and np.abs(v2[1,idz[k],idy[j],idx[i]])>1e-7 ):
+          Cv[:,k,j,i] = v1[ :,idz[k], idy[j], idx[i] ] * v2[ :,idz[k], idy[j], idx[i] ]
+        else:
+          Cv[:,k,j,i] = np.nan
+        
         d[k,j,i] = np.sqrt( (z[idz[k]]-z[0])**2 + (y[idy[j]]-y[0])**2 + (x[idx[i]]-x[0])**2 )
+        zd[k]    = np.abs(z[idz[k]]-z[0])
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - -  #
   # Reynolds stress
-  Rs = np.mean( Cv, axis=(0) )
+  Rs = np.nanmean( Cv, axis=(0) )
+  Rs_havg = np.nanmean( Rs , axis=(1,2) ) # average over x and y
 
   hStr = " Reynolds averaged {}'{}' between ijk {} and {} ".format(varnames[0],varnames[1], ijk1,ijk2)
-  fileout = '{}{}_UEX'.format(varnames[0],varnames[1]) + fileList[fn].split('UEX')[-1]
+  fileout = '{}{}_UEX'.format(varnames[0],varnames[1]) + fileList[fn].split('/')[-1]
   fileout = fileout.strip('.nc') + '.dat'
   np.savetxt(fileout, np.c_[ (1./xs)*d.ravel(), Rs.ravel() ], fmt='%3.6e', header=hStr)
+  
+  # - - - - - <RS> - - - - - #
+  
+  hStr = " Horizontally and Reynolds avg {}'{}' between z=[{},{}]".format(varnames[0],varnames[1], zd[0],zd[-1])
+  fileout = 'DA_{}{}_'.format(varnames[0],varnames[1]) + fileList[fn].split('/')[-1]
+  fileout = fileout.strip('.nc') + '.dat'
+  np.savetxt(fileout, np.c_[ (1./xs)*zd.ravel(), Rs_havg.ravel() ], fmt='%3.6e', header=hStr)

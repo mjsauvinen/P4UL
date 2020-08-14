@@ -89,7 +89,7 @@ time, time_dims = read1DVariableFromDataset('time','u'+suffix, ds, ntskip, 0, 1 
 tv = createNetcdfVariable( dso, time,'time', len(time),'s','f4',('time',), parameter )
 time = None
 
-x, x_dims = read1DVariableFromDataset( 'x','v'+suffix, ds, 0, 1, cl ) # Exclude the last value.
+x, x_dims = read1DVariableFromDataset( 'x','w'+suffix, ds, 0, 1, cl ) # Exclude the last value.
 xv = createNetcdfVariable( dso, x   , 'x'   , len(x)   , 'm', 'f4', ('x',)   , parameter )
 x = None
 
@@ -168,7 +168,7 @@ if( decompOn ):
 
 
 # - - - - Second, v-component - - - - - - - - - -
-
+'''
 v0, v0_dims = read3DVariableFromDataset( 'v'+suffix, ds, ntskip, 0, 0, cl ) # All values.
 v0 = replaceValues(v0, va, vb)
 
@@ -184,7 +184,7 @@ if( decompOn ):
   vp = None
   vmv = createNetcdfVariable( dso, vm, 'vm', cc_dims[0], 'm/s', 'f4',('z','y','x',) , variable )
   vm = None
-
+'''
 
 # - - - - Fouth, possible scalars - - - - - - - - - -
 

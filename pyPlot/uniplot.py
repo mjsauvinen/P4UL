@@ -20,7 +20,9 @@ Author: Mikko Auvinen
 plt.rcParams["legend.labelspacing"] = 1.2
 plt.rcParams["legend.framealpha"]   = 1.
 plt.rcParams["legend.edgecolor"]    = 'k'
-plt.rcParams["legend.fontsize"] = 'large'
+plt.rcParams["legend.fontsize"] = 18
+plt.rcParams["legend.handleheight"]   = 1.0  # default: 0.7
+plt.rcParams["legend.handlelength"]   = 3.0  # default: 2.0
 
 #=======MAIN PROGRAM========================================#
 parser = argparse.ArgumentParser()
