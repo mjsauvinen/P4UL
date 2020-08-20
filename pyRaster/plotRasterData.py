@@ -77,7 +77,7 @@ else:
   R, X, Y, Z, C = readNumpyZFootprint(rasterfile)
   Rdims = np.array(np.shape(R))
   ROrig = np.zeros(2)
-  dPx   = np.array([ (X[0,1]-X[0,0]) , (Y[1,0]-Y[0,0]) ])
+  dPx   = np.array([ (Y[1,0]-Y[0,0]) , (X[0,1]-X[0,0]) ])  # dN, dE
   X = None; Y = None; Z = None; C = None  # Clear memory
   
 if( absOn ): R = np.abs(R)
@@ -86,7 +86,7 @@ info = ''' Info (Orig):
  Dimensions    [rows, cols] = {}
  Origin (top-left)    [N,E] = {}
  Origin (bottom-left) [N,E] = {}
- Resolution         [dX,dY] = {}
+ Resolution         [dN,dE] = {}
  Grid rotation (deg)        = {} deg
 '''.format(Rdims,ROrig,ROrigBL,dPx,gridRot*(180./np.pi))
 
