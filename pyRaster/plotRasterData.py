@@ -83,12 +83,13 @@ else:
 if( absOn ): R = np.abs(R)
 
 info = ''' Info (Orig):
- Dimensions    [rows, cols] = {}
- Origin (top-left)    [N,E] = {}
- Origin (bottom-left) [N,E] = {}
- Resolution         [dN,dE] = {}
- Grid rotation (deg)        = {} deg
-'''.format(Rdims,ROrig,ROrigBL,dPx,gridRot*(180./np.pi))
+ Dimensions    [rows, cols] = {0}
+ Origin (top-left)    [N,E] = {1}
+ Origin (bottom-left) [N,E] = {2}
+ Resolution         [dN,dE] = {3}
+ Grid rotation (deg)        = {4} deg
+ Max(R) / Min(R)            = {5} / {6}
+'''.format(Rdims,ROrig,ROrigBL,dPx,gridRot*(180./np.pi),np.max(R),np.min(R))
 
 print(info)
 
