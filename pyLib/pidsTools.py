@@ -124,7 +124,7 @@ def parseCharacterArray(input_str, maxstrlen):
 def createXDim(ds, nPx, dPx, dims):
   # Creates a new x-axis unless it already exists
   if('x' not in dims):
-    x_dim = createCoordinateAxis(ds, nPx, dPx, 0, 'x', 'f4', 'm', True, False, verbose=False)
+    x_dim = createCoordinateAxis(ds, nPx, dPx, 1, 'x', 'f4', 'm', True, False, verbose=False)
     x_dim.long_name = "distance to origin in x-direction"
     dims.append('x')
     return x_dim
@@ -137,7 +137,7 @@ def createXDim(ds, nPx, dPx, dims):
 def createYDim(ds, nPx, dPx, dims):
   # Creates a new y-axis unless it already exists
   if('y' not in dims):
-    y_dim = createCoordinateAxis(ds, nPx, dPx, 1, 'y', 'f4', 'm', True, False, verbose=False)
+    y_dim = createCoordinateAxis(ds, nPx, dPx, 0, 'y', 'f4', 'm', True, False, verbose=False)
     y_dim.long_name = "distance to origin in y-direction"
     dims.append('y')
     return y_dim

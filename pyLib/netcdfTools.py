@@ -68,6 +68,7 @@ def read1DVariableFromDataset( dimStr, varStr, ds, iLOff=0, iROff=0, cl=1):
   if(varStr in ds.variables.keys()):
     vs = ds.variables[varStr]
     dimList = vs.dimensions   # return a list of variable dimensions ('time', 'x', 'y', etc.)
+    print(' dimList = {} '.format( dimList ))
     vdim = partialMatchFromList( dimStr, dimList )
     
     try:

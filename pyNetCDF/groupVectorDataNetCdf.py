@@ -31,6 +31,8 @@ parser.add_argument("-fo", "--fileout",type=str, default="U-VECTOR.nc",\
   help="Name of the output NETCDF file.")
 parser.add_argument("-sn", "--scalars",type=str, nargs='+', default=None,\
   help="(Optional) Scalars to be included.")
+parser.add_argument("-zn", "--zname",type=str, default='z',\
+  help="String for the z-coordinate (partial string suffices). Default: 'z' ")
 parser.add_argument("-sx", "--suffix",type=str, default='',\
   help="Potential suffix to be appended to variable names. Example: '_xy'. ")
 parser.add_argument("-va", "--replValuesAbove", nargs=2, type=float, default=[1.e9,0.0],\
@@ -54,6 +56,7 @@ args = parser.parse_args()
 filename   = args.filename
 fileout    = args.fileout
 scalars    = args.scalars
+zn         = args.zname
 suffix     = args.suffix
 ntskip     = args.ntimeskip
 cl         = abs(int(args.coarse))
@@ -101,7 +104,7 @@ y = None
 
 if( kcopy ): xk = 0
 else:        xk = 1
-z, z_dims = read1DVariableFromDataset('z','u'+suffix, ds, xk, 0, cl )
+z, z_dims = read1DVariableFromDataset(zn,'u'+suffix, ds, xk, 0, cl )
 zv = createNetcdfVariable( dso, z   , 'z'   , len(z)   , 'm', 'f4', ('z',)   , parameter )
 print(' z_dims = {} '.format(z_dims))
 z = None
@@ -168,7 +171,6 @@ if( decompOn ):
 
 
 # - - - - Second, v-component - - - - - - - - - -
-'''
 v0, v0_dims = read3DVariableFromDataset( 'v'+suffix, ds, ntskip, 0, 0, cl ) # All values.
 v0 = replaceValues(v0, va, vb)
 
@@ -184,7 +186,6 @@ if( decompOn ):
   vp = None
   vmv = createNetcdfVariable( dso, vm, 'vm', cc_dims[0], 'm/s', 'f4',('z','y','x',) , variable )
   vm = None
-'''
 
 # - - - - Fouth, possible scalars - - - - - - - - - -
 
