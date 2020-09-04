@@ -56,6 +56,11 @@ def rotation_by_euler_angles( v , ea ):
   return np.dot(Tx,v)
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def rotateRasterCoordNE( Rne , theta ):
+  T = np.array([ [np.cos(theta), np.sin(theta)] , [-np.sin(theta), np.cos(theta)] ] )
+  return np.matmul( T, Rne )
+  
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
