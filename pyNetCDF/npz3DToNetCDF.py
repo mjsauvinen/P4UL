@@ -5,7 +5,15 @@ import argparse
 import numpy as np
 import sys
 from utilities import writeLog
+#=======================================================================
+'''A script to transform 3D numpy array to netCDF. 
 
+The 3D array is expected as the S file of the npz archive. The other
+required file is dPx.
+
+Author: Jukka-Pekka Keskinen, FMI, 2020
+
+'''
 #==========================================================#
 parser = argparse.ArgumentParser(prog='rasterToNetCdf.py')
 parser.add_argument("-f", "--filename", type=str, help="Name of the input topography raster data file.")
@@ -34,26 +42,24 @@ float64 = 'f8'  # 64-bit floating point
 byte = 'b'  # One byte (8-bit)
 #===============================================================#
 
+# Load file
 A=np.load(args.filename)
 
-print(A.files)
+# Get 3D scalar values (S)
+S=A['S']
 
-grid=A['grid']
-
-Rdims=grid.shape
-
-print(grid)
+# Get coordinate system dimensions and multipliers
+Rdims=S.shape
+Rdpx=A['dPx']
 
 dso = netcdfOutputDataset(args.fileout)
-
-Rdpx=np.ones(3)
 
 xv = createCoordinateAxis(dso, Rdims, Rdpx, 1, 'x', float32, 'm', parameter, args.compress)
 yv = createCoordinateAxis(dso, Rdims, Rdpx, 0, 'y', float32, 'm', parameter, args.compress)
 zv = createCoordinateAxis(dso, Rdims, Rdpx, 2, 'z', float32, 'm', parameter, args.compress)
 
 #topo = fillTopographyArray(A, Rdims, Rdpx, int)
-topovar = createNetcdfVariable(dso, grid, args.varname, 0, 'm', int32, ('z', 'y', 'x',), variable, False)
+topovar = createNetcdfVariable(dso, S, args.varname, 0, 'm', int32, ('z', 'y', 'x',), variable, False)
 topovar.lod = 2
 
 netcdfWriteAndClose(dso)
