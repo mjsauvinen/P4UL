@@ -4,13 +4,16 @@ from netcdfTools import *
 import argparse
 import numpy as np
 import sys
+from utilities import writeLog
 
 #==========================================================#
-#parser = argparse.ArgumentParser(prog='rasterToNetCdf.py')
-#parser.add_argument("-f", "--filename", type=str, help="Name of the input topography raster data file.")
-#parser.add_argument("-fo", "--fileout", type=str, help="Name of the output NetCDF file.", default='output.ncdf')
-#args = parser.parse_args()
-#writeLog( parser, args )
+parser = argparse.ArgumentParser(prog='rasterToNetCdf.py')
+parser.add_argument("-f", "--filename", type=str, help="Name of the input topography raster data file.")
+parser.add_argument("-fo", "--fileout", type=str, help="Name of the output NetCDF file.", default='output.ncdf')
+parser.add_argument("-vn", "--varname", type=str, help="Name of the variable in NetCDF. Default 'buildings_0'.", default='buildings_0')
+parser.add_argument("-c", "--compress", help="Compress netCDF variables with zlib.", action="store_true", default=False)
+args = parser.parse_args()
+writeLog( parser, args )
 #==========================================================#
 '''
 Establish two boolean variables which indicate whether the created variable is an
@@ -31,26 +34,26 @@ float64 = 'f8'  # 64-bit floating point
 byte = 'b'  # One byte (8-bit)
 #===============================================================#
 
-#A=np.load(args.filename)
+A=np.load(args.filename)
 
-#print(A.files)
+print(A.files)
 
-# Dims will be in the order y,x,z
-A=np.random.randint(10,size=(2,3,5))
-Rdims=A.shape
+grid=A['grid']
 
-print(A)
+Rdims=grid.shape
 
-dso = netcdfOutputDataset('testi.nc')
+print(grid)
+
+dso = netcdfOutputDataset(args.fileout)
 
 Rdpx=np.ones(3)
 
-xv = createCoordinateAxis(dso, Rdims, Rdpx, 1, 'x', float32, 'm', parameter,False)#, args.compress)
-yv = createCoordinateAxis(dso, Rdims, Rdpx, 0, 'y', float32, 'm', parameter,False)#, args.compress)
-zv = createCoordinateAxis(dso, Rdims, Rdpx, 2, 'z', float32, 'm', parameter,False)#, args.compress)
+xv = createCoordinateAxis(dso, Rdims, Rdpx, 1, 'x', float32, 'm', parameter, args.compress)
+yv = createCoordinateAxis(dso, Rdims, Rdpx, 0, 'y', float32, 'm', parameter, args.compress)
+zv = createCoordinateAxis(dso, Rdims, Rdpx, 2, 'z', float32, 'm', parameter, args.compress)
 
 #topo = fillTopographyArray(A, Rdims, Rdpx, int)
-topovar = createNetcdfVariable(dso, A, 'testihomma', 0, 'm', int32, ('z', 'y', 'x',), variable, False)
+topovar = createNetcdfVariable(dso, grid, args.varname, 0, 'm', int32, ('z', 'y', 'x',), variable, False)
 topovar.lod = 2
 
 netcdfWriteAndClose(dso)
