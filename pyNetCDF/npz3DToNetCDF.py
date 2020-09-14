@@ -11,6 +11,8 @@ from utilities import writeLog
 The 3D array is expected as the S file of the npz archive. The other
 required file is dPx.
 
+This could be merged at some point with rasterToNetCDF.py. 
+
 Author: Jukka-Pekka Keskinen, FMI, 2020
 
 '''
@@ -23,9 +25,11 @@ parser.add_argument("-c", "--compress", help="Compress netCDF variables with zli
 args = parser.parse_args()
 writeLog( parser, args )
 #==========================================================#
-'''
+'''Some settings for the netCDF outputs.
+
 Establish two boolean variables which indicate whether the created variable is an
 independent or dependent variable in function createNetcdfVariable().
+
 '''
 parameter = True
 variable = False
