@@ -17,11 +17,15 @@ Author: Jukka-Pekka Keskinen, FMI, 2020
 
 '''
 #==========================================================#
-parser = argparse.ArgumentParser(prog='rasterToNetCdf.py')
+parser = argparse.ArgumentParser(prog='rasterToNetCdf.py',description="Transform a 3D npz archive to netCDF. The input file is "
+"required to have an array with the name S and coordinate system multipliers with the name dPx.")
 parser.add_argument("-f", "--filename", type=str, help="Name of the input topography raster data file.")
 parser.add_argument("-fo", "--fileout", type=str, help="Name of the output NetCDF file.", default='output.ncdf')
-parser.add_argument("-vn", "--varname", type=str, help="Name of the variable in NetCDF. Default 'buildings_0'.", default='buildings_0')
+parser.add_argument("-vn", "--varname", type=str, help="Name of the variable in NetCDF. Default 'buildings_0'.", 
+                    default='buildings_0')
 parser.add_argument("-c", "--compress", help="Compress netCDF variables with zlib.", action="store_true", default=False)
+parser.add_argument("-i", "--integer", help="Set datatype in NetCDF to integer. If not set, floats will be used.", 
+                    action="store_true", default=False)
 args = parser.parse_args()
 writeLog( parser, args )
 #==========================================================#
@@ -38,12 +42,14 @@ variable = False
 Available external data types for NetCDF variables. Used data type has
 a significant effect on file size and memory usage.
 '''
-int16 = 'i2'  # 16-bit signed integer
-int32 = 'i4'  # 32-bit signed integer
-int64 = 'i8'  # 64-bit signed integer
-float32 = 'f4'  # 32-bit floating point
-float64 = 'f8'  # 64-bit floating point
-byte = 'b'  # One byte (8-bit)
+if args.integer:
+    netcdftype = 'i2'  # 16-bit signed integer
+    #int32 = 'i4'  # 32-bit signed integer
+    #int64 = 'i8'  # 64-bit signed integer
+else:
+    netcdftype = 'f4'  # 32-bit floating point
+    #float64 = 'f8'  # 64-bit floating point
+    #byte = 'b'  # One byte (8-bit)
 #===============================================================#
 
 # Load file
@@ -58,12 +64,11 @@ Rdpx=A['dPx']
 
 dso = netcdfOutputDataset(args.fileout)
 
-xv = createCoordinateAxis(dso, Rdims, Rdpx, 1, 'x', float32, 'm', parameter, args.compress)
-yv = createCoordinateAxis(dso, Rdims, Rdpx, 0, 'y', float32, 'm', parameter, args.compress)
-zv = createCoordinateAxis(dso, Rdims, Rdpx, 2, 'z', float32, 'm', parameter, args.compress)
+xv = createCoordinateAxis(dso, Rdims, Rdpx, 1, 'x', 'i4', 'm', parameter, args.compress)
+yv = createCoordinateAxis(dso, Rdims, Rdpx, 0, 'y', 'i4', 'm', parameter, args.compress)
+zv = createCoordinateAxis(dso, Rdims, Rdpx, 2, 'z', 'i4', 'm', parameter, args.compress)
 
-#topo = fillTopographyArray(A, Rdims, Rdpx, int)
-topovar = createNetcdfVariable(dso, S, args.varname, 0, 'm', int32, ('z', 'y', 'x',), variable, False)
+topovar = createNetcdfVariable(dso, S, args.varname, 0, 'm', netcdftype, ('z', 'y', 'x',), variable, False)
 topovar.lod = 2
 
 netcdfWriteAndClose(dso)
