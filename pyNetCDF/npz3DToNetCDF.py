@@ -17,9 +17,9 @@ Author: Jukka-Pekka Keskinen, FMI, 2020
 
 '''
 #==========================================================#
-parser = argparse.ArgumentParser(prog='rasterToNetCdf.py',description="Transform a 3D npz archive to netCDF. The input file is "
+parser = argparse.ArgumentParser(prog='npz3DToNetCDF.py',description="Transform a 3D npz file to netCDF. The input file is "
 "required to have an array with the name S and coordinate system multipliers with the name dPx.")
-parser.add_argument("-f", "--filename", type=str, help="Name of the input topography raster data file.")
+parser.add_argument("-f", "--filename", type=str, help="Name of the input 3D npz file.")
 parser.add_argument("-fo", "--fileout", type=str, help="Name of the output NetCDF file.", default='output.ncdf')
 parser.add_argument("-vn", "--varname", type=str, help="Name of the variable in NetCDF. Default 'buildings_0'.", 
                     default='buildings_0')
