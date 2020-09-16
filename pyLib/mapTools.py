@@ -278,7 +278,7 @@ def readNumpyZTile( filename, dataOnly=False, verbose=True):
   
   # Add bottom left origin only if the transformation is trivial (i.e. no rotation required). 
   # Otherwise the extractDomainFromTile.py script ought to be used. 
-  if(not('GlobOrigBL' in Rdict) and Rdict['gridRot']==0.0 and ('GlobOrig' in Rdict) and ('dPX' in Rdict) and ('R' in rdict)):
+  if(not('GlobOrigBL' in Rdict) and Rdict['gridRot']==0.0 and ('GlobOrig' in Rdict) and ('dPx' in Rdict) and ('R' in rdict)):
     BLN = Rdict['GlobOrig'][0] + Rdict['dPx'][0]*np.shape(Rdict['R'])[0]
     BLE = Rdict['GlobOrig'][1]
     Rdict['GlobOrigBL'] = np.array([ BLN , BLE ]) 
