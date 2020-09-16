@@ -23,8 +23,9 @@ parser.add_argument("-f1", "--filename1", type=str, help="Name of the file conta
 parser.add_argument("-f2", "--filename2", type=str, help="Name of the file containing the second object. This acts as the" 
                     "background for the object in the first file.")
 parser.add_argument("-fo", "--fileout", type=str, help="Name of the output file.", default='output.npz')
-parser.add_argument("-mloc", "--mergelocation", nargs=3 , type=int, default=[0,0,0], help="Merge location. Indices in the second"
+parser.add_argument("-mloc", "--mergeloc", nargs=3 , type=int, default=[0,0,0], help="Merge location. Indices in the second"
                     " file where the object from first file will be placed.")
+
 args = parser.parse_args()
 writeLog( parser, args )
 #================================================================================================================================#
