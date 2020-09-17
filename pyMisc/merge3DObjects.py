@@ -44,6 +44,9 @@ ms=args.mergeloc
 me=ms+np.asarray(S1.shape)
 me=np.minimum(me,np.asarray(S2.shape))
 
+if any(np.less_equal(me-ms,0)):
+    sys.exit('Unable to merge objects. The first object is out of bounds.')
+
 # Combine S1 with S2
 if args.add:
     S2[ms[0]:me[0],ms[1]:me[1],ms[2]:me[2]]=S2[ms[0]:me[0],ms[1]:me[1],ms[2]:me[2]]+S1
