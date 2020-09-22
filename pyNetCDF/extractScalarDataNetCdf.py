@@ -90,6 +90,10 @@ for sname in scalarNames:
   s0, s0_dims = read3DVariableFromDataset( sname, ds,  nt, 0, 0, cl ) # All values.
   print(' Ref: z.shape = {}, y.shape = {}, x.shape = {} '.format(z_dims,y_dims,x_dims) )
   print(' Orig: s0.shape = {} '.format(s0.shape) )
+  
+  idx = np.isnan( s0 ); s0[idx] = 0.
+  idx = ( np.abs(s0) > 10.**9 ); s0[idx] = 0.
+  
 
   if( not copyOnly ):
     st_dims  = np.array( s0_dims )  # Change to numpy array for manipulation

@@ -2,6 +2,7 @@
 import sys
 import math
 import numpy as np
+from functools import reduce
 
 # =*=*=*=* FUNCTION DEFINITIONS *=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
