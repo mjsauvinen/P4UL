@@ -53,23 +53,27 @@ else:
 #===============================================================#
 
 # Load file
-A=np.load(args.filename)
+dat = np.load(args.filename)
+A= dict(dat)
+dat = None
 
 # Get 3D scalar values (S)
 S=A['S']
-
-# Get coordinate system dimensions and multipliers
-Rdims=S.shape
+Rdims=S.shape  # Note, these [j,i,k] dimensions will be used below
 Rdpx=A['dPx']
 
+# Change order for NetCDF S[j,i,k] -> S[k,j,i]
+S = np.rollaxis( S, 2, 0 )
+
+# Get coordinate system dimensions and multipliers
 dso = netcdfOutputDataset(args.fileout)
+xv = createCoordinateAxis(dso, Rdims, Rdpx, 1, 'x', 'f4', 'm', parameter, args.compress)
+yv = createCoordinateAxis(dso, Rdims, Rdpx, 0, 'y', 'f4', 'm', parameter, args.compress)
+zv = createCoordinateAxis(dso, Rdims, Rdpx, 2, 'z', 'f4', 'm', parameter, args.compress)
 
-xv = createCoordinateAxis(dso, Rdims, Rdpx, 1, 'x', 'i4', 'm', parameter, args.compress)
-yv = createCoordinateAxis(dso, Rdims, Rdpx, 0, 'y', 'i4', 'm', parameter, args.compress)
-zv = createCoordinateAxis(dso, Rdims, Rdpx, 2, 'z', 'i4', 'm', parameter, args.compress)
+tv = createNetcdfVariable(dso, S, args.varname, 0, 'm', netcdftype, ('z', 'y', 'x',), variable, False)
 
-topovar = createNetcdfVariable(dso, S, args.varname, 0, 'm', netcdftype, ('z', 'y', 'x',), variable, False)
-topovar.lod = 2
+#tv.lod = 2
 
 netcdfWriteAndClose(dso)
 

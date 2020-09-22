@@ -134,8 +134,15 @@ if (args.asmask):
 
 else:
   # Save as Numpy Z file.
-  Rdict["R"]=canopy
-  Rdict["dPx"]=dPx3D
-  saveTileAsNumpyZ( fileout, Rdict )
+  canopy = np.rollaxis( canopy, 1, 0 ).shape # S[i,j,k] -> S[j,i,k] to maintain compatibility with rasters
+  Rdict.pop('R', None)
+  Rdict.pop('Rdims', None )
+  Rdict['S']     = canopy
+  Rdict['dPx']   = dPx3D  # This is correct. It's format is [dN,dE,dZ]
+  Rdict['Sdims'] = np.array( canopy.shape )
+  Rdict['GlobOrig'] = np.append( Rdict['GlobOrig'] , 0. )
+  if('GlobOrigBL' in Rdict.keys() ):
+    Rdict['GlobOrigBL'] = np.append( Rdict['GlobOrigBL'] , 0. )
+  saveTileAsNumpyZ( fileout, Sdict )
 
 print(" ...{} saved successfully.".format(fileout))

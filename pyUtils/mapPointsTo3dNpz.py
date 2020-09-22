@@ -27,8 +27,6 @@ parser.add_argument("-fo", "--fileout",type=str, default="out.npz", \
   help="Name of the output npz file.")
 parser.add_argument("-fn", "--filenetcdf",type=str, default=None,\
   help="Name of the (optional) output NetCDF file.")
-parser.add_argument("-cp", "--copyOnly", action="store_true", default=False,\
-  help="Copy the scalar variable to a new file without interpolation.")
 parser.add_argument("-s", "--scale",type=float, nargs=3, default=[1.,1.,1.],\
   help="Scale factors [sx sy sz] for the point coordinate values. Default=[1.,1.,1.] ")
 parser.add_argument("-N", "--Nxyz",type=int, nargs=3, default=[None,None,None],\
@@ -41,6 +39,7 @@ parser.add_argument("-Ic", "--centerPixel",type=int, nargs=3, required=True,\
   help="Center pixel for the point placement: iE jN kZ ")
 parser.add_argument("-k0", "--kZeroHeight", action="store_true", default=False,\
   help="Position object vertically s.t. min(z)=0. Option -Ic kZ is applied afterwards.")
+
 args = parser.parse_args()
 #==========================================================#
 # rename 
@@ -102,13 +101,29 @@ zs = np.linspace(0., Nz*dz, Nz)
 # Map values
 for i,j,k in zip(ia,ja,ka):
   S[k,j,i] = 1.0
-  
-dso = netcdfOutputDataset(filenetcdf)
-parameter = True; variable  = False # For NetCDF output
-xv = createNetcdfVariable( dso, xs, 'x', len(xs), 'm', 'f4', ('x',), parameter )
-yv = createNetcdfVariable( dso, ys, 'y', len(ys), 'm', 'f4', ('y',), parameter )
-zv = createNetcdfVariable( dso, zs, 'z', len(zs), 'm', 'f4', ('z',), parameter )
-Sv = createNetcdfVariable(dso, S, 'S', 0, '-', 'i2', ('z','y','x'), False, False)  
-netcdfWriteAndClose(dso)
 
 
+if( filenetcdf is not None ):
+  dso = netcdfOutputDataset(filenetcdf)
+  parameter = True; variable  = False # For NetCDF output
+  xv = createNetcdfVariable( dso, xs, 'x', len(xs), 'm', 'f4', ('x',), parameter )
+  yv = createNetcdfVariable( dso, ys, 'y', len(ys), 'm', 'f4', ('y',), parameter )
+  zv = createNetcdfVariable( dso, zs, 'z', len(zs), 'm', 'f4', ('z',), parameter )
+  Sv = createNetcdfVariable(dso, S, 'S', 0, '-', 'i2', ('z','y','x'), False, False)  
+  netcdfWriteAndClose(dso)
+
+
+# Save the 3D npz array in S[j,i,k] order to maintain compatibility with R[j,i] rasters. 
+# take first axis (k) and move it last to obtain (j,i,k) ordering: S[k,j,i] -> S[j,i,k]
+S = np.rollaxis(S, 0, 3) 
+
+Sdict = dict()
+Sdict['S'] = S
+Sdict['Sdims'] = np.array( S.shape )
+Sdict['GlobOrig']   = np.array( [0.,0.,0.] )
+Sdict['GlobOrigBL'] = np.array( [Ny*dy,0.,0.] )
+Sdict['dPx'] = np.array( [dy, dx, dz] )
+
+fileout = fileout.split('.npz')[0]+'.npz'
+np.savez_compressed(fileout, **Sdict)
+print(' {} saved successfully!'.format(fileout))
