@@ -312,11 +312,11 @@ def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 
-def createCoordinateAxis(dso, Rdims, Rdpx, axis, varname, formatstr, unit, parameter, zlib=False, verbose=True):
+def createCoordinateAxis(dso, Rdims, Rdpx, axis, varname, formatstr, unit, parameter, zlib=False, verbose=True, offset=0.0):
   arr = np.empty(Rdims[axis])
   for i in range(Rdims[axis]):
     # dpx is in [N,E], see getGeoTransform() in gdalTools.py
-    arr[i] = i * Rdpx[axis]
+    arr[i] = np.maximum(0.0, i + offset) * Rdpx[axis]
   axvar = createNetcdfVariable( \
     dso, arr, varname, len(arr), unit, formatstr, (varname,), parameter, zlib, verbose=verbose )
   arr = None

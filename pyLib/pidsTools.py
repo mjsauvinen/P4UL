@@ -121,10 +121,10 @@ def parseCharacterArray(input_str, maxstrlen):
 #                    UNIVERSAL                      #
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def createXDim(ds, nPx, dPx, dims):
+def createXDim(ds, nPx, dPx, dims, offset=0.0):
   # Creates a new x-axis unless it already exists
   if('x' not in dims):
-    x_dim = createCoordinateAxis(ds, nPx, dPx, 1, 'x', 'f4', 'm', True, False, verbose=False)
+    x_dim = createCoordinateAxis(ds, nPx, dPx, 1, 'x', 'f4', 'm', True, False, verbose=False, offset=offset)
     x_dim.long_name = "distance to origin in x-direction"
     dims.append('x')
     return x_dim
@@ -134,10 +134,10 @@ def createXDim(ds, nPx, dPx, dims):
 
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def createYDim(ds, nPx, dPx, dims):
+def createYDim(ds, nPx, dPx, dims, offset=0.0):
   # Creates a new y-axis unless it already exists
   if('y' not in dims):
-    y_dim = createCoordinateAxis(ds, nPx, dPx, 0, 'y', 'f4', 'm', True, False, verbose=False)
+    y_dim = createCoordinateAxis(ds, nPx, dPx, 0, 'y', 'f4', 'm', True, False, verbose=False, offset=offset)
     y_dim.long_name = "distance to origin in y-direction"
     dims.append('y')
     return y_dim
@@ -147,10 +147,10 @@ def createYDim(ds, nPx, dPx, dims):
 
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def createZDim(ds, nPx, dPx, dims):
+def createZDim(ds, nPx, dPx, dims, offset=0.0):
   # Creates a new z-axis unless it already exists
   if('z' not in dims):
-    z_dim = createCoordinateAxis(ds, nPx, dPx, 2, 'z', 'f4', 'm', True, False, verbose=False)
+    z_dim = createCoordinateAxis(ds, nPx, dPx, 2, 'z', 'f4', 'm', True, False, verbose=False, offset=offset)
     z_dim.long_name = "height above origin"
     dims.append('z')
     return z_dim
@@ -244,7 +244,7 @@ def processBuildings(fname,ds,vars,dims):
     else:
       x_dim = createXDim(ds, buildNPx, buildDPx, dims)
       y_dim = createYDim(ds, buildNPx, buildDPx, dims)
-      z_dim = createZDim(ds, buildNPx, buildDPx, dims)
+      z_dim = createZDim(ds, buildNPx, buildDPx, dims, offset=-0.5)
       buildNCVar = createNetcdfVariable(ds, topo, 'buildings_3d', 0, 'm', 'b', ('z','y','x'), False,
                                         False, fill_value=-127, verbose=False)
       buildNCVar.long_name = "building_flag"
