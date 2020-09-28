@@ -214,7 +214,12 @@ def processOrography(fname,ds,vars,dims):
 
 def processBuildings(fname,ds,vars,dims):
   buildDict = readNumpyZTile(fname,verbose=False)
-  buildR = buildDict['R'][::-1,:]
+  if ('R' in buildDict):
+    buildR = buildDict['R'][::-1,:]
+  elif ('S' in buildDict):
+    buildR = buildDict['S'][::-1,:,:]
+  else:
+    sys.exit('No R or S array present in the given building file.')
   buildDPx = buildDict['dPx']
   buildNPx = np.shape(buildR)
   buildLOD = len(buildNPx)-1 # 1=2D height field, 2=3D mask
