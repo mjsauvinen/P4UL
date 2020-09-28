@@ -37,6 +37,8 @@ parser.add_argument("-ea", "--eulerAngles",type=float, nargs=3, default=[None,No
   help="Euler angles [ea_z ea_y ea_x] for rotating the points around the center coord (deg).")
 parser.add_argument("-Ic", "--centerPixel",type=int, nargs=3, required=True,\
   help="Center pixel for the point placement: iE jN kZ ")
+parser.add_argument("-na", "--nans", action="store_true", default=False,\
+  help="Initialize 3d numpy array with nans. By default, 3d array will be initialzed with zeros.")
 parser.add_argument("-k0", "--kZeroHeight", action="store_true", default=False,\
   help="Position object vertically s.t. min(z)=0. Option -Ic kZ is applied afterwards.")
 
@@ -48,7 +50,7 @@ fileout      = args.fileout
 filenetcdf   = args.filenetcdf
 sx, sy, sz   = np.array( args.scale )
 kZero        = args.kZeroHeight
-
+nansInit     = args.nans
 Nx,Ny,Nz     = args.Nxyz
 dx,dy,dz     = args.Dxyz
 
@@ -91,7 +93,9 @@ ia = np.minimum( ia, Nx-1 ); ia = np.maximum( ia , 0 )
 ka = np.minimum( ka, Nz-1 ); ka = np.maximum( ka , 0 )
 
 # Create the 3d block 
-S = np.zeros((Nz, Ny, Nx))
+S = np.zeros((Nz, Ny, Nx), int )
+if( nansInit ):
+  S[:,:,:] = np.nan
 xs = np.linspace(0., Nx*dx, Nx)
 ys = np.linspace(0., Ny*dy, Ny)
 zs = np.linspace(0., Nz*dz, Nz)
@@ -100,7 +104,7 @@ zs = np.linspace(0., Nz*dz, Nz)
 
 # Map values
 for i,j,k in zip(ia,ja,ka):
-  S[k,j,i] = 1.0
+  S[k,j,i] = 1
 
 
 if( filenetcdf is not None ):
