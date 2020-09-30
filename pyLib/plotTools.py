@@ -238,9 +238,9 @@ def addImagePlot( fig, R, titleStr, gridOn=False, limsOn=False ):
   ax.grid(gridOn)
   
   if(limsOn):
-    cbar = userColormapSettings( fig, im, np.max(R) )
+    cbar = userColormapSettings( fig, im, np.nanmax(R) )
   else:
-    minval  = np.min(R); maxval = np.max(R)
+    minval  = np.nanmin(R); maxval = np.nanmax(R)
     minSign = np.sign( minval )
     maxSign = np.sign( maxval )
     vmin = min( np.abs(minval), np.abs(maxval) )
@@ -278,7 +278,7 @@ def addImagePlotDict(fig, RDict ):
   ax.grid(gOn)
   
   if(lOn):
-    cbar = userColormapSettings( fig, im, np.max(R), np.min(R) )
+    cbar = userColormapSettings( fig, im, np.nanmax(R), np.nanmin(R) )
   else:
     cbar = fig.colorbar(im)
   

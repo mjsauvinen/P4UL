@@ -80,11 +80,13 @@ x *= sx; y *= sy; z *= sz
 xc, yc, zc = centerCoords(x,y,z, True)
 
 # 3d block indices for the point placements
-ja = np.round((y/dy), decimals=0).astype(int) + iCy
+# N/Y direction is special as Northing advances in negative y-direction.
+ja = (Ny-1)-(np.round((y/dy), decimals=0).astype(int) + iCy)
 ia = np.round((x/dx), decimals=0).astype(int) + iCx
 ka = np.round((z/dz), decimals=0).astype(int)
 if( kZero ): iCz += -np.min(ka)
 ka += iCz
+
 
 
 # Check bounds
@@ -102,7 +104,7 @@ zs = np.linspace(0., Nz*dz, Nz)
 
 #print('xs: {}, ys: {}, zs: {}'.format(np.max(xs), np.max(ys), np.max(zs)))
 
-# Map values
+# Map values ... remember that j runs along Northing (i.e. negative y-direction)
 for i,j,k in zip(ia,ja,ka):
   S[k,j,i] = 1
 
@@ -113,7 +115,8 @@ if( filenetcdf is not None ):
   xv = createNetcdfVariable( dso, xs, 'x', len(xs), 'm', 'f4', ('x',), parameter )
   yv = createNetcdfVariable( dso, ys, 'y', len(ys), 'm', 'f4', ('y',), parameter )
   zv = createNetcdfVariable( dso, zs, 'z', len(zs), 'm', 'f4', ('z',), parameter )
-  Sv = createNetcdfVariable(dso, S, 'S', 0, '-', 'i2', ('z','y','x'), False, False)  
+  # NOTE: j direction needs to be mirrored.
+  Sv = createNetcdfVariable(dso, S[:,::-1,:], 'S', 0, '-', 'i2', ('z','y','x'), False, False)  
   netcdfWriteAndClose(dso)
 
 
@@ -124,8 +127,8 @@ S = np.rollaxis(S, 0, 3)
 Sdict = dict()
 Sdict['S'] = S
 Sdict['Sdims'] = np.array( S.shape )
-Sdict['GlobOrig']   = np.array( [0.,0.,0.] )
-Sdict['GlobOrigBL'] = np.array( [Ny*dy,0.,0.] )
+Sdict['GlobOrig']   = np.array( [   0. , 0., 0.] )    # Top left origo [N,E,Z]
+Sdict['GlobOrigBL'] = np.array( [ Ny*dy, 0., 0.] )   # Bottom left origo [N,E,Z]
 Sdict['dPx'] = np.array( [dy, dx, dz] )
 
 fileout = fileout.split('.npz')[0]+'.npz'

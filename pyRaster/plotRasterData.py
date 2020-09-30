@@ -2,7 +2,7 @@
 import sys
 import argparse
 import numpy as np
-from mapTools import *
+from mapTools import readNumpyZTile, initRdict
 from footprintTools import readNumpyZFootprint
 from utilities import filesFromList
 from plotTools import addImagePlot, userLabels
@@ -64,6 +64,7 @@ plt.rc('axes', titlesize=18)
 
 if( not footprintOn ):
   Rdict = readNumpyZTile(rasterfile)
+  Rdict = initRdict( Rdict )
   R = Rdict['R']
   Rdims = np.array(np.shape(R))
   ROrig = Rdict['GlobOrig']
@@ -89,7 +90,7 @@ info = ''' Info (Orig):
  Resolution         [dN,dE] = {3}
  Grid rotation (deg)        = {4} deg
  Max(R) / Min(R)            = {5} / {6}
-'''.format(Rdims,ROrig,ROrigBL,dPx,gridRot*(180./np.pi),np.max(R),np.min(R))
+'''.format(Rdims,ROrig,ROrigBL,dPx,gridRot*(180./np.pi),np.nanmax(R),np.nanmin(R))
 
 print(info)
 

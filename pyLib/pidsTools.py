@@ -212,12 +212,43 @@ def processOrography(fname,ds,vars,dims):
 
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def processLAD(fname,ds,vars,dims):
+  ladDict = readNumpyZTile(fname,verbose=False)
+  if( 'R' in ladDict ):
+    ladR = ladDict['R'][::-1,:]
+  elif('S' in ladDict ):
+    ladR = ladDict['S'][::-1,:,:] # Mirror j-direction in 3D array data (at this point)
+  ladDPx = ladDict['dPx']
+  ladNPx = np.shape(ladR)
+
+  ladLOD = len(ladNPx)-1 # 1=2D height field, 2=3D mask
+
+  ladR = np.rollaxis(ladR, 2, 0) # i.e. take axis=2 and position it _before_ axis=0
+
+  if('lad' in vars):
+    print(' lad is in vars ')
+    ds.variables['lad'][:]=ladR
+    return ds.variables['lad']
+  else:
+    print(' lad is NOT in vars ')
+    x_dim = createXDim(ds, ladNPx, ladDPx, dims)
+    y_dim = createYDim(ds, ladNPx, ladDPx, dims)
+    zlad_dim = createZLADDim(ds, ladNPx, ladDPx, dims)
+
+    ladNCVar = createNetcdfVariable(ds, ladR, 'lad', 0, 'm', 'f4', ('zlad','y','x'), False, False,
+                                    fill_value=-9999., verbose=False)
+    ladNCVar.long_name = "basal area density"
+
+    return ladNCVar
+
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
 def processBuildings(fname,ds,vars,dims):
   buildDict = readNumpyZTile(fname,verbose=False)
   if ('R' in buildDict):
     buildR = buildDict['R'][::-1,:]
   elif ('S' in buildDict):
-    buildR = buildDict['S'][::-1,:,:]
+    buildR = buildDict['S'][::-1,:,:]   # Mirror j-direction in 3D array data (at this point)
   else:
     sys.exit('No R or S array present in the given building file.')
   buildDPx = buildDict['dPx']
@@ -239,10 +270,11 @@ def processBuildings(fname,ds,vars,dims):
       return buildNCVar
 
   elif(buildLOD==2):
-    # Save as a 3D boolean mask array
-    #topo=fillTopographyArray(buildR, buildNPx, buildDPx, int)
-    # I'm quite not sure why axes swapping has to be done but at least it works
-    topo = np.swapaxes(buildR,0,2)
+    '''
+    The 3d numpy array must come in in [j,i,k] order. Here it is rolled back into [k,j,i] 
+    for NetCDF output. Thus, we roll axis=2 such that it ends up before the 0th axis.
+    '''
+    topo = np.rollaxis(buildR, 2, 0) # i.e. take axis=2 and position it _before_ axis=0
     if('buildings_3d' in vars):
       ds.variables['buildings_3d'][:]=topo
       return ds.variables['buildings_3d']
@@ -365,34 +397,6 @@ def processStreetType(fname,ds,vars,dims):
 
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def processLAD(fname,ds,vars,dims):
-  ladDict = readNumpyZTile(fname,verbose=False)
-  ladR = ladDict['R']
-  ladDPx = ladDict['dPx']
-  ladNPx = np.shape(ladR)
-
-  # Same here as in buildings_3d, idk why this has to be done for 3D arrays
-  print('1 lad shape = {}'.format(np.shape(ladR)))
-  ladR = np.swapaxes(ladR,0,2)
-  print('2 lad shape = {}'.format(np.shape(ladR)))
-
-  if('lad' in vars):
-    print(' lad is in vars ')
-    ds.variables['lad'][:]=ladR
-    return ds.variables['lad']
-  else:
-    print(' lad is NOT in vars ')
-    x_dim = createXDim(ds, ladNPx, ladDPx, dims)
-    y_dim = createYDim(ds, ladNPx, ladDPx, dims)
-    zlad_dim = createZLADDim(ds, ladNPx, ladDPx, dims)
-
-    ladNCVar = createNetcdfVariable(ds, ladR, 'lad', 0, 'm', 'f4', ('zlad','y','x'), False, False,
-                                    fill_value=-9999., verbose=False)
-    ladNCVar.long_name = "basal area density"
-
-    return ladNCVar
-
-#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def processVegetationType(fname,ds,vars,dims):
   vegetationTypeDict = readNumpyZTile(fname,verbose=False)

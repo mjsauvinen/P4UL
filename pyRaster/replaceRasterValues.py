@@ -73,7 +73,6 @@ filereplace = args.filereplace
 fileout  = args.fileout
 lineMode = args.line 
 
-if( useNans ): val = np.nan
 
 if( not lineMode ):
   NonesExist = (list(p1).count(None) != 0) or (list(p2).count(None) != 0) 
@@ -96,6 +95,10 @@ print(' Value at top left: {} '.format(R[p1[0],p1[1]]))
 print(' Value at bottom right: {} '.format(R[p2[0]-1,p2[1]-1]))
 
 idR = replaceMask( R , p1, p2, lineMode )
+
+if( useNans ): 
+  val = np.nan
+  R = R.astype(float)
 
 if( filereplace is not None ):
   Rrdict = readNumpyZTile( filereplace )

@@ -6,8 +6,7 @@ Description:
 
 
 Author: Mikko Auvinen
-        mikko.auvinen@helsinki.fi
-        University of Helsinki &
+        mikko.auvinen@fmi.fi
         Finnish Meteorological Institute
 '''
 
@@ -23,7 +22,6 @@ def readAsciiGridHeader( filename, nHeaderEntries, idx=0 ):
   # 'yllcorner': None
   # 'cellsize' : None
   # 'NODATA_value' : None
-   
 
   for i in range(nHeaderEntries):
     try:
@@ -250,6 +248,46 @@ def saveTileAsNumpyZ( filename, Rdict):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def initRdict(Rdict, R=None, dPx=None ):
+  
+  if(  R  is not None ): Rdict['R']   = R
+  if( dPx is not None ): Rdict['dPx'] = dPx
+  
+  if( 'GlobOrig' not in Rdict ):
+    Rdict['GlobOrig'] = np.array( [0.,0.] )
+  
+  if('gridRot' not in Rdict ):
+    Rdict['gridRot']  = 0.0
+  
+  if('Rdims' not in Rdict ):
+    Rdict['Rdims']    = np.array( R.shape )
+
+  return Rdict
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+def checkDictFormat( Rdict ):
+  # Backwards compatibility for variable name change.
+  if(not('gridRot' in Rdict)): Rdict['gridRot'] = 0.0
+  
+  if ('XOrig' in Rdict and not('GlobOrig' in Rdict)):
+    Rdict['GlobOrig']=Rdict['XOrig']
+  
+  # For some reason dPx arrays were saved as 'dpx' in the past hardcoded versions of saveTileAsNumpyZ.
+  if ('dpx' in Rdict and not('dPx' in Rdict)):
+    Rdict['dPx']=Rdict['dpx']
+  
+  # Add bottom left origin only if the transformation is trivial (i.e. no rotation required). 
+  # Otherwise the extractDomainFromTile.py script ought to be used. 
+  if(not('GlobOrigBL' in Rdict) and Rdict['gridRot']==0.0):
+    # Check also we're dealing with raster format numpy array.
+    if(('GlobOrig' in Rdict) and ('dPx' in Rdict) and ('R' in Rdict)):
+      BLN = Rdict['GlobOrig'][0] + Rdict['dPx'][0]*np.shape(Rdict['R'])[0]
+      BLE = Rdict['GlobOrig'][1]
+      Rdict['GlobOrigBL'] = np.array([ BLN , BLE ]) 
+  
+  return Rdict 
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 def readNumpyZTile( filename, dataOnly=False, verbose=True):
   if (verbose):
     print(' Read filename {} '.format(filename))
@@ -264,25 +302,9 @@ def readNumpyZTile( filename, dataOnly=False, verbose=True):
 
   #if(dataOnly):
     #Rdict['R'] = []
+  
+  Rdict = checkDictFormat( Rdict )
 
-  # Backwards compatibility for variable name change.
-  if(not('gridRot' in Rdict)):
-    Rdict['gridRot'] = 0.0
-  
-  if ('XOrig' in Rdict and not('GlobOrig' in Rdict)):
-    Rdict['GlobOrig']=Rdict['XOrig']
-  
-  # For some reason dPx arrays were saved as 'dpx' in the past hardcoded versions of saveTileAsNumpyZ.
-  if ('dpx' in Rdict and not('dPx' in Rdict)):
-    Rdict['dPx']=Rdict['dpx']
-  
-  # Add bottom left origin only if the transformation is trivial (i.e. no rotation required). 
-  # Otherwise the extractDomainFromTile.py script ought to be used. 
-  if(not('GlobOrigBL' in Rdict) and Rdict['gridRot']==0.0 and ('GlobOrig' in Rdict) and ('dPx' in Rdict) and ('R' in rdict)):
-    BLN = Rdict['GlobOrig'][0] + Rdict['dPx'][0]*np.shape(Rdict['R'])[0]
-    BLE = Rdict['GlobOrig'][1]
-    Rdict['GlobOrigBL'] = np.array([ BLN , BLE ]) 
-  
   return Rdict
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
