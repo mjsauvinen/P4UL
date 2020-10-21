@@ -1,0 +1,4 @@
+*~
+*.pyc
+pyLib/__pycache__
+.*.log
