@@ -66,14 +66,21 @@ if( (iCx>=Nx) or (iCy>=Ny) or (iCz>=Nz) ):
 #==========================================================#
 
 
+print('Reading coordinates from {} ... '.format(filename))
 x,y,z = np.loadtxt(filename, delimiter=',', unpack=True, skiprows=1)
+print('... done!')
+
+print('Determining center coordinate ')
 xc, yc, zc = centerCoords(x,y,z, True)
 
+ 
 # Rotate the x and y coords
 if( eaOn ):
+  print('Performing 3D rotation ... ')
   r1 = np.transpose( np.c_[(x-xc), (y-yc), (z-zc)] )
   rr = rotation_by_euler_angles( r1, [ea_z, ea_y, ea_x] )
   x = rr[0,:]; y = rr[1,:]; z = rr[2,:]; rr = None; r1 = None
+  print('... done!')
 
 # Apply scaling 
 x *= sx; y *= sy; z *= sz
@@ -98,15 +105,20 @@ ka = np.minimum( ka, Nz-1 ); ka = np.maximum( ka , 0 )
 S = np.zeros((Nz, Ny, Nx), int )
 if( nansInit ):
   S[:,:,:] = np.nan
+
+# Map values ... remember that j runs along Northing (i.e. negative y-direction)
+print('Map values onto 3D mesh ... ')
+for i,j,k in zip(ia,ja,ka):
+  S[k,j,i] = 1
+print('... done!')
+
+
 xs = np.linspace(0., Nx*dx, Nx)
 ys = np.linspace(0., Ny*dy, Ny)
 zs = np.linspace(0., Nz*dz, Nz)
 
 #print('xs: {}, ys: {}, zs: {}'.format(np.max(xs), np.max(ys), np.max(zs)))
 
-# Map values ... remember that j runs along Northing (i.e. negative y-direction)
-for i,j,k in zip(ia,ja,ka):
-  S[k,j,i] = 1
 
 
 if( filenetcdf is not None ):
@@ -124,6 +136,7 @@ if( filenetcdf is not None ):
 # take first axis (k) and move it last to obtain (j,i,k) ordering: S[k,j,i] -> S[j,i,k]
 S = np.rollaxis(S, 0, 3) 
 
+print('Saving the npz dataset as a dictionary ...')
 Sdict = dict()
 Sdict['S'] = S
 Sdict['Sdims'] = np.array( S.shape )

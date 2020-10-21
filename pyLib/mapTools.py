@@ -259,7 +259,7 @@ def initRdict(Rdict, R=None, dPx=None ):
   if('gridRot' not in Rdict ):
     Rdict['gridRot']  = 0.0
   
-  if('Rdims' not in Rdict ):
+  if( ('Rdims' not in Rdict) and (R is not None) ):
     Rdict['Rdims']    = np.array( R.shape )
 
   return Rdict
