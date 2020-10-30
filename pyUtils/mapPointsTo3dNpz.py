@@ -4,6 +4,8 @@ import argparse
 import numpy as np
 from numTools import rotation_by_euler_angles
 from netcdfTools import *
+from scipy.ndimage.morphology import binary_closing
+
 #==========================================================#
 def centerCoords(xi,yi,zi, printOn=False):
   x2, x1 = np.max(x), np.min(x)
@@ -88,29 +90,46 @@ xc, yc, zc = centerCoords(x,y,z, True)
 
 # 3d block indices for the point placements
 # N/Y direction is special as Northing advances in negative y-direction.
-ja = (Ny-1)-(np.round((y/dy), decimals=0).astype(int) + iCy)
-ia = np.round((x/dx), decimals=0).astype(int) + iCx
-ka = np.round((z/dz), decimals=0).astype(int)
-if( kZero ): iCz += -np.min(ka)
-ka += iCz
 
-
-
-# Check bounds
-ja = np.minimum( ja, Ny-1 ); ja = np.maximum( ja , 0 )
-ia = np.minimum( ia, Nx-1 ); ia = np.maximum( ia , 0 )
-ka = np.minimum( ka, Nz-1 ); ka = np.maximum( ka , 0 )
+d  = np.zeros(4)
+c1 = np.ones(2); c1[1] = -1.
 
 # Create the 3d block 
 S = np.zeros((Nz, Ny, Nx), int )
 if( nansInit ):
   S[:,:,:] = np.nan
 
-# Map values ... remember that j runs along Northing (i.e. negative y-direction)
-print('Map values onto 3D mesh ... ')
-for i,j,k in zip(ia,ja,ka):
-  S[k,j,i] = 1
+for l in range(2):
+  for m in range(4):
+    if( m > 0 ): d[m] = 0.0005 * c1[l]
+  
+    print('Computing indices for delta={}'.format(d))
+  
+    ja = (Ny-1)-(np.round(((y+d[2])/dy), decimals=0).astype(int) + iCy)
+    ia = np.round(((x+d[1])/dx), decimals=0).astype(int) + iCx
+    ka = np.round(((z+d[3])/dz), decimals=0).astype(int)
+    if( kZero ): iCk = iCz - np.min(ka)
+    ka += iCk
+
+    # Check bounds
+    ja = np.minimum( ja, Ny-1 ); ja = np.maximum( ja , 0 )
+    ia = np.minimum( ia, Nx-1 ); ia = np.maximum( ia , 0 )
+    ka = np.minimum( ka, Nz-1 ); ka = np.maximum( ka , 0 )
+
+    # Map values ... remember that j runs along Northing (i.e. negative y-direction)
+    print('Map values onto 3D mesh ... ')
+    for i,j,k in zip(ia,ja,ka):
+      S[k,j,i] = 1
+    
+    d[:] = 0.
+
 print('... done!')
+
+print('Perform binary closing  ... ') 
+for k in range(Nz):
+  Sx = binary_closing( S[k,:,:] )
+  S[k,:,:] = Sx[:,:]
+print('... done! ')
 
 
 xs = np.linspace(0., Nx*dx, Nx)
