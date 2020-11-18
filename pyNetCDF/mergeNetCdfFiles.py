@@ -36,12 +36,12 @@ ds, varList, paramList = netcdfDataset(args.files[0], False)
 print(' Reading parameters from {}...'.format(args.files[0]))
 paramLengths = {}
 matchGrid = ['x', 'y']
-for p_name in paramList:
-  p_arr = ds.variables[p_name]
-  paramLengths[p_name] = len(p_arr)
-  pv = createNetcdfVariable(dso, p_arr[:], p_name, len(
-      p_arr), p_arr.units, p_arr.dtype, p_arr.dimensions, parameter, zlib=args.compress)
-  p_arr = None
+for pstr in paramList:
+  pv = ds.variables[pstr]
+  paramLengths[pstr] = len(pv)
+  pv = createNetcdfVariable( \
+    dso, pv[:], pstr, len(pv), pv.units, pv.dtype, pv.dimensions, parameter, zlib=args.compress )
+  pv = None
 ds.close()
 print(' ...done.')
 
@@ -52,10 +52,10 @@ for filename in args.files:
   ds, varList, paramList = netcdfDataset(filename, False)
 
   # Check if x and y dimensions match.
-  for p_name in matchGrid:
-    p_arr = ds.variables[p_name]
-    if (len(p_arr) != paramLengths[p_name]):
-      sys.exit(' Error: Size mismatch in \'{}\' parameter'.format(p_name))
+  for pstr in matchGrid:
+    pv = ds.variables[pstr]
+    if (len(pv) != paramLengths[pstr]):
+      sys.exit(' Error: Size mismatch in \'{}\' parameter'.format(pstr))
 
   # varList contains also the parameters
   varList = [x for x in varList if x not in paramList]

@@ -8,8 +8,6 @@ Description:
 
 
 Author: Mikko Auvinen
-        mikko.auvinen@helsinki.fi 
-        University of Helsinki &
         Finnish Meteorological Institute
 '''
 #==========================================================#
