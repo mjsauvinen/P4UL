@@ -292,6 +292,56 @@ def processBuildings(fname,ds,vars,dims):
 
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def processSurfaceTemperature(fname,ds,vars,dims):
+  stDict = readNumpyZTile(fname,verbose=False)
+  if ('R' in stDict):
+    Rst = stDict['R'][::-1,:]
+  elif ('S' in stDict):
+    Rst = stDict['S'][::-1,:,:]   # Mirror j-direction in 3D array data (at this point)
+  else:
+    sys.exit('No R or S array present in the given surface temperature file.')
+  dPx = stDict['dPx']
+  NPx = np.shape(Rst)
+  LOD = len(NPx)-1 # 1=2D height field, 2=3D mask
+
+  if(LOD==1):
+    # Save as a 2D building height array
+    if('theta_2d' in vars):
+      ds.variables['theta_2d'][:]=Rst
+      return ds.variables['theta_2d']
+    else:
+      x_dim = createXDim(ds, NPx, dPx, dims)
+      y_dim = createYDim(ds, NPx, dPx, dims)
+      NCVar = createNetcdfVariable(ds, Rst, 'theta_2d', 0, 'K', 'f4', ('y','x'), False,
+                                        False, fill_value=-9999., verbose=False)
+      NCVar.long_name = "surface_temperature"
+      NCVar.lod = int(LOD)
+      return NCVar
+
+  elif(LOD==2):
+    '''
+    The 3d numpy array must come in in [j,i,k] order. Here it is rolled back into [k,j,i] 
+    for NetCDF output. Thus, we roll axis=2 such that it ends up before the 0th axis.
+    '''
+    T3d = np.rollaxis(Rst, 2, 0) # i.e. take axis=2 and position it _before_ axis=0
+    Rst = None # clear memory
+    if('theta_3d' in vars):
+      ds.variables['theta_3d'][:]=T3d
+      return ds.variables['theta_3d']
+    else:
+      x_dim = createXDim(ds, NPx, dPx, dims)
+      y_dim = createYDim(ds, NPx, dPx, dims)
+      z_dim = createZDim(ds, NPx, dPx, dims, offset=-0.5)
+      NCVar = createNetcdfVariable(ds, T3d, 'theta_3d', 0, 'K', 'f4', ('z','y','x'), False,
+                                        False, fill_value=-9999., verbose=False)
+      NCVar.long_name = "surface temperature"
+      NCVar.lod = int(LOD)
+      return NCVar
+  else:
+    raise ValueError("invalid number of dimensions in surface temperature array: {}".format(LOD+1))
+  
+#=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
 def processBuildingIDs(fname,ds,vars,dims):
   buildIDDict = readNumpyZTile(fname,verbose=False)
   buildIDR = buildIDDict['R'][::-1,:]

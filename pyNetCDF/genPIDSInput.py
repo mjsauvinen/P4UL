@@ -212,6 +212,11 @@ if(not all(v is None for v in [topoConfig, surfConfig, vegConfig])):
       if (surfaceFractionFile is not None and surfaceFractionFile != ""):
         surfaceFractionVar = processSurfaceFraction(surfaceFractionFile, pidsStaticDS, staticVars,
                                                     staticDims)
+      
+      surfTempTypeFile = readConfigVariable(config, 'Surface', 'surface_temperature')
+      if(surfTempTypeFile is not None and surfTempTypeFile !=""):
+        surfTempTypeVar = processSurfaceTemperature(surfTempTypeFile,pidsStaticDS,staticVars,staticDims)
+
 
     if(vegConfig is not None):
       ladFile = readConfigVariable(config, 'Vegetation', 'lad')
