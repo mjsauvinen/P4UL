@@ -13,6 +13,16 @@ Author: Mikko Auvinen
         University of Helsinki &
         Finnish Meteorological Institute
 '''
+#==========================================================#
+def replaceValues( q, qa, qb ):
+  if( qa[0] != 1e9 ):
+    idr = (q > qa[0])
+    q[idr] = qa[1]
+  if( qb[0] != -1e9 ):
+    idr = (q < qb[0])
+    q[idr] = qb[1]
+    
+  return q
 
 #==========================================================#
 parser = argparse.ArgumentParser(prog='extractScalarDataNetCDF.py')
@@ -26,6 +36,10 @@ parser.add_argument("-d", "--decomp", action="store_true", default=False,\
   help="Decomposed into mean (V_m) and fluctuating (V^prime) components.")
 parser.add_argument("-cp", "--copyOnly", action="store_true", default=False,\
   help="Copy the scalar variable to a new file without interpolation.")
+parser.add_argument("-va", "--replValuesAbove", nargs=2, type=float, default=[1.e9,0.0],\
+  help="Entry <Max> <val> := replace values above given threshold <Max> by <val>. Default= 1.e9 0.0")
+parser.add_argument("-vb", "--replValuesBelow", nargs=2, type=float, default=[-1.e9,0.0],\
+  help="Entry <Min> <val> := replace values below given threshold <Min> by <val>. Default= -1.e9 0.0")
 parser.add_argument("-nt", "--ntimeskip", type=int, default=0,\
   help="Skip <nt> number of time steps.")
 parser.add_argument("-c", "--coarse", type=int, help="Coarsening level. Int > 1.", default=1) 
@@ -39,6 +53,8 @@ cl       = abs(int(args.coarse))
 nt       = args.ntimeskip
 scalarNames = args.scalars
 decompOn = args.decomp
+va       = args.replValuesAbove
+vb       = args.replValuesBelow
 copyOnly = args.copyOnly
 
 '''
@@ -88,6 +104,7 @@ sv = []
 for sname in scalarNames:
   
   s0, s0_dims = read3DVariableFromDataset( sname, ds,  nt, 0, 0, cl ) # All values.
+  s0 = replaceValues(s0, va, vb)
   print(' Ref: z.shape = {}, y.shape = {}, x.shape = {} '.format(z_dims,y_dims,x_dims) )
   print(' Orig: s0.shape = {} '.format(s0.shape) )
   

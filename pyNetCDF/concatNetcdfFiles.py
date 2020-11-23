@@ -26,6 +26,8 @@ parser.add_argument("-fo", "--fileout",type=str, default="CONCAT.nc",\
   help="Name of the output NETCDF file.")
 parser.add_argument("-sn", "--scalars",type=str, nargs='+', default=None,\
   help="(Optional) Scalars to be included.")
+parser.add_argument("-so", "--scalarsOnly", action="store_true", default=False,\
+  help="Only scalars, skip wind vector components.")
 parser.add_argument("-nt", "--ntimeskip", type=int, default=0,\
   help="Skip <nt> number of time steps.")
 args = parser.parse_args()
@@ -36,7 +38,7 @@ filenames  = args.filenames
 fileout    = args.fileout
 scalars    = args.scalars
 ntskip     = args.ntimeskip
-
+scalarsOnly      = args.scalarsOnly
 
 parameter = True;  variable  = False
 dtol      = 1E-5  # distance tolerance
@@ -47,6 +49,11 @@ dtol      = 1E-5  # distance tolerance
 dso = netcdfOutputDataset( fileout )
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
+
+if(scalarsOnly):
+  vstr = scalars[0]
+else:
+  vstr = 'u'
 
 if( filenames is not None ):
   Nf = len(filenames)
@@ -79,7 +86,7 @@ for n,fn in enumerate(filenames):
   ds, varList, paramList = netcdfDataset(fn)
   dsL.append( ds )
   
-  time, time_dims = read1DVariableFromDataset('time','u', ds, ntskip, 0, 1 ) # All values.
+  time, time_dims = read1DVariableFromDataset('time',vstr, ds, ntskip, 0, 1 ) # All values.
   print(' time dim = {} '.format(time_dims))
   if( nto is None ):
     nto = len(time)
@@ -88,9 +95,9 @@ for n,fn in enumerate(filenames):
     if( nto != len(time) ): sys.exit(' Time dimensions do not match ')
   
   
-  x, x_dims = read1DVariableFromDataset( 'x','u', ds, 0, 0, 1 )
-  y, y_dims = read1DVariableFromDataset( 'y','u', ds, 0, 0, 1 )
-  z, z_dims = read1DVariableFromDataset( 'z','u', ds, 0, 0, 1 )
+  x, x_dims = read1DVariableFromDataset( 'x',vstr, ds, 0, 0, 1 )
+  y, y_dims = read1DVariableFromDataset( 'y',vstr, ds, 0, 0, 1 )
+  z, z_dims = read1DVariableFromDataset( 'z',vstr, ds, 0, 0, 1 )
   
   # A check should be entered 
   dx=np.mean(x[1:]-x[:-1]); dy=np.mean(y[1:]-y[:-1]); dz=np.mean(z[1:]-z[:-1])
@@ -131,53 +138,56 @@ yv = createNetcdfVariable( dso, yc   , 'y' , ny , 'm', 'f4', ('y',)   , paramete
 zv = createNetcdfVariable( dso, zc   , 'z' , nz , 'm', 'f4', ('z',)   , parameter )
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
-print('Concatenating u arrays ...')
-uc = np.zeros( (nt, nz, ny, nx) ); print(' u concat shape = {} '.format((nt, nz, ny, nx)))
-for n in range(Nf):
-  u, u_dims = read3DVariableFromDataset( 'u', dsL[n], ntskip, 0, 0, 1 ) # All values.
-  print(' u dims = {} '.format(u_dims))
-  i1, i2 = idBounds(xMin, xMaxL[n], xMinL[n], dx, nx )
-  print(' i1, i2 = {}, {} '.format(i1,i2))
-  
-  j1, j2 = idBounds(yMin, yMaxL[n], yMinL[n], dy, ny )
-  print(' j1, j2 = {}, {} '.format(j1,j2))
-  
-  k1, k2 = idBounds(zMin, zMaxL[n], zMinL[n], dz, nz )
-  print(' k1, k2 = {}, {} '.format(k1,k2))
-  
-  uc[:,k1:k2, j1:j2, i1:i2] = u[:,:,:,:]
-  u = None
-uv = createNetcdfVariable(dso,uc,'u', nt, 'm/s', 'f4',('time','z','y','x',), variable)
-uc = None
-# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
-print('Concatenating v arrays ...')
-vc = np.zeros( (nt, nz, ny, nx) )
-for n in range(Nf):
-  v, v_dims = read3DVariableFromDataset( 'v', dsL[n], ntskip, 0, 0, 1 ) # All values.
-  i1, i2 = idBounds( xMin, xMaxL[n], xMinL[n], dx, nx )
-  j1, j2 = idBounds( yMin, yMaxL[n], yMinL[n], dy, ny )
-  k1, k2 = idBounds( zMin, zMaxL[n], zMinL[n], dz, nz )
-  
-  vc[:,k1:k2, j1:j2, i1:i2] = v[:,:,:,:]
-  v = None
 
-vv = createNetcdfVariable(dso,vc,'v', nt, 'm/s', 'f4',('time','z','y','x',), variable)
-vc = None
-# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
-print('Concatenating w arrays ...')
-wc = np.zeros( (nt, nz, ny, nx) )
-for n in range(Nf):
-  w, w_dims = read3DVariableFromDataset( 'w', dsL[n], ntskip, 0, 0, 1 ) # All values.
-  i1, i2 = idBounds( xMin, xMaxL[n], xMinL[n], dx, nx )
-  j1, j2 = idBounds( yMin, yMaxL[n], yMinL[n], dy, ny )
-  k1, k2 = idBounds( zMin, zMaxL[n], zMinL[n], dz, nz )
-  
-  wc[:,k1:k2, j1:j2, i1:i2] = w[:,:,:,:]
-  w = None
+if( not scalarsOnly ):
 
-wv = createNetcdfVariable(dso,wc,'w', nt, 'm/s', 'f4',('time','z','y','x',), variable)
-wc = None
-# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
+  print('Concatenating u arrays ...')
+  uc = np.zeros( (nt, nz, ny, nx) ); print(' u concat shape = {} '.format((nt, nz, ny, nx)))
+  for n in range(Nf):
+    u, u_dims = read3DVariableFromDataset( 'u', dsL[n], ntskip, 0, 0, 1 ) # All values.
+    print(' u dims = {} '.format(u_dims))
+    i1, i2 = idBounds(xMin, xMaxL[n], xMinL[n], dx, nx )
+    print(' i1, i2 = {}, {} '.format(i1,i2))
+  
+    j1, j2 = idBounds(yMin, yMaxL[n], yMinL[n], dy, ny )
+    print(' j1, j2 = {}, {} '.format(j1,j2))
+  
+    k1, k2 = idBounds(zMin, zMaxL[n], zMinL[n], dz, nz )
+    print(' k1, k2 = {}, {} '.format(k1,k2))
+  
+    uc[:,k1:k2, j1:j2, i1:i2] = u[:,:,:,:]
+    u = None
+  uv = createNetcdfVariable(dso,uc,'u', nt, 'm/s', 'f4',('time','z','y','x',), variable)
+  uc = None
+  # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
+  print('Concatenating v arrays ...')
+  vc = np.zeros( (nt, nz, ny, nx) )
+  for n in range(Nf):
+    v, v_dims = read3DVariableFromDataset( 'v', dsL[n], ntskip, 0, 0, 1 ) # All values.
+    i1, i2 = idBounds( xMin, xMaxL[n], xMinL[n], dx, nx )
+    j1, j2 = idBounds( yMin, yMaxL[n], yMinL[n], dy, ny )
+    k1, k2 = idBounds( zMin, zMaxL[n], zMinL[n], dz, nz )
+  
+    vc[:,k1:k2, j1:j2, i1:i2] = v[:,:,:,:]
+    v = None
+
+  vv = createNetcdfVariable(dso,vc,'v', nt, 'm/s', 'f4',('time','z','y','x',), variable)
+  vc = None
+  # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
+  print('Concatenating w arrays ...')
+  wc = np.zeros( (nt, nz, ny, nx) )
+  for n in range(Nf):
+    w, w_dims = read3DVariableFromDataset( 'w', dsL[n], ntskip, 0, 0, 1 ) # All values.
+    i1, i2 = idBounds( xMin, xMaxL[n], xMinL[n], dx, nx )
+    j1, j2 = idBounds( yMin, yMaxL[n], yMinL[n], dy, ny )
+    k1, k2 = idBounds( zMin, zMaxL[n], zMinL[n], dz, nz )
+  
+    wc[:,k1:k2, j1:j2, i1:i2] = w[:,:,:,:]
+    w = None
+
+  wv = createNetcdfVariable(dso,wc,'w', nt, 'm/s', 'f4',('time','z','y','x',), variable)
+  wc = None
+  # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
 
 if( scalars ):
   sv = list()
