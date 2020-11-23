@@ -66,9 +66,23 @@ me = np.minimum(me, np.asarray(S2.shape))
 if any(np.less_equal(me-ml,0)):
   sys.exit('Unable to merge objects. The first object is out of bounds.')
 
+idn2 = np.isnan(S2)
+Nnan = np.count_nonzero(idn2)
+
+if( Nnan > 0 ):
+  idn1 = np.isnan(S1)  
+  ida  = ~idn2[ml[0]:me[0],ml[1]:me[1],ml[2]:me[2]] * ~idn1  # Where to add
+  idr  =  idn2[ml[0]:me[0],ml[1]:me[1],ml[2]:me[2]] * ~idn1  # Where to insert
+
+
+
 # Combine S1 with S2
-if( add ):
-  S2[ml[0]:me[0],ml[1]:me[1],ml[2]:me[2]]+=S1
+if( add ):  
+  if( Nnan > 0 ):
+    S2[ml[0]:me[0],ml[1]:me[1],ml[2]:me[2]][ida]+= S1[ida]
+    S2[ml[0]:me[0],ml[1]:me[1],ml[2]:me[2]][idr] = S1[idr]
+  else:
+    S2[ml[0]:me[0],ml[1]:me[1],ml[2]:me[2]]+= S1
 else:
   S2[ml[0]:me[0],ml[1]:me[1],ml[2]:me[2]]=S1
 

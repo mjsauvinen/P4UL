@@ -196,11 +196,14 @@ if( scalars ):
     if( kcopy ): sc_dims[2:] -= 1   # Reduce the x, y dimensions by one. Note: time = sc_dims[0].
     else:        sc_dims[1:] -= 1   # Reduce all coord. dimensions by one.
     sc = np.zeros( sc_dims )
-    sc, sm = interpolatePalmVectors( s0, s0_dims, 'i' , decompOn ); s0 = None
+    #sc, sm = interpolatePalmVectors( s0, s0_dims, 'i' , decompOn ); s0 = None
+    sc = s0[:,1:,:-1,:-1].copy(); s0 = None
+    
     if( not args.decompOnly ):
-      sv = createNetcdfVariable( dso, sc, sn, sc_dims[0], ' ', 'f4',('time','z','y','x',) , variable )
+      sv = createNetcdfVariable(dso, sc, sn, sc_dims[0],'-','f4',('time','z','y','x',), variable )
       if( not decompOn ): sc = None
     if( decompOn ):
+      sm = np.mean( sc, axis=0 )
       sp = vectorPrimeComponent( sc, sm ); sc = None
       spv = createNetcdfVariable( dso, sp, sn+'p', sc_dims[0], ' ', 'f4',('time','z','y','x',) , variable )
       sp = None
