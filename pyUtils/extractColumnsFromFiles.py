@@ -32,6 +32,7 @@ vcols  = args.vcols
 scale  = np.array(args.scale)  # Should be numpy array.
 euler  = args.euler
 
+rotationOn = False
 # Check whether vector rotation will be performed.
 if( (vcols.count(None) == 0) and (euler.count(None) == 0) ):
   rotationOn = True
