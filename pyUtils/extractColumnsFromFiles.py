@@ -42,6 +42,7 @@ if( fltN is None ):
 else:
   filterOn = True
 
+rotationOn = False
 # Check whether vector rotation will be performed.
 if( (vcols.count(None) == 0) and (euler.count(None) == 0) ):
   rotationOn = True
