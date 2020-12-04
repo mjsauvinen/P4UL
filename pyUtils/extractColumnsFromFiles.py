@@ -4,6 +4,7 @@ import sys
 import argparse
 from utilities import filesFromList, writeLog
 from numTools import rotation_by_euler_angles
+from mapTools import applyFilter
 
 #==========================================================#
 parser = argparse.ArgumentParser(prog='extractColumnsFromFiles.py')
@@ -21,6 +22,9 @@ EulerHelp=''''Euler angles (around z-, y- and x-axes) in [deg] for applying rota
 which are specified via -vc or --vcols arguments. 
 Note! The rotation is applied in the following order: z, y, x. '''
 parser.add_argument('-ea', '--euler', type=float, help=EulerHelp, nargs=3, default=[None,None,None])
+parser.add_argument("-lf", "--localFilter", type=int, default=None,\
+  help="Apply local filter with a given integer width to all columns.")
+
 args = parser.parse_args()
 writeLog( parser, args )
 #==========================================================# 
@@ -31,11 +35,19 @@ Icols  = args.cols
 vcols  = args.vcols
 scale  = np.array(args.scale)  # Should be numpy array.
 euler  = args.euler
+fltN   = args.localFilter      # Local filter width 
+
+if( fltN is None ):
+  filterOn = False
+else:
+  filterOn = True
 
 # Check whether vector rotation will be performed.
 if( (vcols.count(None) == 0) and (euler.count(None) == 0) ):
   rotationOn = True
   eulerAngles = np.array(euler)*(np.pi/180.)
+else:
+  rotationOn = False
 
 # Assemble Tcols -- target columns -- for vector rotation.
 if( rotationOn ):
@@ -47,7 +59,7 @@ if( rotationOn ):
 
 
 if( not  strKey ): 
-  strKey = raw_input(" Enter search string: ")
+  strKey = input(" Enter search string: ")
   if( not strKey ): sys.exit(1)
 
 sc = np.ones( np.shape(Icols) , float )
@@ -80,6 +92,9 @@ for fn in fileNos:
     v1 = rotation_by_euler_angles( v0 , eulerAngles )
     dat[:,Tcols] = np.transpose(v1); v0 = None # Copy the values back and clear memory.
     
+  if( filterOn ):
+    for j in Icols:
+      dat[:,j] = applyFilter( dat[:,j], ['local', fltN ] )
   
   
   fileout = prefix+fileList[fn]
