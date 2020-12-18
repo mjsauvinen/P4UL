@@ -16,7 +16,15 @@ Author: Mikko Auvinen
         Finnish Meteorological Institute
 '''
 #==========================================================#
-def replaceMask( Rx, px1, px2, lineOpt ):
+def replaceMask( Rx, px1, px2, lineOpt, gtval, ltval ):
+  '''Return the indices that will be replaced
+
+  This function handles all the location specific work. Line mode and rectangle
+  mode are complementary. The gt and lt modes can be combined with other
+  location selection modes.
+
+  '''
+
   idm = np.zeros( np.shape(Rx), bool )
   
   if( lineOpt ):
@@ -27,6 +35,14 @@ def replaceMask( Rx, px1, px2, lineOpt ):
       idm[ jrows[i] , icols[i] ] = True
   else:
     idm[ px1[0]:px2[0] , px1[1]:px2[1] ] = True 
+
+  if( gtval is not None ):
+    idm = (Rx > gtval) * idm
+    print(' {} values > {} will be replaced.'.format(np.count_nonzero(idm),gtval))
+
+  if( ltval is not None ):
+    idm = (Rx < ltval) * idm
+    print(' {} values < {} will be replaced.'.format(np.count_nonzero(idm),ltval))
 
   return idm
 
@@ -94,47 +110,25 @@ print(' ROrig = {} '.format(ROrig))
 print(' Value at top left: {} '.format(R[p1[0],p1[1]]))
 print(' Value at bottom right: {} '.format(R[p2[0]-1,p2[1]-1]))
 
-idR = replaceMask( R , p1, p2, lineMode )
+idR = replaceMask( R , p1, p2, lineMode, gtval, ltval )
 
 if( useNans ): 
   val = np.nan
   R = R.astype(float)
-
-if( filereplace is not None ):
+elif( filereplace is not None ):
   Rrdict = readNumpyZTile( filereplace )
   Rr = Rrdict['R']
   Rrdims = np.array( np.shape(Rr) )
   if( any( Rrdims != Rdims ) ):
     sys.exit(' Rasters {} and {} are not the same size. Exiting ...'.format(filename, filereplace))
   print(' Values from {} are used to replace values in {}.'.format(filereplace, filename))
-  R[idR] = cf*Rr[idR]
+  R[idR] = Rr[idR]
   Rr = None
-  
-elif( (gtval is not None) or (ltval is not None) ):
-  idx = np.zeros( R.shape, bool )
-
-  if( gtval is not None ):
-    idx = (R > gtval) * idR
-    if( val is not None ):
-      print(' {} values > {} will be replaced.'.format(np.count_nonzero(idx),gtval))
-      R[idx] = val
-    if( not useNans ): R[idx] *= cf
-    idx[:,:] = False  # Reset
-
-  if( ltval is not None ):
-    idx = (R < ltval) * idR
-    if( val is not None ):
-      print(' {} values < {} will be replaced.'.format(np.count_nonzero(idx),ltval))
-      R[idx] = val
-    if( not useNans ): R[idx] *= cf
-
 elif( val is not None):
   R[idR] = val
-  if( not useNans ): R[idR] *= cf
-
-else: # val is None
+  
+if( not useNans ): 
   R[idR] *= cf
-
 
 Rdict['R'] = R
 
