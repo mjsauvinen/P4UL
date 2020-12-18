@@ -101,12 +101,12 @@ Nbd      = args.Nbidial
 
 
 if( not lineMode ):
-  NonesExist = (list(p1).count(None) != 0) or (list(p2).count(None) != 0) 
-  WrongOrder = any( p1 > p2 )
-
-  if( NonesExist or WrongOrder ):
+  try:
+    WrongOrder = any( p1 > p2 )
+    if( WrongOrder ):
+      sys.exit('Error: p1 = {} or p2 = {} in wrong order. Exiting ...'.format(p1,p2))
+  except (TypeError):
     sys.exit('Error: p1 = {} or p2 = {} incorrectly specified. Exiting ...'.format(p1,p2))
-
 
 
 # Read the raster tile to be processed.
