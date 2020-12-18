@@ -6,6 +6,7 @@ from mapTools import *
 from utilities import filesFromList, writeLog
 from plotTools import addImagePlot
 import matplotlib.pyplot as plt
+import scipy.ndimage as sn
 '''
 Description:
 
@@ -16,7 +17,7 @@ Author: Mikko Auvinen
         Finnish Meteorological Institute
 '''
 #==========================================================#
-def replaceMask( Rx, px1, px2, lineOpt, gtval, ltval ):
+def replaceMask( Rx, px1, px2, lineOpt, gtval, ltval, Nbd):
   '''Return the indices that will be replaced
 
   This function handles all the location specific work. Line mode and rectangle
@@ -38,11 +39,17 @@ def replaceMask( Rx, px1, px2, lineOpt, gtval, ltval ):
 
   if( gtval is not None ):
     idm = (Rx > gtval) * idm
-    print(' {} values > {} will be replaced.'.format(np.count_nonzero(idm),gtval))
+    print(' {} values > {} will be replaced with selection mask.'.format(np.count_nonzero(idm),gtval))
 
   if( ltval is not None ):
     idm = (Rx < ltval) * idm
-    print(' {} values < {} will be replaced.'.format(np.count_nonzero(idm),ltval))
+    print(' {} values < {} will be replaced with selection mask.'.format(np.count_nonzero(idm),ltval))
+
+  if(Nbd > 0):
+    print('Applying binary dilation to selection mask.')
+    for i in range(Nbd):
+      idm = sn.binary_dilation(idm)
+      print('iter {}: number of masked points = {} '.format(i, np.count_nonzero(idm) ))
 
   return idm
 
@@ -73,6 +80,8 @@ parser.add_argument("-gt", "--gt", type=float, default=None,\
   help="Replace values greater than the given value.")
 parser.add_argument("-lt", "--lt", type=float, default=None,\
   help="Replace values less than the given value.")
+parser.add_argument("-Nbd","--Nbidial", type=int, default=0,\
+  help="Number of binary dialations of nan values.")
 args = parser.parse_args()
 writeLog( parser, args, args.printOnly )
 #==========================================================#
@@ -88,6 +97,7 @@ filename = args.filename
 filereplace = args.filereplace
 fileout  = args.fileout
 lineMode = args.line 
+Nbd      = args.Nbidial
 
 
 if( not lineMode ):
@@ -110,7 +120,7 @@ print(' ROrig = {} '.format(ROrig))
 print(' Value at top left: {} '.format(R[p1[0],p1[1]]))
 print(' Value at bottom right: {} '.format(R[p2[0]-1,p2[1]-1]))
 
-idR = replaceMask( R , p1, p2, lineMode, gtval, ltval )
+idR = replaceMask( R , p1, p2, lineMode, gtval, ltval, Nbd )
 
 if( useNans ): 
   val = np.nan
