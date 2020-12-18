@@ -82,23 +82,36 @@ parser.add_argument("-lt", "--lt", type=float, default=None,\
   help="Replace values less than the given value.")
 parser.add_argument("-Nbd","--Nbidial", type=int, default=0,\
   help="Number of binary dialations of nan values.")
+parser.add_argument("-a", "--allPoints", action="store_true", default=False,\
+  help="Select all points in raster for processing. Overrides p1 and p2.")
 args = parser.parse_args()
 writeLog( parser, args, args.printOnly )
 #==========================================================#
 
-p1       = np.array( args.pixels1 )
-p2       = np.array( args.pixels2 )
-val      = args.value        # Replacement value
-useNans  = args.nans
-cf       = args.coef         # Multiplication coefficient
-gtval    = args.gt           # value greater than which will be replaced by [val]
-ltval    = args.lt           # value less than which will be replaced by [val]
-filename = args.filename
+p1          = np.array( args.pixels1 )
+p2          = np.array( args.pixels2 )
+val         = args.value        # Replacement value
+useNans     = args.nans
+cf          = args.coef         # Multiplication coefficient
+gtval       = args.gt           # value greater than which will be replaced by [val]
+ltval       = args.lt           # value less than which will be replaced by [val]
+filename    = args.filename
 filereplace = args.filereplace
-fileout  = args.fileout
-lineMode = args.line 
-Nbd      = args.Nbidial
+fileout     = args.fileout
+lineMode    = args.line 
+Nbd         = args.Nbidial
+allPoints   = args.allPoints   
 
+# Read the raster tile to be processed.
+Rdict = readNumpyZTile( filename )
+R = Rdict['R']
+Rdims = np.array(np.shape(R))
+ROrig = Rdict['GlobOrig']
+
+if( allPoints ):
+  p1=np.zeros(2,int)
+  p2=Rdims
+  print('Selecting all points for processing')
 
 if( not lineMode ):
   try:
@@ -108,12 +121,6 @@ if( not lineMode ):
   except (TypeError):
     sys.exit('Error: p1 = {} or p2 = {} incorrectly specified. Exiting ...'.format(p1,p2))
 
-
-# Read the raster tile to be processed.
-Rdict = readNumpyZTile( filename )
-R = Rdict['R']
-Rdims = np.array(np.shape(R))
-ROrig = Rdict['GlobOrig']
 print(' Rdims = {} '.format(Rdims))
 print(' ROrig = {} '.format(ROrig))
 
