@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import sys
 import numpy as np
 import scipy.ndimage as sn # contains the filters
 from mapTools import readNumpyZTile, saveTileAsNumpyZ
@@ -21,11 +22,17 @@ parser.add_argument("-n","--size", type=int, nargs=2, default=[5,5],
                     help="Size (x,y) of filtering window. Default=5×5.")
 parser.add_argument("-s","--sigma", type=float, default=None, help="Standard" 
      " deviation (σ). Invokes the"+"\033[1m"+" Gaussian filter"+"\033[0m"+".")
+parser.add_argument("-t","--maximum",action="store_true", default=False, help="Invoke "
+" the "+"\033[0m"+"maximum filter"+"\033[0m"+".")
+parser.add_argument("-m","--median",action="store_true", default=False, help="Invoke "
+" the "+"\033[0m"+"median filter"+"\033[0m"+".")
 args = parser.parse_args()
 filename= args.filename
 fileout = args.fileout
 fsize = np.array( args.size)
 sigma = args.sigma
+maxi  = args.maximum
+medi  = args.median
 #=input=======================================================================#
 Rdict = readNumpyZTile(filename)
 R = Rdict['R']
@@ -37,9 +44,15 @@ print(' ROrig = {} '.format(ROrig))
 if (sigma is not None):
   print('Applying the gaussian filter.')
   R=sn.gaussian_filter(R,sigma)
-else:
+elif maxi:
+  print('Applying the maximum filter.')
+  R=sn.maximum_filter(R,size=fsize)
+elif medi:
   print('Applying the median filter.')
   R=sn.median_filter(R,size=fsize)
+else:
+  print('No filter specified. Nothing to do here.')
+  sys.exit()
 #=output======================================================================#
 Rdict['R'] = np.round( R , decimals=1 )
 saveTileAsNumpyZ( fileout, Rdict )
