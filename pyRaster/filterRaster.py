@@ -29,6 +29,8 @@ parser.add_argument("-m","--median",action="store_true", default=False,
     help="Invoke the "+"\033[0m"+"median filter"+"\033[0m"+".")
 parser.add_argument("-b","--minimum",action="store_true", default=False, 
     help="Invoke the "+"\033[0m"+"minimum filter"+"\033[0m"+".")
+parser.add_argument("-r","--rank", type=int, default=None, help="Rank to "
+                    " use in the "+"\033[0m"+"rank filter"+"\033[0m"+".")
 args = parser.parse_args()
 filename= args.filename
 fileout = args.fileout
@@ -37,6 +39,7 @@ sigma = args.sigma
 maxi  = args.maximum
 medi  = args.median
 mini  = args.minimum 
+rank  = args.rank
 #=input=======================================================================#
 Rdict = readNumpyZTile(filename)
 R = Rdict['R']
@@ -46,7 +49,7 @@ print(' Rdims = {} '.format(Rdims))
 print(' ROrig = {} '.format(ROrig))
 #=filtering===================================================================#
 if (sigma is not None):
-  print(' Applying the gaussian filter.')
+  print(' Applying the gaussian filter with σ='+str(sigma)+'.')
   R=sn.gaussian_filter(R,sigma)
 elif maxi:
   print(' Applying the maximum filter.')
@@ -57,6 +60,10 @@ elif medi:
 elif mini:
   print(' Applying the minumum filter.')
   R=sn.minimum_filter(R,size=fsize)
+elif (rank is not None):
+  print(' Applying the rank filter. Selecting values at rank '+str(rank)+'/'+
+        str(np.prod(fsize))+' from the filter window.')
+  R=sn.rank_filter(R,rank,size=fsize)
 else:
   print(' No filter specified. Nothing to do here.')
   sys.exit()
