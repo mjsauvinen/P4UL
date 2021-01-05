@@ -130,8 +130,8 @@ print(' Value at bottom right: {} '.format(R[p2[0]-1,p2[1]-1]))
 idR = replaceMask( R , p1, p2, lineMode, gtval, ltval, Nbd )
 
 if( useNans ): 
-  val = np.nan
   R = R.astype(float)
+  R[idR] = np.nan
 elif( filereplace is not None ):
   Rrdict = readNumpyZTile( filereplace )
   Rr = Rrdict['R']
