@@ -21,16 +21,16 @@ parser.add_argument("-fo", "--fileout",type=str,
 parser.add_argument("-n","--size", type=int, nargs=2, default=[5,5],
                     help="Size (x,y) of filtering window. Default=5×5.")
 parser.add_argument("-s","--sigma", type=float, default=None, help="Standard" 
-     " deviation (σ). Invokes the"+"\033[1m"+" Gaussian filter"+"\033[0m"+"."
+     " deviation (σ). Invokes the Gaussian filter."
                     " Does not use filter size even if specified.")
 parser.add_argument("-t","--maximum",action="store_true", default=False, 
-    help="Invoke the "+"\033[0m"+"maximum filter"+"\033[0m"+".")
+    help="Invoke the maximum filter.")
 parser.add_argument("-m","--median",action="store_true", default=False, 
-    help="Invoke the "+"\033[0m"+"median filter"+"\033[0m"+".")
+    help="Invoke the median filter.")
 parser.add_argument("-b","--minimum",action="store_true", default=False, 
-    help="Invoke the "+"\033[0m"+"minimum filter"+"\033[0m"+".")
+    help="Invoke the minimum filter.")
 parser.add_argument("-r","--rank", type=int, default=None, help="Rank to "
-                    " use in the "+"\033[0m"+"rank filter"+"\033[0m"+".")
+                    " use in the rank filter.")
 args = parser.parse_args()
 filename= args.filename
 fileout = args.fileout
