@@ -6,6 +6,7 @@ from mapTools import *
 from utilities import filesFromList, writeLog
 from plotTools import addImagePlot
 import matplotlib.pyplot as plt
+import scipy.ndimage as sn
 '''
 Description:
 
@@ -16,7 +17,15 @@ Author: Mikko Auvinen
         Finnish Meteorological Institute
 '''
 #==========================================================#
-def replaceMask( Rx, px1, px2, lineOpt ):
+def replaceMask( Rx, px1, px2, lineOpt, gtval, ltval, Nbd):
+  '''Return the indices that will be replaced
+
+  This function handles all the location specific work. Line mode and rectangle
+  mode are complementary. The gt and lt modes can be combined with other
+  location selection modes.
+
+  '''
+
   idm = np.zeros( np.shape(Rx), bool )
   
   if( lineOpt ):
@@ -27,6 +36,20 @@ def replaceMask( Rx, px1, px2, lineOpt ):
       idm[ jrows[i] , icols[i] ] = True
   else:
     idm[ px1[0]:px2[0] , px1[1]:px2[1] ] = True 
+
+  if( gtval is not None ):
+    idm = (Rx > gtval) * idm
+    print(' {} values > {} will be replaced with selection mask.'.format(np.count_nonzero(idm),gtval))
+
+  if( ltval is not None ):
+    idm = (Rx < ltval) * idm
+    print(' {} values < {} will be replaced with selection mask.'.format(np.count_nonzero(idm),ltval))
+
+  if(Nbd > 0):
+    print('Applying binary dilation to selection mask.')
+    for i in range(Nbd):
+      idm = sn.binary_dilation(idm)
+      print('iter {}: number of masked points = {} '.format(i, np.count_nonzero(idm) ))
 
   return idm
 
@@ -57,84 +80,72 @@ parser.add_argument("-gt", "--gt", type=float, default=None,\
   help="Replace values greater than the given value.")
 parser.add_argument("-lt", "--lt", type=float, default=None,\
   help="Replace values less than the given value.")
+parser.add_argument("-Nbd","--Nbidial", type=int, default=0,\
+  help="Number of binary dialations of nan values.")
+parser.add_argument("-a", "--allPoints", action="store_true", default=False,\
+  help="Select all points in raster for processing. Overrides p1 and p2.")
 args = parser.parse_args()
 writeLog( parser, args, args.printOnly )
 #==========================================================#
 
-p1       = np.array( args.pixels1 )
-p2       = np.array( args.pixels2 )
-val      = args.value        # Replacement value
-useNans  = args.nans
-cf       = args.coef         # Multiplication coefficient
-gtval    = args.gt           # value greater than which will be replaced by [val]
-ltval    = args.lt           # value less than which will be replaced by [val]
-filename = args.filename
+p1          = np.array( args.pixels1 )
+p2          = np.array( args.pixels2 )
+val         = args.value        # Replacement value
+useNans     = args.nans
+cf          = args.coef         # Multiplication coefficient
+gtval       = args.gt           # value greater than which will be replaced by [val]
+ltval       = args.lt           # value less than which will be replaced by [val]
+filename    = args.filename
 filereplace = args.filereplace
-fileout  = args.fileout
-lineMode = args.line 
-
-
-if( not lineMode ):
-  NonesExist = (list(p1).count(None) != 0) or (list(p2).count(None) != 0) 
-  WrongOrder = any( p1 > p2 )
-
-  if( NonesExist or WrongOrder ):
-    sys.exit('Error: p1 = {} or p2 = {} incorrectly specified. Exiting ...'.format(p1,p2))
-
-
+fileout     = args.fileout
+lineMode    = args.line 
+Nbd         = args.Nbidial
+allPoints   = args.allPoints   
 
 # Read the raster tile to be processed.
 Rdict = readNumpyZTile( filename )
 R = Rdict['R']
 Rdims = np.array(np.shape(R))
 ROrig = Rdict['GlobOrig']
+
+if( allPoints ):
+  p1=np.zeros(2,int)
+  p2=Rdims
+  print('Selecting all points for processing')
+
+if( not lineMode ):
+  try:
+    WrongOrder = any( p1 > p2 )
+    if( WrongOrder ):
+      sys.exit('Error: p1 = {} or p2 = {} in wrong order. Exiting ...'.format(p1,p2))
+  except (TypeError):
+    sys.exit('Error: p1 = {} or p2 = {} incorrectly specified. Exiting ...'.format(p1,p2))
+
 print(' Rdims = {} '.format(Rdims))
 print(' ROrig = {} '.format(ROrig))
 
 print(' Value at top left: {} '.format(R[p1[0],p1[1]]))
 print(' Value at bottom right: {} '.format(R[p2[0]-1,p2[1]-1]))
 
-idR = replaceMask( R , p1, p2, lineMode )
+idR = replaceMask( R , p1, p2, lineMode, gtval, ltval, Nbd )
 
 if( useNans ): 
   val = np.nan
   R = R.astype(float)
-
-if( filereplace is not None ):
+elif( filereplace is not None ):
   Rrdict = readNumpyZTile( filereplace )
   Rr = Rrdict['R']
   Rrdims = np.array( np.shape(Rr) )
   if( any( Rrdims != Rdims ) ):
     sys.exit(' Rasters {} and {} are not the same size. Exiting ...'.format(filename, filereplace))
   print(' Values from {} are used to replace values in {}.'.format(filereplace, filename))
-  R[idR] = cf*Rr[idR]
+  R[idR] = Rr[idR]
   Rr = None
-  
-elif( (gtval is not None) or (ltval is not None) ):
-  idx = np.zeros( R.shape, bool )
-
-  if( gtval is not None ):
-    idx = (R > gtval) * idR
-    if( val is not None ):
-      print(' {} values > {} will be replaced.'.format(np.count_nonzero(idx),gtval))
-      R[idx] = val
-    if( not useNans ): R[idx] *= cf
-    idx[:,:] = False  # Reset
-
-  if( ltval is not None ):
-    idx = (R < ltval) * idR
-    if( val is not None ):
-      print(' {} values < {} will be replaced.'.format(np.count_nonzero(idx),ltval))
-      R[idx] = val
-    if( not useNans ): R[idx] *= cf
-
 elif( val is not None):
   R[idR] = val
-  if( not useNans ): R[idR] *= cf
-
-else: # val is None
+  
+if( not useNans ): 
   R[idR] *= cf
-
 
 Rdict['R'] = R
 
