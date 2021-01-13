@@ -109,11 +109,6 @@ for fn in fileNos:
   if( pc is None ): fs = 'ACC_'
   else:             fs = 'P{:02d}_'.format(pc)
   
-  if( timeSeries ):
-    tsFileName = 'ts_mean'+fileList[fn].split('/')[-1]
-    tsFileName = tsFileName.strip('.nc')+'.dat'
-    writeTimeSeries(s, time, tsFileName, useMask )
-  
   # = = = = = = = = = = = = = = = = = = = = = = #
   sa = np.zeros( s_dims )
   
