@@ -134,7 +134,7 @@ if (args.asmask):
 
 else:
   # Save as Numpy Z file.
-  canopy = np.rollaxis( canopy, 1, 0 ).shape # S[i,j,k] -> S[j,i,k] to maintain compatibility with rasters
+  canopy = np.rollaxis( canopy, 1, 0 ) # S[i,j,k] -> S[j,i,k] to maintain compatibility with rasters
   Rdict.pop('R', None)
   Rdict.pop('Rdims', None )
   Rdict['S']     = canopy
@@ -143,6 +143,5 @@ else:
   Rdict['GlobOrig'] = np.append( Rdict['GlobOrig'] , 0. )
   if('GlobOrigBL' in Rdict.keys() ):
     Rdict['GlobOrigBL'] = np.append( Rdict['GlobOrigBL'] , 0. )
-  saveTileAsNumpyZ( fileout, Sdict )
+  saveTileAsNumpyZ( fileout, Rdict )
 
-print(" ...{} saved successfully.".format(fileout))
