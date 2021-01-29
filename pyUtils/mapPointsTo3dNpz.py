@@ -66,8 +66,10 @@ parser.add_argument("-Dx", "--Dxyz",type=float, nargs=3, default=[None,None,None
   help="Resolution of the npz block: dx dy dz ")
 parser.add_argument("-ea", "--eulerAngles",type=float, nargs=3, default=[None,None,None],\
   help="Euler angles [ea_z ea_y ea_x] for rotating the points around the center coord (deg).")
-parser.add_argument("-Ic", "--centerPixel",type=int, nargs=3, required=True,\
+parser.add_argument("-Ic", "--centerPixel",type=int, nargs=3, default=[None,None,None],\
   help="Center pixel for the point placement: iE jN kZ ")
+parser.add_argument("-IcF", "--centerPixelFile",type=str, default=None,\
+  help="Name of file containing all center pixels [iE jN kZ] for the point placement. Overrides -Ic")
 parser.add_argument("-d", "--dGapFill",type=float, default=0.,\
   help="Distance used for filling gaps. Default=None.")
 parser.add_argument("-na", "--nans", action="store_true", default=False,\
@@ -78,33 +80,53 @@ parser.add_argument("-k0", "--kZeroHeight", action="store_true", default=False,\
 args = parser.parse_args()
 #==========================================================#
 # rename 
-filename     = args.filename
-fileout      = args.fileout
-filenetcdf   = args.filenetcdf
-sx, sy, sz   = np.array( args.scale )
-kZero        = args.kZeroHeight
-nansInit     = args.nans
-Nx,Ny,Nz     = args.Nxyz
-dx,dy,dz     = args.Dxyz
-dm           = args.dGapFill 
+filename      = args.filename
+fileout       = args.fileout
+filenetcdf    = args.filenetcdf
+sx, sy, sz    = np.array( args.scale )
+kZero         = args.kZeroHeight
+nansInit      = args.nans
+Nx,Ny,Nz      = args.Nxyz
+dx,dy,dz      = args.Dxyz
+dm            = args.dGapFill
+iCx, iCy, iCz = args.centerPixel # northing, easting, elevation
+fileICntCoord = args.centerPixelFile
 
+# - - - - - - - - - - #
 if( dm == 0. ):
   dgf  = None
 else:
   dgf = np.zeros(4)
 
+# - - - - - - - - - - #
+if( iCx is not None ):
+  if( (iCx>=Nx) or (iCy>=Ny) or (iCz>=Nz) ):
+    sys.exit('Center pixel offset goes out of bounds. Exiting ...')
+  else:
+    iCx = [iCx]; iCy = [iCy]; iCz = [iCz] # convert to list
 
-eaOn = False
+# - - - - - - - - - - #
+
 if( ~np.any( np.array(args.eulerAngles) == None )):
-     eaOn = True
-     ea_z, ea_y, ea_x = np.array( args.eulerAngles ) * (np.pi/180.)
+  ea_z, ea_y, ea_x = np.array( args.eulerAngles ) * (np.pi/180.)
+  ea_z = [ea_z]; ea_y = [ea_y]; ea_x = [ea_x]
+else:
+  ea_z = [0.]; ea_y = [0.]; ea_x = [0.]
 
-iCx, iCy, iCz    = args.centerPixel # northing, easting, elevation
-if( (iCx>=Nx) or (iCy>=Ny) or (iCz>=Nz) ):
-  sys.exit('Center pixel offset goes out of bounds. Exiting ...')
+
+# - - - - - - - - - - #
+if( fileICntCoord is not None ):
+  iCx, iCy, iCz, ea_z, ea_y, ea_x \
+    = np.loadtxt( fileICntCoord, usecols=(0,1,2,3,4,5), unpack=True, dtype=float )
+  
+  ea_z *= (np.pi/180.); ea_y *= (np.pi/180.); ea_x *= (np.pi/180.)
+  iCx   = iCx.astype(int); iCy = iCy.astype(int); iCz = iCz.astype(int)
+
+nCntCoord = len(iCx)
+
+
 
 #==========================================================#
-
 
 print('Reading coordinates from {} ... '.format(filename))
 x,y,z = np.loadtxt(filename, delimiter=',', unpack=True, skiprows=1)
@@ -113,18 +135,10 @@ print('... done!')
 print('Determining center coordinate ')
 xc, yc, zc = centerCoords(x,y,z, True)
 
- 
-# Rotate the x and y coords
-if( eaOn ):
-  print('Performing 3D rotation ... ')
-  r1 = np.transpose( np.c_[(x-xc), (y-yc), (z-zc)] )
-  rr = rotation_by_euler_angles( r1, [ea_z, ea_y, ea_x] )
-  x = rr[0,:]; y = rr[1,:]; z = rr[2,:]; rr = None; r1 = None
-  print('... done!')
-
 # Apply scaling 
 x *= sx; y *= sy; z *= sz
 xc, yc, zc = centerCoords(x,y,z, True)
+r1 = np.transpose( np.c_[(x-xc), (y-yc), (z-zc)] )
 
 # 3d block indices for the point placements
 # N/Y direction is special as Northing advances in negative y-direction.
@@ -136,20 +150,33 @@ if( nansInit ):
   S[:,:,:] = np.nan
 
 
-if( dgf is None ):
-  ia, ja, ka = coordsToIJK(x, y, z, iCx, iCy, iCz, dx, dy, dz, kZero, dgf)
-  ia, ja, ka = checkBounds( ia, ja, ka, Nx, Ny, Nz )
-  S = mapPoints( S, ia, ja, ka )
-else:
-  for l in range(2):
-    for m in range(4):
-      if( m > 0 ): dgf[m] = dm * c1[l]
-      print('Computing indices for delta={}'.format(dgf))
-      ia, ja, ka = coordsToIJK(x, y, z, iCx, iCy, iCz, dx, dy, dz, kZero, dgf)
-      ia, ja, ka = checkBounds( ia, ja, ka, Nx, Ny, Nz )
-      S = mapPoints( S, ia, ja, ka )
-      dgf[:] = 0.
-print('... done!')
+for ic in range(nCntCoord):
+  
+  if( ea_z[ic] != 0. or ea_y[ic] != 0. or ea_x[ic] != 0. ):
+    print('Performing 3D rotation ... ')
+    rr = rotation_by_euler_angles( r1, [ea_z[ic], ea_y[ic], ea_x[ic]] )
+    xp = rr[0,:]; yp = rr[1,:]; zp = rr[2,:]; rr = None
+    print('... done!')
+  else:
+    xp = x; yp = y; zp = z
+  
+  
+  print(' Mapping points to center coordinate (I,J,K) = ({},{},{}) ...'.format(iCx[ic], iCy[ic], iCz[ic]))
+
+  if( dgf is None ):
+    ia, ja, ka = coordsToIJK(xp, yp, zp, iCx[ic], iCy[ic], iCz[ic], dx, dy, dz, kZero, dgf)
+    ia, ja, ka = checkBounds( ia, ja, ka, Nx, Ny, Nz )
+    S = mapPoints( S, ia, ja, ka )
+  else:
+    for l in range(2):
+      for m in range(4):
+        if( m > 0 ): dgf[m] = dm * c1[l]
+        print('Computing indices for delta={}'.format(dgf))
+        ia, ja, ka = coordsToIJK(xp, yp, zp, iCx[ic], iCy[ic], iCz[ic], dx, dy, dz, kZero, dgf)
+        ia, ja, ka = checkBounds( ia, ja, ka, Nx, Ny, Nz )
+        S = mapPoints( S, ia, ja, ka )
+        dgf[:] = 0.
+  print('... done!')
 
 
 print('Perform binary closing  ... ') 
@@ -160,6 +187,7 @@ print('... done! ')
 
 # Make sure the flanks do not leak
 S[:,0,:] = S[:,1,:]; S[:,-1,:] = S[:,-2,:]
+S[:,:,0] = S[:,:,1]; S[:,:,-1] = S[:,:,-2]
 
 xs = np.linspace(0., Nx*dx, Nx)
 ys = np.linspace(0., Ny*dy, Ny)

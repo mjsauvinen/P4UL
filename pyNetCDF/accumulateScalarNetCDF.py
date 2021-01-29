@@ -27,25 +27,28 @@ def readCoords_nc(ds, tskip, sStr):
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
 
 def write1dProfile( st, zt, fn, maskOn=False):
-    saz = np.mean( st[-1,:,:,:], axis=(1,2))  # compute all, and correct afterwards
+    
+    stt = np.mean( st[-20:,:,:,:], axis=0 )
+    nz, ny, nx = np.shape( stt )
+    saz = np.zeros( nz )
     
     if( maskOn ):
-      nz, ny, nx = np.shape( st[-1,:,:,:] )
-      ids = np.ones( (ny,nx) , bool )
-      ids[388:410,228:250] = False  # 1) UniqAir
-      ids[197:218,248:271] = False  # 2) UniqAir
-      for k in range(1,60):
-        saz[k] = np.mean( st[-1,k,ids] )
-      ids = None
-
-
+      stt[1:59,388:410,228:250] = 0.  # 1) UniqAir
+      stt[1:59,197:218,248:271] = 0.  # 2) UniqAir
+    
+    for k in range(nz):
+      ids = ( stt[k,:,:]  > 0. )
+      saz[k] = np.mean( stt[k,ids] )
+    
+    stt = None
     #print(' saz.shape = {}, saz = {} '.format(np.shape(saz), saz))
     hStr = ' z-coord (m), < s >_xy '
     np.savetxt( fn , np.c_[ zt.ravel() , saz.ravel() ], fmt='%3.6e', header=hStr)
     saz = None
     
-
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
+
+
 
 #==========================================================#
 parser = argparse.ArgumentParser(prog='accumulateScalarNetCDF.py')
@@ -131,7 +134,7 @@ for fn in fileNos:
       idp = (s[i,:,:,:] >= Px)
       sa[i,idp] = s[i,idp]
       
-  s1 = np.mean( s[-8:,:,:,:], axis=0 )   
+  s1 = np.mean( s[-20:,:,:,:], axis=0 )   
   s  = None # Clear memory
   
   # = = = = = = = = = = = = = = = = = = = = = = #
