@@ -82,14 +82,12 @@ print(" Generating vertical distributions of leaf area densities ...")
 lad_const = laiRef/(zref[1]-zref[0])
 k1        = int( np.round(zref[0]/float(dPc[2])) )  # starting k index
 
-# Reverse the y-axis because of the top-left origo in raster
-Rry = R[::-1,:]
-print(' Rry shape = {} '.format(Rry.shape))
+print(' Rry shape = {} '.format(R.shape))
 
 # Calculate leaf area density profiles for each horizontal grid tile and fill array vertically
 for j in range(nPc[1]):
   for i in range(nPc[0]):
-    Zi = Rry[j,i] # Zi := canopy height at [j,i]
+    Zi = R[j,i] # Zi := canopy height at [j,i]
     # Check if there is canopy at all in the vertical column
     if (Zi <= zref[0]):
       continue
