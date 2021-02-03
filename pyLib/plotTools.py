@@ -946,9 +946,9 @@ def wavePlot( fig, fileStr, logOn ):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def userLabels( pFig ):
-  print('A) pFig.get_axes()[] ')
+  #print('A) pFig.get_axes()[] ')
   ax=pFig.get_axes()[0]  # Get a handle on the first axes
-  print('B) pFig.get_axes()[] ')
+  #print('B) pFig.get_axes()[] ')
   #pl.rc('text', usetex=True )
   #pl.rc('xtick', labelsize=24)
   #pl.rc('ytick', labelsize=24)
@@ -966,8 +966,8 @@ def userLabels( pFig ):
   """
  
   ax.set_title(titleStr, fontsize=20, fontstyle='normal', fontweight='demibold', fontname='serif')
-  ax.set_ylabel(yLbl, fontsize=16, fontstyle='normal', fontweight='book', fontname='serif')
-  ax.set_xlabel(xLbl, fontsize=16, fontstyle='normal', fontweight='book', fontname='serif')
+  ax.set_ylabel(yLbl, fontsize=20, fontstyle='normal', fontweight='book', fontname='serif')
+  ax.set_xlabel(xLbl, fontsize=20, fontstyle='normal', fontweight='book', fontname='serif')
 
   return pFig
 

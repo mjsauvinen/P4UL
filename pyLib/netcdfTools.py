@@ -60,7 +60,6 @@ def netcdfWriteAndClose(dso, verbose=True):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-
 def read1DVariableFromDataset( dimStr, varStr, ds, iLOff=0, iROff=0, cl=1):
   # iLOff: left offset
   # iROff: right offset
