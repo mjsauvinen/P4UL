@@ -129,7 +129,7 @@ print(' Value at bottom right: {} '.format(R[p2[0]-1,p2[1]-1]))
 
 idR = replaceMask( R , p1, p2, lineMode, gtval, ltval, Nbd )
 
-if( useNans ): 
+if( useNans ):
   val = np.nan
   R = R.astype(float)
 

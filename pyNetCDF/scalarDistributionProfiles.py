@@ -26,14 +26,24 @@ def readCoords_nc(ds, tskip, sStr):
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
 
-def write1dProfile( st, zt, fn, maskOn=False):
-    saz = np.mean( st[-1,:,:,:], axis=(1,2))  # compute all, and correct afterwards
-
-    #print(' saz.shape = {}, saz = {} '.format(np.shape(saz), saz))
-    hStr = ' z-coord (m), < s >_xy '
-    np.savetxt( fn , np.c_[ zt.ravel() , saz.ravel() ], fmt='%3.6e', header=hStr)
-    saz = None
+def write1dProfile( st, zt, time, Np, fn, maskOn=False):
+  dt = (len(time)//Np)-1
+  tlist = time[::dt]
     
+  ntimes  = len(tlist)
+    
+  for n in range(1,ntimes):
+    saz = np.zeros( len(zt) )
+    for k in range(len(zt)):
+      ids = (st[-1,k,:,:]>0.)
+      saz[k] = np.mean( st[n*dt,k,ids] )  # compute all, and correct afterwards
+      
+      #print(' saz.shape = {}, saz = {} '.format(np.shape(saz), saz))
+      hStr = ' z-coord (m), < s >_xy '
+      filename = fn.strip('.nc')+'_'+str(int(tlist[n]))+'.dat'
+      print(' Writing {}'.format(filename))
+      np.savetxt( filename , np.c_[ zt.ravel() , saz.ravel() ], fmt='%3.6e', header=hStr)
+      
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
 
@@ -51,7 +61,7 @@ def writeTimeSeries( st, time, fn, maskOn=False ):
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
 #==========================================================#
-parser = argparse.ArgumentParser(prog='accumulateScalarNetCDF.py')
+parser = argparse.ArgumentParser(prog='scalarDistributionProfiles.py')
 parser.add_argument("strKey", nargs='?', default=None,\
   help="Search string for collecting files.")
 parser.add_argument("-s", "--scalar",type=str, required=True,\
@@ -98,6 +108,12 @@ for fn in fileNos:
     s = np.array(s)
     
   if( timeSeries ):
-    tsFileName = 'ts_mean'+fileList[fn].split('/')[-1]
+    tsFileName = 's_ts_mean_'+fileList[fn].split('/')[-1]
     tsFileName = tsFileName.strip('.nc')+'.dat'
     writeTimeSeries(s, time, tsFileName, useMask )
+
+  if( zprofile ):
+    zFileName = 's_xy-mean_'+fileList[fn].split('/')[-1]
+    write1dProfile( s, z, time, 4, zFileName, useMask )
+    
+print('Done!')
