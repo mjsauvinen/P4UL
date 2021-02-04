@@ -129,10 +129,11 @@ print(' Value at bottom right: {} '.format(R[p2[0]-1,p2[1]-1]))
 
 idR = replaceMask( R , p1, p2, lineMode, gtval, ltval, Nbd )
 
-if( useNans ): 
+if( useNans ):
   val = np.nan
   R = R.astype(float)
-elif( filereplace is not None ):
+
+if( filereplace is not None ):
   Rrdict = readNumpyZTile( filereplace )
   Rr = Rrdict['R']
   Rrdims = np.array( np.shape(Rr) )
@@ -159,6 +160,5 @@ if( args.printOn or args.printOnly ):
   fig = addImagePlot( fig, R, fileout )
 
   plt.show()
-
 
 R = None
