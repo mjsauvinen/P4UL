@@ -38,11 +38,11 @@ def write1dProfile( st, zt, time, Np, fn, maskOn=False):
       ids = (st[-1,k,:,:]>0.)
       saz[k] = np.mean( st[n*dt,k,ids] )  # compute all, and correct afterwards
       
-      #print(' saz.shape = {}, saz = {} '.format(np.shape(saz), saz))
-      hStr = ' z-coord (m), < s >_xy '
-      filename = fn.strip('.nc')+'_'+str(int(tlist[n]))+'.dat'
-      print(' Writing {}'.format(filename))
-      np.savetxt( filename , np.c_[ zt.ravel() , saz.ravel() ], fmt='%3.6e', header=hStr)
+    #print(' saz.shape = {}, saz = {} '.format(np.shape(saz), saz))
+    hStr = ' z-coord (m), < s >_xy '
+    filename = fn.strip('.nc')+'_'+str(int(tlist[n]))+'.dat'
+    print(' Writing {}'.format(filename))
+    np.savetxt( filename , np.c_[ zt.ravel() , saz.ravel() ], fmt='%3.6e', header=hStr)
       
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
