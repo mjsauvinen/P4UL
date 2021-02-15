@@ -128,11 +128,11 @@ if(None in distribution):  # Fill with a constant value
   Rx[(LR>0)] = vmean
 elif (distribution[0] == "gaussian"):
   for i in range(Nshapes):
-    rv = np.random.normal(vmean, distribution[1])
-    Rx[(LR ==(i + 1))] = np.random.normal(vmean, distribution[1])
+    rv = np.random.normal(vmean, float(distribution[1]))
+    Rx[(LR ==(i + 1))] = np.random.normal(vmean, float(distribution[1]))
 elif (distribution[0] == "uniform"):
   for i in range(Nshapes):
-    rv = np.random.uniform(-1.*distribution[1], distribution[1]) 
+    rv = np.random.uniform(-1.*float(distribution[1]), float(distribution[1])) 
     Rx[(LR ==(i + 1))] = vmean + rv
 else:
   sys.exit('Error: invalid distribution given.')
