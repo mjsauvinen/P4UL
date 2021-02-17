@@ -51,6 +51,8 @@ parser.add_argument("-vx", "--vmfix", type=float, nargs='+', default=[None],\
   help="Prescribed values for the masks given by --imfix. (Optional).")
 parser.add_argument("-vz", "--valueForZeros", type=float, default=None, \
   help=" Value to replace remaining zeros. Mean value --mean used as default.")
+parser.add_argument("-l", "--labels", action="store_true", default=False,\
+  help="Output area labels. Useful in the creation of building IDs.")
 parser.add_argument("-p", "--printOn", action="store_true", default=False,\
   help="Print the resulting raster data.")
 parser.add_argument("-pp", "--printOnly",action="store_true", default=False,\
@@ -64,6 +66,7 @@ fileout      = args.fileout
 filetopo     = args.filetopo
 fileaug      = args.fileaugment
 distribution = args.distribution
+labels       = args.labels
 maskIds      = args.maskIds
 vmean        = args.mean
 vtkOn        = args.vtk 
@@ -81,6 +84,9 @@ if( (None not in imfix) and (None not in vmfix) ):
     sys.exit('ERROR: len(imfix) != len(vmfix). Exiting ...')
   mfixOn = True
 
+if (not(distribution == None) and labels):
+  print(''' WARNING: Both distribution and label switches have been selected. Label
+          output will be suppressed.''')
 # - - - - - - - - - - - - - - - - - - - - - - - - - - #
 if( vfz is None ):
   vfz = vmean
@@ -102,7 +108,7 @@ Rdict['R'] = None
 # - - - - - - - - - - - - - - - - - - - - - - - - - - #
 
 # Label shapes from 0 to Nshapes-1 with SciPy ndimage package
-if (not(distribution == None)):
+if (not(distribution == None) or labels):
   LR, Nshapes = labelRaster(R, maskIds)
 else:  # no need for labeling
   LR = R
@@ -125,14 +131,18 @@ else:
 
 # Fill the areas with generated values
 if(None in distribution):  # Fill with a constant value
-  Rx[(LR>0)] = vmean
+  if labels:
+    print(' Outputting area labels.')
+    Rx = LR
+  else:
+    Rx[(LR>0)] = vmean
 elif (distribution[0] == "gaussian"):
   for i in range(Nshapes):
-    rv = np.random.normal(vmean, distribution[1])
-    Rx[(LR ==(i + 1))] = np.random.normal(vmean, distribution[1])
+    rv = np.random.normal(vmean, float(distribution[1]))
+    Rx[(LR ==(i + 1))] = np.random.normal(vmean, float(distribution[1]))
 elif (distribution[0] == "uniform"):
   for i in range(Nshapes):
-    rv = np.random.uniform(-1.*distribution[1], distribution[1]) 
+    rv = np.random.uniform(-1.*float(distribution[1]), float(distribution[1])) 
     Rx[(LR ==(i + 1))] = vmean + rv
 else:
   sys.exit('Error: invalid distribution given.')
@@ -161,18 +171,19 @@ R = None
 # Calculate mean and move nonzero values accordingly
 if( idmm is None ):
   idmm = (Rx>0.)
-  
-offset = np.nanmean(Rx[idmm]) - vmean
-print(' Offset to ensure prescribed mean values. V_offset = {}'.format(offset))
-Rx[idmm] -= offset
-print(' V_max, V_min = {}, {}'.format(np.max(Rx[idmm]), np.min(Rx[idmm])))
-idmm = None
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - #
+if not labels:
+  offset = np.nanmean(Rx[idmm]) - vmean
+  print(' Offset to ensure prescribed mean values. V_offset = {}'.format(offset))
+  Rx[idmm] -= offset
+  print(' V_max, V_min = {}, {}'.format(np.max(Rx[idmm]), np.min(Rx[idmm])))
+  idmm = None
 
-# Replace remaining zero values. These do not influence the area average
-# imposed above. 
-Rx[~(Rx>0.)] = vfz 
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+  # Replace remaining zero values. These do not influence the area average
+  # imposed above. 
+  Rx[~(Rx>0.)] = vfz 
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - #
