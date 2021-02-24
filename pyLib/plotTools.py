@@ -3,6 +3,7 @@ import sys
 import glob
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from utilities import dataFromDict
 from  matplotlib.ticker import FormatStrFormatter
 
@@ -229,10 +230,23 @@ def plotBar(fig, xb, yb, labelStr, plotStr=["","",""], wb=0.6, errb=0):
   
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def addImagePlot( fig, R, titleStr, gridOn=False, limsOn=False ):
+def addImagePlot( fig, R, titleStr, gridOn=False, limsOn=False, plotNests=False):
   global cmaps
   ax = addFigAxes( fig )
   im = ax.imshow(np.real(R), aspect='auto')       
+
+  while (plotNests):
+    try:
+      nestParams=list( map(float, input(' Please enter nest location (top left x, top left y, width, height).\n' 
+                                          ' Leave empty to stop drawing of nests.\n').split(',')) )
+    except:
+      break
+    try: 
+      nesti = patches.Rectangle((nestParams[0],nestParams[1]),nestParams[2],nestParams[3], linewidth=1, edgecolor='r', 
+                                  facecolor='none')
+      ax.add_patch(nesti)
+    except:
+      print(' Nest drawing failed. Please try again.')
 
   ax.set_title(titleStr)
   ax.grid(gridOn)
