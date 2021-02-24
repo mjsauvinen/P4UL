@@ -238,15 +238,17 @@ def addImagePlot( fig, R, titleStr, gridOn=False, limsOn=False, plotNests=False)
   while (plotNests):
     try:
       nestParams=list( map(float, input(' Please enter nest location (top left x, top left y, width, height).\n' 
-                                          ' Leave empty to stop drawing of nests.\n').split(',')) )
+                                          ' Leave empty to draw nests already inputted.\n').split(',')) )
+      annotation=str(input(' Please enter annotation for nest.\n'))
     except:
       break
     try: 
       nesti = patches.Rectangle((nestParams[0],nestParams[1]),nestParams[2],nestParams[3], linewidth=1, edgecolor='r', 
                                   facecolor='none')
       ax.add_patch(nesti)
+      ax.annotate(annotation,(nestParams[0],nestParams[1]),textcoords='offset pixels',xytext=(2,-20),color='r',size='small')
     except:
-      print(' Nest drawing failed. Please try again.')
+      print(' Nest drawing failed.')
 
   ax.set_title(titleStr)
   ax.grid(gridOn)
