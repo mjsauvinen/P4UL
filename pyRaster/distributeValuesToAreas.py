@@ -84,9 +84,14 @@ if( (None not in imfix) and (None not in vmfix) ):
     sys.exit('ERROR: len(imfix) != len(vmfix). Exiting ...')
   mfixOn = True
 
-if (not(distribution == None) and labels):
+if ( (None not in distribution) and labels):
+  if ( vmean == None):
+    sys.exit(' ERROR: vmean not specified. Exiting.')
   print(''' WARNING: Both distribution and label switches have been selected. Label
           output will be suppressed.''')
+
+if ( vmean == None and (not labels)):
+  sys.exit(' ERROR: vmean not specified. Exiting.')
 # - - - - - - - - - - - - - - - - - - - - - - - - - - #
 if( vfz is None ):
   vfz = vmean
@@ -108,7 +113,7 @@ Rdict['R'] = None
 # - - - - - - - - - - - - - - - - - - - - - - - - - - #
 
 # Label shapes from 0 to Nshapes-1 with SciPy ndimage package
-if (not(distribution == None) or labels):
+if ( (None not in distribution) or labels):
   LR, Nshapes = labelRaster(R, maskIds)
 else:  # no need for labeling
   LR = R
