@@ -16,8 +16,8 @@ Author: Mikko Auvinen
 '''
 
 #==========================================================#
-parser = argparse.ArgumentParser(prog='refineTileResolution.py',description="Refine or coarsen a raster. When coarsening, the 
-new value will be the mean of the corresponding cells in the fine raster unless specified otherwise.")
+parser = argparse.ArgumentParser(prog='refineTileResolution.py',description="Refine or coarsen a raster. When coarsening, the "
+                          "new value will be the mean of the corresponding cells in the fine raster unless specified otherwise.")
 parser.add_argument("-f", "--filename",type=str, help="Name of the .npz data file.")
 parser.add_argument("-fo", "--fileout",type=str, help="Name of output Palm/npz topography file.",\
   default="TOPOGRAPHY_MOD")
