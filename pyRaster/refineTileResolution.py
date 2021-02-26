@@ -5,6 +5,7 @@ from mapTools import *
 from utilities import writeLog
 from plotTools import addImagePlot
 import matplotlib.pyplot as plt
+from scipy import stats
 '''
 Description:
 
@@ -15,11 +16,14 @@ Author: Mikko Auvinen
 '''
 
 #==========================================================#
-parser = argparse.ArgumentParser(prog='refineTileResolution.py')
+parser = argparse.ArgumentParser(prog='refineTileResolution.py',description="Refine or coarsen a raster. When coarsening, the 
+new value will be the mean of the corresponding cells in the fine raster unless specified otherwise.")
 parser.add_argument("-f", "--filename",type=str, help="Name of the .npz data file.")
 parser.add_argument("-fo", "--fileout",type=str, help="Name of output Palm/npz topography file.",\
   default="TOPOGRAPHY_MOD")
 parser.add_argument("-N","--refn", help="Refinement factor N in 2^N. Negative value coarsens.", type=float)
+parser.add_argument("-m", "--mode", help="When coarsening, select the most common value (mode) from the finer grid.",
+                    action="store_true", default=False)
 parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
   action="store_true", default=False)
 parser.add_argument("-pp", "--printOnly", help="Only print the resulting data. Don't save.",\
@@ -34,6 +38,7 @@ N         = args.refn
 printOn   = args.printOn
 printOnly = args.printOnly
 fileout   = args.fileout
+mode      = args.mode
 
 
 Rdict = readNumpyZTile( filename )
@@ -78,7 +83,26 @@ n2 = n2.astype(int);  e2 = e2.astype(int)
 if( N > 0 ):
   R2 = np.zeros( R2dims, float ) # Create the output array.
   R2[n2, e2] += R1[n1,e1]
+elif  np.isclose(np.around(1/s2),1/s2,0.001):
+  RT = np.full( np.append(R2dims,int(1/s2)),-9999, float )
+  n2 = np.minimum( n2 , R2dims[0]-1)
+  e2 = np.minimum( e2 , R2dims[1]-1)
+  for k in range(maxDims[0]):
+    for l in range(maxDims[1]):
+      i = np.argmax( np.isclose(RT[ n2[k], e2[l], 1: ],-9999, 0.01 )  ) + 1
+      RT[ n2[k], e2[l], i] =  R1[ n1[k] ,e1[l] ]        
+  if mode:
+    print(' Coarsening with most common value.') 
+    RTT,RTTc = stats.mode(RT,axis=2)
+    RT=None
+    RTTc = None
+    R2=RTT[:,:,0]
+    RTT=None
+  else:
+    print(' Coarsening with mean value.')
+    R2 = np.mean(RT,axis=2)
 else:
+  # Calculate mean using finer grid
   R2 = np.zeros( R2dims, float ) # Create the output array.
   n2 = np.minimum( n2 , R2dims[0]-1)
   e2 = np.minimum( e2 , R2dims[1]-1)
