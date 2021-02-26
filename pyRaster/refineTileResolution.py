@@ -24,6 +24,8 @@ parser.add_argument("-fo", "--fileout",type=str, help="Name of output Palm/npz t
 parser.add_argument("-N","--refn", help="Refinement factor N in 2^N. Negative value coarsens.", type=float)
 parser.add_argument("-m", "--mode", help="When coarsening, select the most common value (mode) from the finer grid.",
                     action="store_true", default=False)
+parser.add_argument("-i", "--integer", help="Output an integer array. Default is a float array.",
+  action="store_true", default=False)
 parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
   action="store_true", default=False)
 parser.add_argument("-pp", "--printOnly", help="Only print the resulting data. Don't save.",\
@@ -39,7 +41,7 @@ printOn   = args.printOn
 printOnly = args.printOnly
 fileout   = args.fileout
 mode      = args.mode
-
+ints      = args.integer
 
 Rdict = readNumpyZTile( filename )
 R1 = Rdict['R']
@@ -47,6 +49,11 @@ R1dims = np.array(np.shape(R1))
 R1Orig = Rdict['GlobOrig']
 dPx1   = Rdict['dPx']
 gridRot1 = Rdict['gridRot']
+
+if ints:
+  Rtype = int
+else:
+  Rtype = float
 
 # Resolution ratio (rr).
 rr = 2**N
@@ -81,10 +88,10 @@ n2 = n2.astype(int);  e2 = e2.astype(int)
 #np.savetxt('n1.dat', n1, fmt='%g')
 
 if( N > 0 ):
-  R2 = np.zeros( R2dims, float ) # Create the output array.
+  R2 = np.zeros( R2dims, Rtype ) # Create the output array.
   R2[n2, e2] += R1[n1,e1]
 elif  np.isclose(np.around(1/s2),1/s2,0.001):
-  RT = np.full( np.append(R2dims,int(1/s2)),-9999, float )
+  RT = np.full( np.append(R2dims,int(1/s2)),-9999, Rtype )
   n2 = np.minimum( n2 , R2dims[0]-1)
   e2 = np.minimum( e2 , R2dims[1]-1)
   for k in range(maxDims[0]):
@@ -103,7 +110,7 @@ elif  np.isclose(np.around(1/s2),1/s2,0.001):
     R2 = np.mean(RT,axis=2)
 else:
   # Calculate mean using finer grid
-  R2 = np.zeros( R2dims, float ) # Create the output array.
+  R2 = np.zeros( R2dims, Rtype ) # Create the output array.
   n2 = np.minimum( n2 , R2dims[0]-1)
   e2 = np.minimum( e2 , R2dims[1]-1)
   for k in range(maxDims[0]):
@@ -114,13 +121,14 @@ else:
   R2 *= s2
 
 
+
 #print(' TL:{} TR:{} BL:{} BR:{} '.format( R2[0,0], R2[0,-1], R2[-1,0], R2[-1,-1]))
 #print(' TL+1:{} TR+1:{} BL+1:{} BR+1:{} '.format( R2[1,0], R2[1,-1], R2[-1,1], R2[-1,-2]))
 
 # NOTE! The global origin is the coordinate of the top left cell center. 
 # Therefore, it must be shifted by in accordance to the top left cc's new location.
 R1 = None
-Rdict['R'] = R2
+Rdict['R'] = R2.astype(Rtype)
 
 # Select the smaller delta
 dPx2 = dPx1/rr
