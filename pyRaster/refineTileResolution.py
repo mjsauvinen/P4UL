@@ -75,14 +75,11 @@ n2 = n2.astype(int);  e2 = e2.astype(int)
 #np.savetxt('n2.dat', n2, fmt='%g')
 #np.savetxt('n1.dat', n1, fmt='%g')
 
-
-
-# Create the output array.
-R2 = np.zeros( R2dims, float )
-
 if( N > 0 ):
+  R2 = np.zeros( R2dims, float ) # Create the output array.
   R2[n2, e2] += R1[n1,e1]
 else:
+  R2 = np.zeros( R2dims, float ) # Create the output array.
   n2 = np.minimum( n2 , R2dims[0]-1)
   e2 = np.minimum( e2 , R2dims[1]-1)
   for k in range(maxDims[0]):
@@ -90,6 +87,7 @@ else:
       R2[ n2[k], e2[l] ] +=  R1[ n1[k] ,e1[l] ]
       #if( n2[k] == 0  and e2[l] == 0): 
       #  print(' R2 = {} , R1 = {} '.format( R2[ n2[k], e2[l] ], R1[ n1[k] ,e1[l] ]))
+  R2 *= s2
 
 
 #print(' TL:{} TR:{} BL:{} BR:{} '.format( R2[0,0], R2[0,-1], R2[-1,0], R2[-1,-1]))
@@ -98,7 +96,6 @@ else:
 # NOTE! The global origin is the coordinate of the top left cell center. 
 # Therefore, it must be shifted by in accordance to the top left cc's new location.
 R1 = None
-R2 *= s2
 Rdict['R'] = R2
 
 # Select the smaller delta
