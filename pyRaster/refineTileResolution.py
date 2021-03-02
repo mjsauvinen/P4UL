@@ -5,7 +5,6 @@ from mapTools import *
 from utilities import writeLog
 from plotTools import addImagePlot
 import matplotlib.pyplot as plt
-from scipy import stats
 import sys
 '''
 Description:
@@ -70,11 +69,10 @@ if( N > 0. ):
   n2,e2 = np.ogrid[ 0:maxDims[0] , 0:maxDims[1] ]  # northing, easting
 else:
   dr1 = 1; fr2 = rr    # fr2 < 1
-  maxDims = R1dims     # Coarsening, R2dims < R1dims
   R2dims  = np.round(rr * R1dims).astype(int); print(' Coarser dims = {}'.format(R2dims))
   s2 = (2**(2*N))   # Scale factor. If we coarsen, the R1 values are appended. Same value to 2^2n cells.
-  n1 = np.arange(maxDims[0]); e1 = np.arange(maxDims[1])
-  n2 = np.arange(maxDims[0]); e2 = np.arange(maxDims[1])
+  n1 = np.arange(R1dims[0]); e1 = np.arange(R1dims[1])
+  n2 = np.arange(R1dims[0]); e2 = np.arange(R1dims[1])
 
 # Modify the integer list for refining/coarsening
 n1= n1/dr1; e1=e1/dr1
@@ -93,33 +91,12 @@ if( N > 0 ):
   R2 = np.zeros( R2dims, Rtype ) # Create the output array.
   R2[n2, e2] += R1[n1,e1]
 elif  np.isclose(np.around(1/s2),1/s2,0.001):
+  n2 = np.minimum( n2 , R2dims[0]-1)
+  e2 = np.minimum( e2 , R2dims[1]-1)
   if mode:
-    print(' Coarsening with most common value.') 
-    RT = np.zeros( np.append(R2dims,int(1/s2)+1), Rtype )
-    i = np.zeros(R2dims,int)
-    n2 = np.minimum( n2 , R2dims[0]-1)
-    e2 = np.minimum( e2 , R2dims[1]-1)
-    for k in range(maxDims[0]):
-      for l in range(maxDims[1]):
-        RT[ n2[k], e2[l], i[n2[k], e2[l]]] =  R1[ n1[k] ,e1[l] ]        
-        i[n2[k], e2[l]] += 1
-    RTT,RTTc = stats.mode(RT,axis=2)
-    RT=None
-    RTTc = None
-    R2=RTT[:,:,0]
-    RTT=None
+    R2=slowCoarsen(R1,R2dims,s2,n1,n2,e1,e2,Rtype)
   else:
-    print(' Coarsening with mean value.')
-    # Calculate mean using finer grid
-    R2 = np.zeros( R2dims, Rtype ) # Create the output array.
-    n2 = np.minimum( n2 , R2dims[0]-1)
-    e2 = np.minimum( e2 , R2dims[1]-1)
-    for k in range(maxDims[0]):
-      for l in range(maxDims[1]):
-        R2[ n2[k], e2[l] ] +=  R1[ n1[k] ,e1[l] ]
-        #if( n2[k] == 0  and e2[l] == 0): 
-        #  print(' R2 = {} , R1 = {} '.format( R2[ n2[k], e2[l] ], R1[ n1[k] ,e1[l] ]))
-    R2 *= s2
+    R2=fastCoarsen(R1,R2dims,s2,n1,n2,e1,e2,Rtype)
 else:
   sys.exit("ERROR: Attempting to coarsen with an incompatible refinement factor. Exiting.")
 

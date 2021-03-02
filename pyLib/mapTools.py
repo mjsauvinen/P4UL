@@ -740,5 +740,36 @@ def interpolateOverNans( R ):
   return R
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def slowCoarsen(R,Rdims,s,n1,n2,e1,e2,Rtype):
+  '''Function to coarsen an integer field using the most common value. This is relatively slow for strong coarsenings.'''
+  from scipy import stats
+  print(' Coarsening with most common value.') 
+  maxDims = np.array(np.shape(R))
+  RT = np.zeros( np.append(Rdims,int(1/s)+1), Rtype )
+  i = np.zeros(Rdims,int)
+  for k in range(maxDims[0]):
+    for l in range(maxDims[1]):
+      RT[ n2[k], e2[l], i[n2[k], e2[l]]] =  R[ n1[k] ,e1[l] ]        
+      i[n2[k], e2[l]] += 1
+  RTT,RTTc = stats.mode(RT,axis=2)
+  return RTT[:,:,0]
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+
+def fastCoarsen(R,Rdims,s,n1,n2,e1,e2,Rtype): 
+  '''Function to coarsen a field using the most common value. This is relatively fast for strong coarsenings.'''
+  print(' Coarsening with mean value.')
+  maxDims = np.array(np.shape(R))
+  R2 = np.zeros( Rdims, Rtype ) # Create the output array.
+  for k in range(maxDims[0]):
+    for l in range(maxDims[1]):
+      R2[ n2[k], e2[l] ] +=  R[ n1[k] ,e1[l] ]
+  R2 *= s
+  return R2
+
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
