@@ -6,6 +6,7 @@ from utilities import writeLog
 from plotTools import addImagePlot
 import matplotlib.pyplot as plt
 from scipy import stats
+import sys
 '''
 Description:
 
@@ -92,16 +93,16 @@ if( N > 0 ):
   R2 = np.zeros( R2dims, Rtype ) # Create the output array.
   R2[n2, e2] += R1[n1,e1]
 elif  np.isclose(np.around(1/s2),1/s2,0.001):
-  RT = np.zeros( np.append(R2dims,int(1/s2)+1), Rtype )
-  i = np.zeros(R2dims,int)
-  n2 = np.minimum( n2 , R2dims[0]-1)
-  e2 = np.minimum( e2 , R2dims[1]-1)
-  for k in range(maxDims[0]):
-    for l in range(maxDims[1]):
-      RT[ n2[k], e2[l], i[n2[k], e2[l]]] =  R1[ n1[k] ,e1[l] ]        
-      i[n2[k], e2[l]] += 1
   if mode:
     print(' Coarsening with most common value.') 
+    RT = np.zeros( np.append(R2dims,int(1/s2)+1), Rtype )
+    i = np.zeros(R2dims,int)
+    n2 = np.minimum( n2 , R2dims[0]-1)
+    e2 = np.minimum( e2 , R2dims[1]-1)
+    for k in range(maxDims[0]):
+      for l in range(maxDims[1]):
+        RT[ n2[k], e2[l], i[n2[k], e2[l]]] =  R1[ n1[k] ,e1[l] ]        
+        i[n2[k], e2[l]] += 1
     RTT,RTTc = stats.mode(RT,axis=2)
     RT=None
     RTTc = None
@@ -109,20 +110,18 @@ elif  np.isclose(np.around(1/s2),1/s2,0.001):
     RTT=None
   else:
     print(' Coarsening with mean value.')
-    R2 = np.mean(RT,axis=2)
-    RT=None
+    # Calculate mean using finer grid
+    R2 = np.zeros( R2dims, Rtype ) # Create the output array.
+    n2 = np.minimum( n2 , R2dims[0]-1)
+    e2 = np.minimum( e2 , R2dims[1]-1)
+    for k in range(maxDims[0]):
+      for l in range(maxDims[1]):
+        R2[ n2[k], e2[l] ] +=  R1[ n1[k] ,e1[l] ]
+        #if( n2[k] == 0  and e2[l] == 0): 
+        #  print(' R2 = {} , R1 = {} '.format( R2[ n2[k], e2[l] ], R1[ n1[k] ,e1[l] ]))
+    R2 *= s2
 else:
-  # Calculate mean using finer grid
-  R2 = np.zeros( R2dims, Rtype ) # Create the output array.
-  n2 = np.minimum( n2 , R2dims[0]-1)
-  e2 = np.minimum( e2 , R2dims[1]-1)
-  for k in range(maxDims[0]):
-    for l in range(maxDims[1]):
-      R2[ n2[k], e2[l] ] +=  R1[ n1[k] ,e1[l] ]
-      #if( n2[k] == 0  and e2[l] == 0): 
-      #  print(' R2 = {} , R1 = {} '.format( R2[ n2[k], e2[l] ], R1[ n1[k] ,e1[l] ]))
-  R2 *= s2
-
+  sys.exit("ERROR: Attempting to coarsen with an incompatible refinement factor. Exiting.")
 
 
 #print(' TL:{} TR:{} BL:{} BR:{} '.format( R2[0,0], R2[0,-1], R2[-1,0], R2[-1,-1]))
