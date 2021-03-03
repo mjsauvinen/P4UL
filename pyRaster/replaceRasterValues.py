@@ -146,7 +146,7 @@ elif( val is not None):
   R[idR] = val
   
 if( not useNans ): 
-  R[idR] *= cf
+  R[idR] = R[idR]*cf
 
 Rdict['R'] = R
 
