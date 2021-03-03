@@ -5,6 +5,7 @@ from mapTools import *
 from utilities import writeLog
 from plotTools import addImagePlot
 import matplotlib.pyplot as plt
+import sys
 '''
 Description:
 
@@ -15,11 +16,17 @@ Author: Mikko Auvinen
 '''
 
 #==========================================================#
-parser = argparse.ArgumentParser(prog='refineTileResolution.py')
+parser = argparse.ArgumentParser(prog='refineTileResolution.py',description="Refine or coarsen a raster. When coarsening, the "
+"new value will be the mean of the corresponding cells in the fine raster unless specified otherwise. NB! Does not work "
+                                 "properly if raster contains missing values or NaNs.")
 parser.add_argument("-f", "--filename",type=str, help="Name of the .npz data file.")
 parser.add_argument("-fo", "--fileout",type=str, help="Name of output Palm/npz topography file.",\
   default="TOPOGRAPHY_MOD")
 parser.add_argument("-N","--refn", help="Refinement factor N in 2^N. Negative value coarsens.", type=float)
+parser.add_argument("-m", "--mode", help="When coarsening, select the most common value (mode) from the finer grid.",
+                    action="store_true", default=False)
+parser.add_argument("-i", "--integer", help="Output an integer array. Default is a float array.",
+  action="store_true", default=False)
 parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
   action="store_true", default=False)
 parser.add_argument("-pp", "--printOnly", help="Only print the resulting data. Don't save.",\
@@ -34,7 +41,8 @@ N         = args.refn
 printOn   = args.printOn
 printOnly = args.printOnly
 fileout   = args.fileout
-
+mode      = args.mode
+ints      = args.integer
 
 Rdict = readNumpyZTile( filename )
 R1 = Rdict['R']
@@ -42,6 +50,11 @@ R1dims = np.array(np.shape(R1))
 R1Orig = Rdict['GlobOrig']
 dPx1   = Rdict['dPx']
 gridRot1 = Rdict['gridRot']
+
+if ints:
+  Rtype = int
+else:
+  Rtype = float
 
 # Resolution ratio (rr).
 rr = 2**N
@@ -56,11 +69,10 @@ if( N > 0. ):
   n2,e2 = np.ogrid[ 0:maxDims[0] , 0:maxDims[1] ]  # northing, easting
 else:
   dr1 = 1; fr2 = rr    # fr2 < 1
-  maxDims = R1dims     # Coarsening, R2dims < R1dims
   R2dims  = np.round(rr * R1dims).astype(int); print(' Coarser dims = {}'.format(R2dims))
   s2 = (2**(2*N))   # Scale factor. If we coarsen, the R1 values are appended. Same value to 2^2n cells.
-  n1 = np.arange(maxDims[0]); e1 = np.arange(maxDims[1])
-  n2 = np.arange(maxDims[0]); e2 = np.arange(maxDims[1])
+  n1 = np.arange(R1dims[0]); e1 = np.arange(R1dims[1])
+  n2 = np.arange(R1dims[0]); e2 = np.arange(R1dims[1])
 
 # Modify the integer list for refining/coarsening
 n1= n1/dr1; e1=e1/dr1
@@ -75,21 +87,18 @@ n2 = n2.astype(int);  e2 = e2.astype(int)
 #np.savetxt('n2.dat', n2, fmt='%g')
 #np.savetxt('n1.dat', n1, fmt='%g')
 
-
-
-# Create the output array.
-R2 = np.zeros( R2dims, float )
-
 if( N > 0 ):
+  R2 = np.zeros( R2dims, Rtype ) # Create the output array.
   R2[n2, e2] += R1[n1,e1]
-else:
+elif  np.isclose(np.around(1/s2),1/s2,0.001):
   n2 = np.minimum( n2 , R2dims[0]-1)
   e2 = np.minimum( e2 , R2dims[1]-1)
-  for k in range(maxDims[0]):
-    for l in range(maxDims[1]):
-      R2[ n2[k], e2[l] ] +=  R1[ n1[k] ,e1[l] ]
-      #if( n2[k] == 0  and e2[l] == 0): 
-      #  print(' R2 = {} , R1 = {} '.format( R2[ n2[k], e2[l] ], R1[ n1[k] ,e1[l] ]))
+  if mode:
+    R2=slowCoarsen(R1,R2dims,s2,n1,n2,e1,e2,Rtype)
+  else:
+    R2=fastCoarsen(R1,R2dims,s2,n1,n2,e1,e2,Rtype)
+else:
+  sys.exit("ERROR: Attempting to coarsen with an incompatible refinement factor. Exiting.")
 
 
 #print(' TL:{} TR:{} BL:{} BR:{} '.format( R2[0,0], R2[0,-1], R2[-1,0], R2[-1,-1]))
@@ -98,8 +107,7 @@ else:
 # NOTE! The global origin is the coordinate of the top left cell center. 
 # Therefore, it must be shifted by in accordance to the top left cc's new location.
 R1 = None
-R2 *= s2
-Rdict['R'] = R2
+Rdict['R'] = R2.astype(Rtype)
 
 # Select the smaller delta
 dPx2 = dPx1/rr
