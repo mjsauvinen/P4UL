@@ -36,6 +36,8 @@ parser.add_argument("--labels", action="store_true", default=False,\
   help="User specified labels.")
 parser.add_argument("--footprint", action="store_true", default=False,\
   help="Plot footprint data.")
+parser.add_argument("-n","--drawNests", action="store_true", default=False,\
+  help="Draw nests (rectangles) on top of the raster.")
 parser.add_argument("-i","--infoOnly", action="store_true", default=False,\
   help="Print only info to the screen.")
 parser.add_argument("--save", metavar="FORMAT" ,type=str, default='', \
@@ -55,6 +57,7 @@ limsOn      = args.lims
 gridOn      = args.grid
 infoOnly    = args.infoOnly
 labels      = args.labels
+drawNests   = args.drawNests
 footprintOn = args.footprint
 save        = args.save
 
@@ -115,7 +118,7 @@ if( imod or jmod ):
 if( not infoOnly ):
   figDims = size*(Rdims[::-1].astype(float)/np.max(Rdims))
   fig = plt.figure(num=1, figsize=figDims)
-  fig = addImagePlot( fig, R , rasterfile, gridOn, limsOn)
+  fig = addImagePlot( fig, R , rasterfile, gridOn, limsOn, drawNests)
   R = None
 
   if(labels):
