@@ -24,7 +24,7 @@ strKey = args.strKey
 prefix = args.prefix
 jcols  = args.jcols
 xcols  = args.xcols
-nr     = args.nrows
+nrows  = args.nrows
 
 #print(' args = {} '.format(args))
 
@@ -45,26 +45,29 @@ for fn in fileNos:
   
   ddims = np.shape( d )
   
-  nr  = min( nr , ddims[0] )
+  nrows = min( nrows , ddims[0] )
   ncols = len( allcols )
   
-  cdims = (nr, ncols )
+  # cumulative array 
+  cdims = (nrows, ncols )
   cdat = np.zeros( cdims )
   
-  idelta = np.round(ddims[0]/nr, decimals=0).astype(int)
+  idelta = np.round(ddims[0]/nrows, decimals=0).astype(int)
   
   njx = 0
+  # xcols: columns to include without cumulations
   for n,j in enumerate(xcols):
     njx += 1    
-    for i in range(nr+1):
+    for i in range(nrows+1):
       irow = i*idelta; irow = min( irow, ddims[0]-1 )
-      i = min(i, nr-1)
+      i = min(i, nrows-1)
       cdat[i,n] = d[irow,j]
   
+  # jcols: columns to cumulate 
   for n,j in enumerate(jcols):
-    for i in range(nr+1):
+    for i in range(nrows+1):
       irow = i*idelta; irow = min( irow, ddims[0] )
-      i = min(i, nr-1)
+      i = min(i, nrows-1)
       cdat[i,n+njx] = np.sum( d[:irow,j] )
   
   d = None
