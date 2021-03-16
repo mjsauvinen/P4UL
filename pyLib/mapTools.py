@@ -746,7 +746,7 @@ def slowCoarsen(R,Rdims,s,n1,n2,e1,e2,Rtype):
   from scipy import stats
   print(' Coarsening with most common value.') 
   maxDims = np.array(np.shape(R))
-  RT = np.zeros( np.append(Rdims,int(1/s)), Rtype )
+  RT = np.zeros( np.append(Rdims,int(np.round(1/s))), Rtype )
   i = np.zeros(Rdims,int)
   for k in range(maxDims[0]):
     for l in range(maxDims[1]):
