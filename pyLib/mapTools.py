@@ -750,7 +750,10 @@ def slowCoarsen(R,Rdims,s,n1,n2,e1,e2,Rtype):
   i = np.zeros(Rdims,int)
   for k in range(maxDims[0]):
     for l in range(maxDims[1]):
-      RT[ n2[k], e2[l], i[n2[k], e2[l]]] =  R[ n1[k] ,e1[l] ]        
+      try:
+        RT[ n2[k], e2[l], i[n2[k], e2[l]]] =  R[ n1[k] ,e1[l] ]        
+      except IndexError:
+        sys.exit("ERROR: Incorrect index in RT or R array. Exiting. (slowCoarsen)")
       i[n2[k], e2[l]] += 1
   RTT,RTTc = stats.mode(RT,axis=2)
   return RTT[:,:,0]
