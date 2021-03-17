@@ -233,7 +233,7 @@ if(not printOnly):
 
 # Plot the resulting raster
 if( printOn or printOnly):
-  Rx[Rx == 0] = np.nan  # Replacing zeros with NaN helps plotting
+  #Rx[Rx == 0] = np.nan  # Replacing zeros with NaN helps plotting
   figDims = 13. * (Rxdims[::-1].astype(float) / np.max(Rxdims))
   fig = plt.figure(num=1, figsize=figDims)
   fig = addImagePlot(fig, Rx, fileout, False, False)
