@@ -78,7 +78,7 @@ else:
 n1= n1/dr1; e1=e1/dr1
 n1 = n1.astype(int);  e1 = e1.astype(int)
 
-n2 = np.round(n2*fr2, decimals=2);  e2 = np.round(e2*fr2, decimals=2)
+n2 = np.floor((n2+0.5)*fr2);  e2 = np.floor((e2+0.5)*fr2)
 #print(' n2 = {} '.format(n2))
 #print(' n1 = {} '.format(n1))
 

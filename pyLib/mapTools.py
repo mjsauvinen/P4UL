@@ -746,11 +746,14 @@ def slowCoarsen(R,Rdims,s,n1,n2,e1,e2,Rtype):
   from scipy import stats
   print(' Coarsening with most common value.') 
   maxDims = np.array(np.shape(R))
-  RT = np.zeros( np.append(Rdims,int(1/s)+1), Rtype )
+  RT = np.zeros( np.append(Rdims,int(np.round(1/s))), Rtype )
   i = np.zeros(Rdims,int)
   for k in range(maxDims[0]):
     for l in range(maxDims[1]):
-      RT[ n2[k], e2[l], i[n2[k], e2[l]]] =  R[ n1[k] ,e1[l] ]        
+      try:
+        RT[ n2[k], e2[l], i[n2[k], e2[l]]] =  R[ n1[k] ,e1[l] ]        
+      except IndexError:
+        sys.exit("ERROR: Incorrect index in RT or R array. Exiting. (slowCoarsen)")
       i[n2[k], e2[l]] += 1
   RTT,RTTc = stats.mode(RT,axis=2)
   return RTT[:,:,0]
