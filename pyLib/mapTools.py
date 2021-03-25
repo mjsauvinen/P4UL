@@ -605,6 +605,7 @@ def labelRaster(R, maskId=None):
 
 def openTifAsNumpy(tifFile):
   from PIL import Image
+  Image.MAX_IMAGE_PIXELS = 260000000
 
   im = Image.open(tifFile)
   #im.show()
