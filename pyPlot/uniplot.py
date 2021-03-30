@@ -46,17 +46,20 @@ parser.add_argument("-lm", "--linemode", type=int, choices=[1,2], default=1,\
   help="Mode for displaying the color and type of lines. See the source code. Default=1")
 parser.add_argument("-lw", "--linewidth", type=float, default=2.6,\
   help="Line width. Default=2.6")
+parser.add_argument("-nl","--nolegend", action="store_true", default=False,\
+  help="Do not draw a legend.")
 parser.add_argument("-s", "--save", type=str, default=None, \
   help="Name of the saved figure. Default=None")
 args = parser.parse_args()
 #==========================================================#
 # Rename ...
-strKey  = args.strKey
-Cx      = args.factorX
-Cy      = args.factorY
-logOn   = args.log
-labelsOn= args.labels
-saveFig = args.save
+strKey   = args.strKey
+Cx       = args.factorX
+Cy       = args.factorY
+logOn    = args.log
+labelsOn = args.labels
+saveFig  = args.save
+legendOn = not args.nolegend
 
 strKey = inputIfNone( strKey , " Enter search string: " )
 
@@ -86,7 +89,9 @@ if( labelsOn ):
   print(' userLabels ')
   pfig = userLabels( pfig )
 plt.grid(True)
-plt.legend(loc=0)
+
+if( legendOn ):
+  plt.legend(loc=0)
 
 if( saveFig is not None ):
   pfig.savefig( saveFig, format='jpg', dpi=300)
