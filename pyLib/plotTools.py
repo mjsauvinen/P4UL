@@ -396,8 +396,8 @@ def plotXX( fig, pDict, ax=None ):
   ax.set_ybound(lower=ylims[0], upper=ylims[1] )
   ax.set_xbound(lower=xlims[0], upper=xlims[1] )
   
-  ax.set_xlabel(" X ")
-  ax.set_ylabel(" Y ")
+  ax.set_xlabel(" ")
+  ax.set_ylabel(" ")
   return fig
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
