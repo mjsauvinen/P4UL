@@ -10,27 +10,32 @@ import sys
 Description:
 
 
-Author: Mikko Auvinen
+Author: Mikko Auvinen & Jukka-Pekka Keskinen
         mikko.auvinen@fmi.fi
         Finnish Meteorological Institute
 '''
 
 #==========================================================#
-parser = argparse.ArgumentParser(prog='refineTileResolution.py',description="Refine or coarsen a raster. When coarsening, the "
-"new value will be the mean of the corresponding cells in the fine raster unless specified otherwise. NB! Does not work "
-                                 "properly if raster contains missing values or NaNs.")
+dscStr = '''Refine or coarsen a raster. When coarsening, the new value will be 
+the mean of the corresponding cells in the fine raster unless specified otherwise. 
+NB! Does not work properly if raster contains missing values or NaNs.
+'''
+
+parser = argparse.ArgumentParser(prog='refineTileResolution.py',\
+  description=dscStr)
 parser.add_argument("-f", "--filename",type=str, help="Name of the .npz data file.")
-parser.add_argument("-fo", "--fileout",type=str, help="Name of output Palm/npz topography file.",\
-  default="TOPOGRAPHY_MOD")
-parser.add_argument("-N","--refn", help="Refinement factor N in 2^N. Negative value coarsens.", type=float)
-parser.add_argument("-m", "--mode", help="When coarsening, select the most common value (mode) from the finer grid.",
-                    action="store_true", default=False)
-parser.add_argument("-i", "--integer", help="Output an integer array. Default is a float array.",
-  action="store_true", default=False)
-parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
-  action="store_true", default=False)
-parser.add_argument("-pp", "--printOnly", help="Only print the resulting data. Don't save.",\
-  action="store_true", default=False)
+parser.add_argument("-fo", "--fileout",type=str,\
+  help="Name of output Palm/npz topography file.")
+parser.add_argument("-N","--refn", type=float,\
+  help="Refinement factor N in 2^N. Negative value coarsens.")
+parser.add_argument("-m", "--mode", action="store_true", default=False,\
+  help="When coarsening, select the most common value (mode) from the finer grid.")
+parser.add_argument("-i", "--integer", action="store_true", default=False,\
+  help="Output an integer array. Default is a float array.")
+parser.add_argument("-p", "--printOn", action="store_true", default=False, \
+  help="Print the resulting raster data.")
+parser.add_argument("-pp", "--printOnly", action="store_true", default=False, \
+  help="Only print the resulting data. Don't save.")
 args = parser.parse_args()
 writeLog( parser, args, args.printOnly )
 #==========================================================#
@@ -46,8 +51,18 @@ ints      = args.integer
 
 Rdict = readNumpyZTile( filename )
 R1 = Rdict['R']
+
+if( N < 0. ):
+  # Take precaution if coarsening and the original raster has an odd numbered dimension.
+  nN, nE = R1.shape
+  eN = None; eE = None
+  if( np.mod( nN, 2 ) != 0 ): eN = -1
+  if( np.mod( nE, 2 ) != 0 ): eE = -1
+  if( eN is not None or eE is not None ): R1 = R1[:eN,:eE]
+
 R1dims = np.array(np.shape(R1))
-R1Orig = Rdict['GlobOrig']
+print(' R1dims = {}'.format(R1dims))
+R1Orig = Rdict['GlobOrig'].astype(float)
 dPx1   = Rdict['dPx']
 gridRot1 = Rdict['gridRot']
 
@@ -75,16 +90,14 @@ else:
   n2 = np.arange(R1dims[0]); e2 = np.arange(R1dims[1])
 
 # Modify the integer list for refining/coarsening
-n1= n1/dr1; e1=e1/dr1
-n1 = n1.astype(int);  e1 = e1.astype(int)
+n1= (n1/dr1).astype(int); e1=(e1/dr1).astype(int)
 
-n2 = np.floor((n2+0.5)*fr2);  e2 = np.floor((e2+0.5)*fr2)
+#n2 = np.round(n2*fr2, decimals=2);  e2 = np.round(e2*fr2, decimals=2)
+n2 = np.floor((n2+0.5)*fr2).astype(int);  e2 = np.floor((e2+0.5)*fr2).astype(int)
 #print(' n2 = {} '.format(n2))
 #print(' n1 = {} '.format(n1))
 
-
-n2 = n2.astype(int);  e2 = e2.astype(int)
-#np.savetxt('n2.dat', n2, fmt='%g')
+np.savetxt('n2.dat', n2, fmt='%g')
 #np.savetxt('n1.dat', n1, fmt='%g')
 
 if( N > 0 ):

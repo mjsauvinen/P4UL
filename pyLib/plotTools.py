@@ -327,7 +327,7 @@ def addToPlot(fig, x,y,labelStr, plotStr=["","",""], logOn=False):
   
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def plotXX( fig, pDict ):
+def plotXX( fig, pDict, ax=None ):
   fileStr = dataFromDict('filename', pDict, allowNone=False)
   logOn   = dataFromDict('logOn',    pDict, allowNone=False)
   Cx      = dataFromDict('Cx',       pDict, allowNone=False)
@@ -341,7 +341,8 @@ def plotXX( fig, pDict ):
   try:    x = np.loadtxt(fileStr)
   except: x = np.loadtxt(fileStr,delimiter=',')
   
-  ax = addFigAxes( fig )
+  if( ax is None ):
+    ax = addFigAxes( fig )
 
   labelStr = labelString( fileStr )
   #lStr = fileStr.rsplit(".", 1)[0]  # Remove the ".dat" 
