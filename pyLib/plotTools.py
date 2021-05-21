@@ -338,14 +338,18 @@ def plotXX( fig, pDict, ax=None ):
   linewidth= dataFromDict('lw',      pDict, allowNone=False)
   ylims   = dataFromDict('ylims',    pDict, allowNone=True)
   xlims   = dataFromDict('xlims',    pDict, allowNone=True)
+  reset   = dataFromDict('reset',    pDict, allowNone=True)
   
   try:    x = np.loadtxt(fileStr)
   except: x = np.loadtxt(fileStr,delimiter=',')
   
   if( ax is None ):
     ax = addFigAxes( fig )
-  else:
-    iCg = 0; iMg = 0; iLg = 0 # Reset global integer for color, marker and linestyle.
+
+  # Reset global integer for color, marker and linestyle.
+  if( reset ):
+    iCg = 0; iMg = 0; iLg = 0 
+
 
   labelStr = labelString( fileStr )
   #lStr = fileStr.rsplit(".", 1)[0]  # Remove the ".dat" 

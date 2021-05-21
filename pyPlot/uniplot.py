@@ -78,6 +78,7 @@ pD['lm']       = args.linemode
 pD['ylims']    = args.ylims
 pD['xlims']    = args.xlims
 pD['lw']       = args.linewidth
+pD['reset']    = False
 
 pfig = plt.figure(num=1, figsize=(12.,9.5));
 

@@ -85,16 +85,18 @@ pD['lm']       = args.linemode
 pD['ylims']    = args.ylims
 pD['xlims']    = args.xlims
 pD['lw']       = args.linewidth
-
+pD['reset']    = True
 
 # loop over each subplot
 for i in range(Nplots):
 
   fileNos, fileList = filesFromList( fsearch[i]+"*", allfiles )
 
+  pD['reset'] = True
   for fn in fileNos:
     pD['filename'] = fileList[fn]
     pfig = plotXX( pfig, pD, axs[i] )
+    pD['reset'] = False
 
   axs[i].grid(True)
   axs[i].legend(loc=1) # upper right ... for now
