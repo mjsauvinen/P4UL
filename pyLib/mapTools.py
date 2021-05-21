@@ -741,21 +741,25 @@ def interpolateOverNans( R ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def slowCoarsen(R,Rdims,s,n1,n2,e1,e2,Rtype):
+def slowCoarsen(R1,R2dims,s,n1,n2,e1,e2,Rtype):
   '''Function to coarsen an integer field using the most common value. This is relatively slow for strong coarsenings.'''
   from scipy import stats
-  print(' Coarsening with most common value.') 
-  maxDims = np.array(np.shape(R))
-  RT = np.zeros( np.append(Rdims,int(np.round(1/s))), Rtype )
-  i = np.zeros(Rdims,int)
+  print(' Coarsening using mode as value.') 
+  maxDims = np.array(np.shape(R1))
+  RT = np.zeros( np.append(R2dims,int(np.round(1/s))), Rtype )
+  i = np.zeros(R2dims,int)
   for k in range(maxDims[0]):
+    #print(' k={}'.format(k))
     for l in range(maxDims[1]):
-      try:
-        RT[ n2[k], e2[l], i[n2[k], e2[l]]] =  R[ n1[k] ,e1[l] ]        
-      except IndexError:
-        sys.exit("ERROR: Incorrect index in RT or R array. Exiting. (slowCoarsen)")
+      RT[ n2[k], e2[l], i[n2[k], e2[l]]] =  R1[ n1[k] ,e1[l] ]
+      #try:
+      #  RT[ n2[k], e2[l], i[n2[k], e2[l]]] =  R[ n1[k] ,e1[l] ]        
+      #except IndexError:
+      #  sys.exit("ERROR: Incorrect index in RT or R array. Exiting. (slowCoarsen)")
       i[n2[k], e2[l]] += 1
-  RTT,RTTc = stats.mode(RT,axis=2)
+  print(' Computing mode ... ')
+  RTT,_ = stats.mode(RT,axis=2)
+  print(' ... done!')
   return RTT[:,:,0]
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
