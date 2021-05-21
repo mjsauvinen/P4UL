@@ -328,6 +328,7 @@ def addToPlot(fig, x,y,labelStr, plotStr=["","",""], logOn=False):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def plotXX( fig, pDict, ax=None ):
+  global iCg, iMg, iLg
   fileStr = dataFromDict('filename', pDict, allowNone=False)
   logOn   = dataFromDict('logOn',    pDict, allowNone=False)
   Cx      = dataFromDict('Cx',       pDict, allowNone=False)
@@ -343,6 +344,8 @@ def plotXX( fig, pDict, ax=None ):
   
   if( ax is None ):
     ax = addFigAxes( fig )
+  else:
+    iCg = 0; iMg = 0; iLg = 0 # Reset global integer for color, marker and linestyle.
 
   labelStr = labelString( fileStr )
   #lStr = fileStr.rsplit(".", 1)[0]  # Remove the ".dat" 
