@@ -159,7 +159,7 @@ def read3DVariableFromDataset(varStr, ds, iTOff=0, iLOff=0, iROff=0, cl=1, meanO
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def read3dDataFromNetCDF( fname, varStr, cl=1 ):
+def read3dDataFromNetCDF( fname, varStr, cl=1, zeroNans=True ):
   '''
   Establish two boolean variables which indicate whether the created variable is an
   independent or dependent variable in function createNetcdfVariable().
@@ -178,7 +178,9 @@ def read3dDataFromNetCDF( fname, varStr, cl=1 ):
 
   # Rename the keys in dDict to simplify the future postprocessing
   for dn in dDict.keys():
-    idNan = np.isnan(dDict[dn]); dDict[dn][idNan] = 0.
+    if( zeroNans ):
+      idNan = np.isnan(dDict[dn]); dDict[dn][idNan] = 0.
+    
     if( 'time' in dn and 'time' != dn ):
       dDict['time'] = dDict.pop( dn )
     elif( 'x' == dn[0] and 'x' != dn ):
