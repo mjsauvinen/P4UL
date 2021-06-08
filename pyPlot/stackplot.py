@@ -65,11 +65,12 @@ Cy         = args.factorY
 logOn      = args.log
 llogOn     = args.loglog
 labelsOn   = args.labels
+legendsOn  = not args.nolegend
 allfiles   = args.allfiles
 saveFig    = args.save
 Nplots     = len( fsearch )
 
-fsize = (11., Nplots*9.)
+fsize = (11., Nplots*7.0)
 
 if( not horizontal ):
   pfig, axs = plt.subplots(Nplots, 1, sharex=True, sharey=True, figsize=fsize)
@@ -101,7 +102,8 @@ for i in range(Nplots):
     pD['reset'] = False
 
   axs[i].grid(True)
-  axs[i].legend(loc=1) # upper right ... for now
+  if( legendsOn ):
+    axs[i].legend(loc=1) # upper right ... for now
 
 if( labelsOn ):
   print(' userLabels ')

@@ -78,7 +78,8 @@ fileNos, fileList = filesFromList( strKey+"*" )
 # Process the files:
 for fn in fileNos:
   
-  dat = np.loadtxt( fileList[fn], usecols=Icols )
+  try:    dat = np.loadtxt( fileList[fn], usecols=Icols )
+  except: dat = np.loadtxt( fileList[fn], usecols=Icols, delimiter=',')
   
   for j in Icols:
     if j not in range(dat.shape[1]):
