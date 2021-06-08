@@ -63,6 +63,7 @@ vertical   = ~horizontal
 Cx         = args.factorX
 Cy         = args.factorY
 logOn      = args.log
+llogOn     = args.loglog
 labelsOn   = args.labels
 allfiles   = args.allfiles
 saveFig    = args.save
@@ -77,7 +78,8 @@ else:
 
 # Assemble plot dict
 pD = dict()  
-pD['logOn']    = logOn; 
+pD['logOn']    = logOn
+pD['llogOn']   = llogOn
 pD['Cx']       = Cx
 pD['Cy']       = Cy
 pD['revAxes']  = args.revAxes

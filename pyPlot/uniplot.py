@@ -30,6 +30,8 @@ parser.add_argument("strKey", nargs='?', default=None,\
   help="Search string for collecting files.")
 parser.add_argument("--log", action="store_true", default=False,\
   help="Logarithmic y-axis.")
+parser.add_argument("--loglog", action="store_true", default=False,\
+  help="Logarithmic axes.")
 parser.add_argument("--labels", action="store_true", default=False,\
   help="User specified labels.")
 parser.add_argument("-rx","--revAxes", action="store_true", default=False,\
@@ -57,6 +59,7 @@ strKey   = args.strKey
 Cx       = args.factorX
 Cy       = args.factorY
 logOn    = args.log
+llogOn   = args.loglog
 labelsOn = args.labels
 saveFig  = args.save
 legendOn = not args.nolegend
@@ -70,7 +73,8 @@ styleStr = 'seaborn-white' # 'ggplot'  # 'seaborn-paper'
 fileNos, fileList = filesFromList( strKey+"*" )
 
 pD = dict()  
-pD['logOn']    = logOn; 
+pD['logOn']    = logOn
+pD['llogOn']   = llogOn
 pD['Cx']       = Cx
 pD['Cy']       = Cy
 pD['revAxes']  = args.revAxes

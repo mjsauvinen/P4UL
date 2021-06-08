@@ -331,6 +331,7 @@ def plotXX( fig, pDict, ax=None ):
   global iCg, iMg, iLg
   fileStr = dataFromDict('filename', pDict, allowNone=False)
   logOn   = dataFromDict('logOn',    pDict, allowNone=False)
+  llogOn  = dataFromDict('llogOn',   pDict, allowNone=False)
   Cx      = dataFromDict('Cx',       pDict, allowNone=False)
   Cy      = dataFromDict('Cy',       pDict, allowNone=False)
   revAxes = dataFromDict('revAxes',  pDict, allowNone=False)
@@ -378,13 +379,17 @@ def plotXX( fig, pDict, ax=None ):
     else:
       xp = Cx*x[:,0];  yp = Cy*x[:,i+1]; dp = yp
     
-    if( logOn ):
+    if( logOn or llogOn ):
       if( revAxes ): 
         xp = np.abs( xp )
         plotf = ax.semilogx 
       else:
         yp = np.abs( yp )
         plotf = ax.semilogy
+        
+      if( llogOn ):
+        plotf = ax.loglog
+        
     else:
       plotf = ax.plot
     
