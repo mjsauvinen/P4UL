@@ -49,8 +49,15 @@ def setPIDSGlobalAtrributes(ds, globalAttributes):
     try:
       setattr(ds, key, float(globalAttributes[key]))
     except KeyError:
-      if(getattr(ds, key, 0.0)==0.0):
-        setattr(ds, key, 0.0)
+      if key=='origin_lat':
+        if(getattr(ds, key, 0.0)==0.0):
+          print("WARNING: origin_lat (latitude) not set. Using default value (55˚).")
+          setattr(ds, key, 55.0)
+      else:
+        if key in ['origin_lon', 'rotation_angle']:
+          print("WARNING: "+key+" not set. Using default value (0.0).")
+        if(getattr(ds, key, 0.0)==0.0):
+          setattr(ds, key, 0.0)
 
   for key in intAttributeKeys:
     try:
