@@ -32,6 +32,8 @@ parser.add_argument("-hz","--horizontal", action="store_true", default=False,\
   help="Horizontal stacking of subplots.")
 parser.add_argument("--log", action="store_true", default=False,\
   help="Logarithmic y-axis.")
+parser.add_argument("--loglog", action="store_true", default=False,\
+  help="Logarithmic x- and y-axes.")
 parser.add_argument("--labels", action="store_true", default=False,\
   help="User specified labels.")
 parser.add_argument("-rx","--revAxes", action="store_true", default=False,\
