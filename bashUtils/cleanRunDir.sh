@@ -33,4 +33,5 @@ rm -$k CPU_MEASURES*
 rm -$k *.err
 rm -$k *.out
 rm -$k NO_COMBINE*
-
+rm -$k 3DNESTING
+rm -$k SURFACE_DATA_*
