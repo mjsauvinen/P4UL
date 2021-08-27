@@ -53,6 +53,8 @@ parser.add_argument("-vz", "--valueForZeros", type=float, default=None, \
   help=" Value to replace remaining zeros. Mean value --mean used as default.")
 parser.add_argument("-l", "--labels", action="store_true", default=False,\
   help="Output area labels. Useful in the creation of building IDs.")
+parser.add_argument("-s", "--labelsize", type=int, default=-1,\
+  help="Maximum size in pixels of area labels. Used only with --labels.")
 parser.add_argument("-p", "--printOn", action="store_true", default=False,\
   help="Print the resulting raster data.")
 parser.add_argument("-pp", "--printOnly",action="store_true", default=False,\
@@ -67,6 +69,7 @@ filetopo     = args.filetopo
 fileaug      = args.fileaugment
 distribution = args.distribution
 labels       = args.labels
+labelsize    = args.labelsize
 maskIds      = args.maskIds
 vmean        = args.mean
 vtkOn        = args.vtk 
@@ -115,6 +118,12 @@ Rdict['R'] = None
 # Label shapes from 0 to Nshapes-1 with SciPy ndimage package
 if ( (None not in distribution) or labels):
   LR, Nshapes = labelRaster(R, maskIds)
+  if (labelsize > 0):
+    for i in range(1,Nshapes+1):
+      nlabels = np.count_nonzero(LR==i)
+      if (nlabels > labelsize):
+        print(' Label '+str(i)+' exceeds maximum label size '+str(labelsize)+'. Splitting.')
+              
 else:  # no need for labeling
   LR = R
   Nshapes = 1
