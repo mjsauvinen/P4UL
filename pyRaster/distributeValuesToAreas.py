@@ -54,7 +54,7 @@ parser.add_argument("-vz", "--valueForZeros", type=float, default=None, \
 parser.add_argument("-l", "--labels", action="store_true", default=False,\
   help="Output area labels. Useful in the creation of building IDs.")
 parser.add_argument("-s", "--labelsize", type=int, default=-1,\
-  help="Maximum size in pixels of area labels. Used only with --labels.")
+  help="Maximum size in pixels of area labels. Used only with --labels. NB! This option can slow down the script significantly.")
 parser.add_argument("-p", "--printOn", action="store_true", default=False,\
   help="Print the resulting raster data.")
 parser.add_argument("-pp", "--printOnly",action="store_true", default=False,\

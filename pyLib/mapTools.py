@@ -606,18 +606,26 @@ def splitLabels(R, shapeCount, labelsize):
   for i in range(1,shapeCount+1):
     nlabels = np.count_nonzero(R==i)
     if (nlabels > labelsize):
-      print(' Label no.'+str(i)+' will be split. Original size: '+str(nlabels)+'.')      
-      L  = R==i
-      LU = np.zeros(L.shape,dtype=bool)
-      Lnz = np.nonzero(L)
-      LU[(Lnz[0][0],Lnz[1][0])] = True
-      while ( np.count_nonzero(LU) < labelsize): 
-        ULU = sn.binary_dilation(LU)*L
-        if (ULU==LU).all():
-          break
-        LU=ULU
-      shapeCount=shapeCount+1
-      R[LU]=shapeCount
+      print(' Label no. '+str(i)+' will be split. Original size: '+str(nlabels)+' px.')      
+      nleft = nlabels
+      while (nleft > labelsize):
+        L  = R==i
+        LU = np.zeros(L.shape,dtype=bool)
+        Lnz = np.nonzero(L)
+        LU[(Lnz[0][0],Lnz[1][0])] = True
+        nnonzero = np.count_nonzero(LU)        
+        while ( nnonzero < labelsize): 
+          VLU = LU
+          vnnonzero = nnonzero
+          LU = sn.binary_dilation(VLU)*L
+          if (VLU==LU).all():
+            break
+          nnonzero = np.count_nonzero(LU)
+        shapeCount=shapeCount+1
+        R[VLU]=shapeCount
+        print('   Created new label no. '+str(shapeCount)+' at size '+str(vnnonzero)+' px.')
+        nleft = nleft - vnnonzero
+      print('   Label no. '+str(i)+' is now at size '+str(nleft)+' px.')
 
   return R, shapeCount
 
