@@ -554,7 +554,7 @@ def plotCiXY( fig, pDict ):
   
   lines = plotf( xp, yp, linestyle_stack(lm=linemode), lw=3., \
     label=labelStr, color=color_stack(lm=linemode))
-  linef = fillbf( d, v_u, v_l, facecolor='white', edgecolor='white', alpha=0.25)
+  linef = fillbf( d, v_u, v_l, facecolor='grey', edgecolor='black', alpha=0.25)
   ax.set_ybound(lower=ylims[0], upper=ylims[1] )
   ax.set_xbound(lower=xlims[0], upper=xlims[1] )
   ax.set_xlabel(xlb)

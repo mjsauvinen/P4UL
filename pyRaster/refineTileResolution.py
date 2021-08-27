@@ -78,7 +78,7 @@ rr = 2**N
 if( N > 0. ):
   dr1 = rr; fr2 = 1        # dr1 > 1
   maxDims = dr1 * R1dims   # Refinement, R2dims > R1dims
-  R2dims  = maxDims
+  R2dims  = maxDims.astype(int)
   s2 = 1.                   # Scale factor. If we refine, the R1 values always fill a new zero cell, see below.
   n1,e1 = np.ogrid[ 0:maxDims[0] , 0:maxDims[1] ]  # northing, easting 
   n2,e2 = np.ogrid[ 0:maxDims[0] , 0:maxDims[1] ]  # northing, easting
