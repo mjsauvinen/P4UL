@@ -119,18 +119,7 @@ Rdict['R'] = None
 if ( (None not in distribution) or labels):
   LR, Nshapes = labelRaster(R, maskIds)
   if (labelsize > 0):
-    for i in range(1,Nshapes+1):
-      nlabels = np.count_nonzero(LR==i)
-      if (nlabels > labelsize):
-        print(' Label '+str(i)+' exceeds maximum label size '+str(labelsize)+'. Splitting.')
-        labels = np.nonzero(LR==i)
-        ej = 0
-        for j in range(1,nlabels//labelsize + 1):
-          LR[(labels[0][ej*labelsize:j*labelsize],labels[1][ej*labelsize:j*labelsize])]=Nshapes+1
-          Nshapes=Nshapes+1
-          ej = j
-          
-        
+    LR, Nshapes = splitLabels(LR, Nshapes, labelsize)                 
 else:  # no need for labeling
   LR = R
   Nshapes = 1

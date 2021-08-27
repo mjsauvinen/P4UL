@@ -599,6 +599,22 @@ def labelRaster(R, maskId=None):
 
   return Rl, shapeCount
 
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def splitLabels(R, shapeCount, labelsize):
+  for i in range(1,shapeCount+1):
+    nlabels = np.count_nonzero(R==i)
+    if (nlabels > labelsize):
+      print(' Label '+str(i)+' exceeds maximum label size '+str(labelsize)+'. Splitting.')
+      labels = np.nonzero(R==i)
+      ej = 0
+      for j in range(1,nlabels//labelsize + 1):
+        R[(labels[0][ej*labelsize:j*labelsize],labels[1][ej*labelsize:j*labelsize])]=shapeCount+1
+        shapeCount=shapeCount+1
+        ej = j
+
+  return R, shapeCount
+
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
