@@ -602,16 +602,22 @@ def labelRaster(R, maskId=None):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def splitLabels(R, shapeCount, labelsize):
+  import scipy.ndimage as sn
   for i in range(1,shapeCount+1):
     nlabels = np.count_nonzero(R==i)
     if (nlabels > labelsize):
-      print(' Label '+str(i)+' exceeds maximum label size '+str(labelsize)+'. Splitting.')
-      labels = np.nonzero(R==i)
-      ej = 0
-      for j in range(1,nlabels//labelsize + 1):
-        R[(labels[0][ej*labelsize:j*labelsize],labels[1][ej*labelsize:j*labelsize])]=shapeCount+1
-        shapeCount=shapeCount+1
-        ej = j
+      print(' Label no.'+str(i)+' will be split. Original size: '+str(nlabels)+'.')      
+      L  = R==i
+      LU = np.zeros(L.shape,dtype=bool)
+      Lnz = np.nonzero(L)
+      LU[(Lnz[0][0],Lnz[1][0])] = True
+      while ( np.count_nonzero(LU) < labelsize): 
+        ULU = sn.binary_dilation(LU)*L
+        if (ULU==LU).all():
+          break
+        LU=ULU
+      shapeCount=shapeCount+1
+      R[LU]=shapeCount
 
   return R, shapeCount
 
