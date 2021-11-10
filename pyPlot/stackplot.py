@@ -72,7 +72,8 @@ allfiles   = args.allfiles
 saveFig    = args.save
 Nplots     = len( fsearch )
 
-fsize = (11., Nplots*7.0)
+#fsize = (11., Nplots*7.0)
+fsize = (11., Nplots*10.0)
 
 if( not horizontal ):
   pfig, axs = plt.subplots(Nplots, 1, sharex=True, sharey=True, figsize=fsize)
@@ -105,7 +106,8 @@ for i in range(Nplots):
 
   axs[i].grid(True)
   if( legendsOn ):
-    axs[i].legend(loc=1) # upper right ... for now
+#    axs[i].legend(loc=1) # upper right ... for now
+    axs[i].legend(loc=2) # upper right ... for now
 
 if( labelsOn ):
   print(' userLabels ')

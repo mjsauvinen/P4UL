@@ -60,18 +60,18 @@ figN = 1      # Figure number ... to be appended on demand.
 
 # Read in the data. The output raster will inherit Rdict1 properties not shown here.
 Rdict1 = readNumpyZTile(file1)
-R1 = Rdict1['R']
+R1 = Rdict1['R']; idnan = np.isnan(R1); if( np.count_nonzero(idnan) > 0 ): R1[idnan] = 0.
 R1dims = np.array(np.shape(R1))
 R1Orig = Rdict1['GlobOrig']
 dPx1 = Rdict1['dPx']
 
 Rdict2 = readNumpyZTile(file2)
-R2 = Rdict2['R']
+R2 = Rdict2['R']; idnan = np.isnan(R2); if( np.count_nonzero(idnan) > 0 ): R2[idnan] = 0.
 R2dims = np.array(np.shape(R2))
 R2Orig = Rdict2['GlobOrig']
 dPx2 = Rdict2['dPx']
 Rdict2 = None 
-
+idnan  = None
 
 #dPx1 = entry2Int( dPx1 ); dPx2 = entry2Int( dPx2 )
 dPx1 = np.abs(dPx1[0])  ; dPx2 = np.abs( dPx2[0] )
