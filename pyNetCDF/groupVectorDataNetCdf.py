@@ -37,6 +37,8 @@ parser.add_argument("-va", "--replValuesAbove", nargs=2, type=float, default=[1.
   help="Entry <Max> <val> := replace values above given threshold <Max> by <val>. Default= 1.e9 0.0")
 parser.add_argument("-vb", "--replValuesBelow", nargs=2, type=float, default=[-1.e9,0.0],\
   help="Entry <Min> <val> := replace values below given threshold <Min> by <val>. Default= -1.e9 0.0")
+parser.add_argument("-v2", "--variances", action="store_true", default=False,\
+  help="Interpolate variance values instead of velocities. Modifies variable names and units.")
 parser.add_argument("-d", "--decomp", action="store_true", default=False,\
   help="Decomposed into mean (V_m) and fluctuating (V^prime) components.")
 parser.add_argument("-dd", "--decompOnly",action="store_true", default=False,\
@@ -61,6 +63,7 @@ cl         = abs(int(args.coarse))
 kcopy      = args.kcopy
 va         = args.replValuesAbove
 vb         = args.replValuesBelow
+v2On       = args.variances
 
 # Boolean switch for the decomposition option.
 decompOn = args.decomp or args.decompOnly
@@ -81,20 +84,27 @@ ds, varList, paramList = netcdfDataset(filename)
 # Create a NETCDF output dataset (dso) for writing out the data.
 dso = netcdfOutputDataset( fileout )
 
+# Set variable names 
+if( not v2On ):
+  ustr = 'u';  vstr = 'v';  wstr = 'w'
+  unitstr = 'm/s'
+else:
+  ustr = 'uu'; vstr = 'vv'; wstr = 'ww'
+  unitstr = 'm^2/s^2'
 
 '''
 Read cell center coordinates and time.
 Create the output independent variables right away and empty memory.
 '''
-time, time_dims = read1DVariableFromDataset('time','u'+suffix, ds, ntskip, 0, 1 ) # All values.
+time, time_dims = read1DVariableFromDataset('time',ustr+suffix, ds, ntskip, 0, 1 ) # All values.
 tv = createNetcdfVariable( dso, time,'time', len(time),'s','f4',('time',), parameter )
 time = None
 
-x, x_dims = read1DVariableFromDataset( 'x','w'+suffix, ds, 0, 1, cl ) # Exclude the last value.
+x, x_dims = read1DVariableFromDataset( 'x',wstr+suffix, ds, 0, 1, cl ) # Exclude the last value.
 xv = createNetcdfVariable( dso, x   , 'x'   , len(x)   , 'm', 'f4', ('x',)   , parameter )
 x = None
 
-y, y_dims = read1DVariableFromDataset( 'y','u'+suffix, ds, 0, 1, cl ) # Exclude the last value.
+y, y_dims = read1DVariableFromDataset( 'y',ustr+suffix, ds, 0, 1, cl ) # Exclude the last value.
 print(' y_dims = {} '.format(y_dims))
 y[np.isnan(y)] = 0.  # Special treatment.
 yv = createNetcdfVariable( dso, y   , 'y'   , len(y)   , 'm', 'f4', ('y',)   , parameter )
@@ -102,7 +112,7 @@ y = None
 
 if( kcopy ): xk = 0
 else:        xk = 1
-z, z_dims = read1DVariableFromDataset(zn,'u'+suffix, ds, xk, 0, cl )
+z, z_dims = read1DVariableFromDataset(zn,ustr+suffix, ds, xk, 0, cl )
 zv = createNetcdfVariable( dso, z   , 'z'   , len(z)   , 'm', 'f4', ('z',)   , parameter )
 print(' z_dims = {} '.format(z_dims))
 z = None
@@ -118,7 +128,7 @@ PALM netCDF4:
 '''
 
 # - - - - First, u-component - - - - - - - - - -
-u0, u0_dims = read3DVariableFromDataset( 'u'+suffix, ds, ntskip, 0, 0, cl ) # All values.
+u0, u0_dims = read3DVariableFromDataset( ustr+suffix, ds, ntskip, 0, 0, cl ) # All values.
 u0 = replaceValues(u0, va, vb)
 
 ''' 
@@ -136,19 +146,19 @@ uc = np.zeros( cc_dims )
 uc, um = interpolatePalmVectors( u0, cc_dims, 'i' , decompOn ); u0 = None
 
 if( not args.decompOnly ):
-  uv = createNetcdfVariable( dso, uc, 'u', cc_dims[0], 'm/s', 'f4',('time','z','y','x',) , variable )
+  uv = createNetcdfVariable( dso, uc, ustr, cc_dims[0], unitstr, 'f4',('time','z','y','x',) , variable )
   if( not decompOn ): uc = None
 if( decompOn ):
   up = vectorPrimeComponent( uc, um ); uc = None
-  upv = createNetcdfVariable( dso, up, 'up', cc_dims[0], 'm/s', 'f4',('time','z','y','x',) , variable )
+  upv = createNetcdfVariable( dso, up, ustr+'p', cc_dims[0], unitstr, 'f4',('time','z','y','x',) , variable )
   up = None
-  umv = createNetcdfVariable( dso, um, 'um', cc_dims[0], 'm/s', 'f4',('z','y','x',) , variable )
+  umv = createNetcdfVariable( dso, um, ustr+'m', cc_dims[0], unitstr, 'f4',('z','y','x',) , variable )
   um = None
 
 
 # - - - - Third, w-component - - - - - - - - - -
 
-w0, w0_dims = read3DVariableFromDataset( 'w'+suffix, ds, ntskip, 0, 0, cl ) # All values.
+w0, w0_dims = read3DVariableFromDataset( wstr+suffix, ds, ntskip, 0, 0, cl ) # All values.
 w0 = replaceValues(w0, va, vb)
 
 wc = np.zeros( cc_dims )
@@ -158,31 +168,31 @@ else:
   wc, wm = interpolatePalmVectors( w0, cc_dims, 'k' , decompOn ); w0 = None
 
 if( not args.decompOnly ):
-  wv = createNetcdfVariable( dso, wc, 'w', cc_dims[0], 'm/s', 'f4',('time','z','y','x',) , variable )
+  wv = createNetcdfVariable( dso, wc, wstr, cc_dims[0], unitstr, 'f4',('time','z','y','x',) , variable )
   if( not decompOn ): wc = None  # ASAP
 if( decompOn ):
   wp = vectorPrimeComponent( wc, wm )
-  wpv = createNetcdfVariable( dso, wp, 'wp', cc_dims[0], 'm/s', 'f4',('time','z','y','x',) , variable )
+  wpv = createNetcdfVariable( dso, wp, wstr+'p', cc_dims[0], unitstr, 'f4',('time','z','y','x',) , variable )
   wp = None
-  wmv = createNetcdfVariable( dso, wm, 'wm', cc_dims[0], 'm/s', 'f4',('z','y','x',) , variable )
+  wmv = createNetcdfVariable( dso, wm, wstr+'m', cc_dims[0], unitstr, 'f4',('z','y','x',) , variable )
   wm = None
 
 
 # - - - - Second, v-component - - - - - - - - - -
-v0, v0_dims = read3DVariableFromDataset( 'v'+suffix, ds, ntskip, 0, 0, cl ) # All values.
+v0, v0_dims = read3DVariableFromDataset( vstr+suffix, ds, ntskip, 0, 0, cl ) # All values.
 v0 = replaceValues(v0, va, vb)
 
 vc = np.zeros( cc_dims )
 vc, vm = interpolatePalmVectors( v0, cc_dims, 'j' , decompOn ); v0 = None
 
 if( not args.decompOnly ):
-  vv = createNetcdfVariable( dso, vc, 'v', cc_dims[0], 'm/s', 'f4',('time','z','y','x',) , variable )
+  vv = createNetcdfVariable( dso, vc, vstr, cc_dims[0], unitstr, 'f4',('time','z','y','x',) , variable )
   if( not decompOn ): vc = None
 if( decompOn ):
   vp = vectorPrimeComponent( vc, vm ); vc = None
-  vpv = createNetcdfVariable( dso, vp, 'vp', cc_dims[0], 'm/s', 'f4',('time','z','y','x',) , variable )
+  vpv = createNetcdfVariable( dso, vp, vstr+'p', cc_dims[0], unitstr, 'f4',('time','z','y','x',) , variable )
   vp = None
-  vmv = createNetcdfVariable( dso, vm, 'vm', cc_dims[0], 'm/s', 'f4',('z','y','x',) , variable )
+  vmv = createNetcdfVariable( dso, vm, vstr+'m', cc_dims[0], unitstr, 'f4',('z','y','x',) , variable )
   vm = None
 
 # - - - - Fouth, possible scalars - - - - - - - - - -
