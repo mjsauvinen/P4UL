@@ -244,7 +244,7 @@ def saveTileAsNumpyZ( filename, Rdict):
     np.savez_compressed(filename, **Rdict)
     print(' {} saved successfully!'.format(filename))
   except:
-    print(' Error in saving {}.npz in saveTileAsNumpyZ().'.format(filename))
+    print(' Error in saving {}.npz in saveTileAsNumpyZ().'.format(filename.strip('.npz')))
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
@@ -635,7 +635,8 @@ def splitLabels(R, shapeCount, labelsize):
 
 def openTifAsNumpy(tifFile):
   from PIL import Image
-  Image.MAX_IMAGE_PIXELS = 1800000000 # 260000000
+
+  Image.MAX_IMAGE_PIXELS = 1800000000 
 
   im = Image.open(tifFile)
   #im.show()
