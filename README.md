@@ -9,14 +9,25 @@
 ############################
 Mandatory steps to make the python-scripts work in Linux:
 
-0) Go to $HOME directory and clone the repository
+1) Install the following packages: 
+
+* python3-numpy
+
+* python3-matplotlib
+
+* python3-scipy
+
+* python3-gdal 
+
+
+2) Go to $HOME directory and clone the repository
 
 cd $HOME
 
 git clone https://github.com/mjsauvinen/P4UL.git
 
 
-1) Add to $HOME/.bashrc
+3) Add to $HOME/.bashrc
 
 export PATH=$HOME/P4UL:$PATH
 
@@ -40,7 +51,7 @@ export PATH=$HOME/P4UL/pyNetCDF:$PATH
 export PYTHONPATH=$HOME/P4UL/pyLib/:$PYTHONPATH
 
 
-2) While in $HOME/P4UL run the following command to make the programs executables:
+4) While in $HOME/P4UL, run the following command to make the scripts executables:
 
 chmod u+x py*/*.py
 
@@ -56,7 +67,9 @@ Now the scripts can be run everywhere in your system.
 #########################
 ##### Contributors ######
 
-* Mikko Auvinen, Finnish Meteorological Institute.
+* Mikko Auvinen, Finnish Meteorological Institute
+
+* Jukka-Pekka Keskinen, Finnish Meteorological Institute
 
 * Sasu Karttunen, University of Helsinki
 

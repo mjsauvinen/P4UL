@@ -35,7 +35,7 @@ def replaceMask( Rx, px1, px2, lineOpt, gtval, ltval, Nbd):
     for i in range(N):
       idm[ jrows[i] , icols[i] ] = True
   else:
-    idm[ px1[0]:px2[0] , px1[1]:px2[1] ] = True 
+    idm[ px1[0]:px2[0] , px1[1]:px2[1] ] = True
 
   if( gtval is not None ):
     idm = (Rx > gtval) * idm
@@ -80,8 +80,8 @@ parser.add_argument("-gt", "--gt", type=float, default=None,\
   help="Replace values greater than the given value.")
 parser.add_argument("-lt", "--lt", type=float, default=None,\
   help="Replace values less than the given value.")
-parser.add_argument("-Nbd","--Nbidial", type=int, default=0,\
-  help="Number of binary dialations of nan values.")
+parser.add_argument("-Nbd","--Nbidil", type=int, default=0,\
+  help="Number of binary dilations of nan values.")
 parser.add_argument("-a", "--allPoints", action="store_true", default=False,\
   help="Select all points in raster for processing. Overrides p1 and p2.")
 args = parser.parse_args()
@@ -99,7 +99,7 @@ filename    = args.filename
 filereplace = args.filereplace
 fileout     = args.fileout
 lineMode    = args.line 
-Nbd         = args.Nbidial
+Nbd         = args.Nbidil
 allPoints   = args.allPoints   
 
 # Read the raster tile to be processed.

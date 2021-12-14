@@ -80,7 +80,7 @@ def numberOfRasterBands( ds , printOn=False):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def selectBand( nBands , promtUser=True, defInt=1):
+def selectBand( nBands , promptUser=True, defInt=1):
   defInt = int(defInt)
   if( nBands > 1 and promptUser ):
     ib = int(input('Select Band (1-{}): ib = '.format(nBands)))
