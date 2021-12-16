@@ -16,4 +16,4 @@ inFile = openIOFile( filename, 'r' )
 
 for line in inFile:
   print(" Executing: {}".format(line))
-  subprocess.call( line , shell=True )
+  subprocess.run( line , shell=True )

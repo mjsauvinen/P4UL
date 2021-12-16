@@ -16,7 +16,7 @@ def openIOFile( filename , mode='r' ):
     xfile=open(filename, mode)
     print(" Opening file {} for {}".format(filename,message))
   except IndexError:
-    sys.exit(" Error: "+filename+" does not exist. Exiting ...")
+    sys.exit(" Error: {} does not exist. Exiting ...".format(filename))
 
   return xfile
 
