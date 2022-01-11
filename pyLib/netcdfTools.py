@@ -40,6 +40,22 @@ def netcdfDataset(filename, verbose=True):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def netcdfDataset2(filename, verbose=True):
+  # Create Dataset
+  ds = nc.Dataset(filename)
+  
+  varList = ds.variables.keys()
+  dimList = ds.dimensions.keys()
+  # Generate a dictionary that contains an individual listing of dimensions for each variable
+  dD = dict()
+  for vn in varList:
+    if( vn not in dimList ):
+      dD[vn] = ds.variables[vn].dimensions
+      
+  return ds, dD
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
 def netcdfOutputDataset(filename, mode='w'):
   if( isinstance( filename, bytes ) ):
     filename = filename.decode()
@@ -47,7 +63,6 @@ def netcdfOutputDataset(filename, mode='w'):
   return dso
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-
 
 def netcdfWriteAndClose(dso, verbose=True):
   if(verbose):
