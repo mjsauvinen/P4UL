@@ -47,12 +47,16 @@ def netcdfDataset2(filename, verbose=True):
   varList = ds.variables.keys()
   dimList = ds.dimensions.keys()
   # Generate a dictionary that contains an individual listing of dimensions for each variable
-  dD = dict()
+  vD = dict() # Variable dimensions
+  uD = dict() # All units
   for vn in varList:
     if( vn not in dimList ):
-      dD[vn] = ds.variables[vn].dimensions
+      vD[vn] = ds.variables[vn].dimensions
+      uD[vn] = ds.variables[vn].units
+    else:
+      uD[vn] = ds.variables[vn].units
       
-  return ds, dD
+  return ds, vD, uD
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
