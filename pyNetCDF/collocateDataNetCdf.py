@@ -42,6 +42,10 @@ parser.add_argument("-d", "--decomp", action="store_true", default=False,\
   help="Decomposed into mean (V_m) and fluctuating (V^prime) components.")
 parser.add_argument("-sx", "--suffix",type=str, default='',\
   help="Potential suffix to be appended to variable names. Example: '_xy'. ")
+helpk2z='''Conversion factor for converting vertical coord from index (like ku_above_surf) 
+to elevation in meters. Example usage: --k2z 2 means vertical resolution is 2 m.'''
+parser.add_argument("-k2z", "--k2z",type=float, default=None,\
+  help=helpk2z)
 parser.add_argument("-dd", "--decompOnly",action="store_true", default=False,\
   help="Output V_m and V^prime components only.")
 parser.add_argument("-nt", "--ntimeskip", type=int, default=0,\
@@ -64,6 +68,7 @@ cl         = abs(int(args.coarse))
 kcopy      = args.kcopy
 va         = args.replValuesAbove
 vb         = args.replValuesBelow
+k2z        = args.k2z
 suffix     = args.suffix
 
 # Boolean switch for the decomposition option.
@@ -129,6 +134,9 @@ yv = createNetcdfVariable( dso, y  , yn , len(y)   , uD[yn],'f4', (yn,), paramet
 if( kcopy ): xk = 0
 else:        xk = 1
 z, z_dims = read1DVariableFromDataset(zn, vn[0], ds, xk, 0, cl ) # Exclude determined by xk
+if(('k' in zn)  and (k2z is not None) ):
+  print(' NOTE: Converting vertical coord from index {} to z [m] using dz={} m.'.format(zn,k2z))
+  z *= k2z;  zn = 'z'; zunit = 'm'
 zv = createNetcdfVariable( dso, z  , zn , len(z)   , zunit, 'f4', (zn,), parameter )
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
