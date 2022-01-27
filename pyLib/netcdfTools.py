@@ -314,6 +314,10 @@ def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, 
 
   if(parameter):
     dso.createDimension(vName, vLen)
+  
+  v = v.view( np.ma.MaskedArray )
+  v.mask = np.isnan(v)
+  
   var = dso.createVariable(vName, vType, vTuple, zlib=zlib, fill_value=fill_value)
   var.units = vUnits
   var[:] = v
