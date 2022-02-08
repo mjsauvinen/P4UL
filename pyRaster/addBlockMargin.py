@@ -102,8 +102,8 @@ T1 = T12[0]; T2 = T12[1]
 
 if( not all( L12 == 0 ) ): R[:,L1:L2] = addBlocks( R[:,L1:L2], stride, Lb, mh[0] )
 if( not all( R12 == 0 ) ): R[:,R1:R2] = addBlocks( R[:,R1:R2], stride, Lb, mh[1] )
-if( not all( T12 == 0 ) ): R[T1:T2,:] = addBlocks( R[T1:T2,:], stride, Lb, mh[2] )
-if( not all( B12 == 0 ) ): R[B1:B2,:] = addBlocks( R[B1:B2,:], stride, Lb, mh[3] )
+if( not all( B12 == 0 ) ): R[B1:B2,:] = addBlocks( R[B1:B2,:], stride, Lb, mh[2] )
+if( not all( T12 == 0 ) ): R[T1:T2,:] = addBlocks( R[T1:T2,:], stride, Lb, mh[3] )
 
 if( printOn or printOnly ):
   
