@@ -77,11 +77,11 @@ rr = 2**N
 # Create the index arrays. The dims are always according to the larger one.
 if( N > 0. ):
   dr1 = rr; fr2 = 1        # dr1 > 1
-  maxDims = dr1 * R1dims   # Refinement, R2dims > R1dims
-  R2dims  = maxDims.astype(int)
+  R2dims = np.round( dr1 * R1dims ).astype(int)   # Refinement, R2dims > R1dims
   s2 = 1.                   # Scale factor. If we refine, the R1 values always fill a new zero cell, see below.
-  n1,e1 = np.ogrid[ 0:maxDims[0] , 0:maxDims[1] ]  # northing, easting 
-  n2,e2 = np.ogrid[ 0:maxDims[0] , 0:maxDims[1] ]  # northing, easting
+  n1,e1 = np.ogrid[ 0:R2dims[0] , 0:R2dims[1] ]  # northing, easting 
+  n2,e2 = np.ogrid[ 0:R2dims[0] , 0:R2dims[1] ]  # northing, easting
+  
 else:
   dr1 = 1; fr2 = rr    # fr2 < 1
   R2dims  = np.round(rr * R1dims).astype(int); print(' Coarser dims = {}'.format(R2dims))
