@@ -13,25 +13,54 @@ Note that dealing with larger rasters require a lot of memory.
 
 #==========================================================#
 parser = argparse.ArgumentParser(prog='rasterToNetCdf.py')
-parser.add_argument("-f", "--filename", type=str, help="Name of the input topography raster data file.")
-parser.add_argument("-fo", "--fileout", type=str, help="Name of the output NetCDF file.", default='output.ncdf')
-parser.add_argument("-N", "--NdZ", type=int, help="Number of grid points in z direction. Leave empty to calculate automatically.")
-parser.add_argument("-dz", "--dZ", type=float, help="Resolution of z axis. Defaults to resolution of N axis.")
-parser.add_argument("-flat", "--flatarray", action="store_true", help="Save as an 2D array instead of a 3D mask.", default=False)
-parser.add_argument("-vn", "--varname", type=str, help="Name of the variable in NetCDF. Default 'buildings_0'.", default='buildings_0')
-parser.add_argument("-c", "--compress", help="Compress netCDF variables with zlib.", action="store_true", default=False)
+parser.add_argument("-f", "--filename", type=str, \
+  help="Name of the input topography raster data file.")
+parser.add_argument("-f2", "--file2", type=str, default=None, \
+  help="Name of (optional) orography raster file which is added to the topography.")
+parser.add_argument("-fo", "--fileout", type=str, \
+  help="Name of the output NetCDF file.", default='output.ncdf')
+parser.add_argument("-N", "--NdZ", type=int, \
+  help="Number of grid points in z direction. Leave empty to calculate automatically.")
+parser.add_argument("-dz", "--dZ", type=float, \
+  help="Resolution of z axis. Defaults to resolution of N axis.")
+parser.add_argument("-flat", "--flatarray", action="store_true", \
+  help="Save as an 2D array instead of a 3D mask.", default=False)
+parser.add_argument("-vn", "--varname", type=str, \
+  help="Name of the variable in NetCDF. Default 'buildings_0'.", default='buildings_0')
+parser.add_argument("-c", "--compress", \
+  help="Compress netCDF variables with zlib.", action="store_true", default=False)
 args = parser.parse_args()
 writeLog( parser, args )
 #==========================================================#
+filename = args.filename
+file2    = args.file2
+
 
 # Read input raster data file.
-Rdict = readNumpyZTile(args.filename)
+Rdict = readNumpyZTile(filename)
 Rtopo = Rdict['R']
 Rdims = np.shape(Rtopo)
 Rdpx = Rdict['dPx']
 
+if( file2 is not None ):
+  R2dict = readNumpyZTile(file2)
+  R2 = R2dict['R']
+  R2dims = np.shape(R2)
+  R2dpx = R2dict['dPx']
+
+
 # Create a 3D mask instead of an 2D array
 mask = not(args.flatarray)
+
+# Convert nans to zeros 
+idnan = np.isnan( Rtopo )
+if( np.count_nonzero(idnan) > 0 ): Rtopo[idnan] = 0.; idnan = None
+
+if( file2 is not None ):
+  print(' Add values from {} to {} ...'.format(file2, filename)) 
+  Rtopo += R2
+  print(' ... done!')
+
 
 # Set z axis resolution
 if (args.dZ and mask):
