@@ -95,8 +95,9 @@ for fn in fileNos:
     dat[:,Tcols] = np.transpose(v1); v0 = None # Copy the values back and clear memory.
     
   if( filterOn ):
+    iM = fltN//2
     for j in Icols:
-      dat[:,j] = applyFilter( dat[:,j], ['local', fltN ] )
+      dat[iM:-iM,j] = applyFilter( dat[iM:-iM,j], ['local', fltN ] )
   
   
   fileout = prefix+fileList[fn]
