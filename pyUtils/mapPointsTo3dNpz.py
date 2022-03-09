@@ -94,7 +94,7 @@ fileICntCoord = args.centerPixelFile
 
 # - - - - - - - - - - #
 if( dm == 0. ):
-  dgf  = None
+  dgf  = None   # delta gap fill 
 else:
   dgf = np.zeros(4)
 
