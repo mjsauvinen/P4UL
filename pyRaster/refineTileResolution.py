@@ -23,9 +23,10 @@ NB! Does not work properly if raster contains missing values or NaNs.
 
 parser = argparse.ArgumentParser(prog='refineTileResolution.py',\
   description=dscStr)
-parser.add_argument("-f", "--filename",type=str, help="Name of the .npz data file.")
+parser.add_argument("-f", "--filename",type=str, \
+  help="Name of the input P4UL npz data file.")
 parser.add_argument("-fo", "--fileout",type=str,\
-  help="Name of output Palm/npz topography file.")
+  help="Name of output P4UL npz topography file.")
 parser.add_argument("-N","--refn", type=float,\
   help="Refinement factor N in 2^N. Negative value coarsens.")
 parser.add_argument("-m", "--mode", action="store_true", default=False,\
@@ -66,7 +67,7 @@ R1Orig = Rdict['GlobOrig'].astype(float)
 dPx1   = Rdict['dPx']
 gridRot1 = Rdict['gridRot']
 
-if ints:
+if( ints ):
   Rtype = int
 else:
   Rtype = float
@@ -77,11 +78,10 @@ rr = 2**N
 # Create the index arrays. The dims are always according to the larger one.
 if( N > 0. ):
   dr1 = rr; fr2 = 1        # dr1 > 1
-  R2dims = np.round( dr1 * R1dims ).astype(int)   # Refinement, R2dims > R1dims
-  s2 = 1.                   # Scale factor. If we refine, the R1 values always fill a new zero cell, see below.
+  R2dims = np.round(dr1 * R1dims).astype(int)   # Refinement, R2dims > R1dims
+  s2 = 1.   # Scale factor. If we refine, the R1 values always fill a new zero cell, see below.
   n1,e1 = np.ogrid[ 0:R2dims[0] , 0:R2dims[1] ]  # northing, easting 
   n2,e2 = np.ogrid[ 0:R2dims[0] , 0:R2dims[1] ]  # northing, easting
-  
 else:
   dr1 = 1; fr2 = rr    # fr2 < 1
   R2dims  = np.round(rr * R1dims).astype(int); print(' Coarser dims = {}'.format(R2dims))
@@ -97,7 +97,7 @@ n2 = np.floor((n2+0.5)*fr2).astype(int);  e2 = np.floor((e2+0.5)*fr2).astype(int
 #print(' n2 = {} '.format(n2))
 #print(' n1 = {} '.format(n1))
 
-np.savetxt('n2.dat', n2, fmt='%g')
+#np.savetxt('n2.dat', n2, fmt='%g')
 #np.savetxt('n1.dat', n1, fmt='%g')
 
 if( N > 0 ):
@@ -106,7 +106,7 @@ if( N > 0 ):
 elif  np.isclose(np.around(1/s2),1/s2,0.001):
   n2 = np.minimum( n2 , R2dims[0]-1)
   e2 = np.minimum( e2 , R2dims[1]-1)
-  if mode:
+  if( mode ):
     R2=slowCoarsen(R1,R2dims,s2,n1,n2,e1,e2,Rtype)
   else:
     R2=fastCoarsen(R1,R2dims,s2,n1,n2,e1,e2,Rtype)

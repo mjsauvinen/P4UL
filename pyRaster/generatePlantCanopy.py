@@ -53,11 +53,11 @@ with open(args.plantinfo, 'r') as csvfile:
       continue
     if(plant_id in plant_info):
       print("Warning: plant id {} multiply defined in the plant information file.".format(plant_id))
-    plant_data = np.array(map(lambda item: float(item), row[1:]))
+    plant_data = np.array(list(map(lambda item: float(item), row[1:])))
     plant_info[plant_id] = plant_data
 
 # Calculate grid point index for canopy upper boundary and initialize 3D LAD array
-pch_index = int(np.ceil(np.amax(np.array(plant_info.values())[:,2])/dpx[2]))+1
+pch_index = int(np.ceil(np.amax(np.array(list(plant_info.values()))[:,2])/dpx[2]))+1
 print("Plant canopy height index (pch_index): {}".format(pch_index+1))
 lad_3d = np.zeros((int(rdims[1]/dpx[1]),int(rdims[0]/dpx[0]),pch_index+1))
 

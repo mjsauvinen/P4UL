@@ -15,25 +15,30 @@ Author: Mikko Auvinen
         Finnish Meteorological Institute
 '''
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-def addBlocks( T, stride, Lx, h ):
+def addBlocks( T, stride, Lx, h , random=False, append=True ):
   Tdims = T.shape
   sy = stride[0]; sx = stride[1]
   ly = Lx[0];     lx = Lx[1]
   
   for i in range( int(np.ceil(Tdims[1]/sx)+1) ):
-    ix  = i*sx 
-    ix2 = ix + lx
     for j in range( int( np.ceil(Tdims[0]/sy)+1) ):
-      jy = j*sy + int(np.mod(i,2)*(sy/2))
+      
+      if( random ): ix = i * np.random.randint(3*sx//4, 5*sx//4 )
+      else:         ix = i * sx
+      ix2 = ix + lx
+      
+      if( random ): jy = j * np.random.randint(3*sy//4, 5*sy//4 ) #+ int(np.mod(i,2)*(sy//2))
+      else:         jy = j * sy + int(np.mod(i,2)*(sy/2))
       jy2 = jy+ly
       if( ix2 > Tdims[1] or jy2 > Tdims[0] ):
         break
       else:
         #print(' ix1: ix2 = {}:{}, jy1:jy2 = {}:{} '.format(ix,ix2,jy,jy2))
-        T[jy:jy2, ix:ix2] += h
+        if( append ): T[jy:jy2, ix:ix2] += h
+        else:         T[jy:jy2, ix:ix2] = h
 
   return T
- # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=* 
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=* 
 
 #==========================================================#
 parser = argparse.ArgumentParser(prog='addBlockMargin.py')
@@ -48,6 +53,10 @@ parser.add_argument("-mw","--mrgnW", help="Zero or non-zero margin widths as rat
 parser.add_argument("-mh","--mrgnH", help="Margins block heights: [L,R,B,T]. Default=0",\
   type=float,nargs=4,default=[0.,0.,0.,0.])
 parser.add_argument("-wa", "--writeAscii", help="Write 'TOPOGRAPHY_DATA' ascii file.",\
+  action="store_true", default=False)
+parser.add_argument("-r", "--randomize", help="Randomize the block pattern.",\
+  action="store_true", default=False)
+parser.add_argument("-a", "--append", help="Append values onto the original raster.",\
   action="store_true", default=False)
 parser.add_argument("-z", "--zero", help="Zero the raster file first.",\
   action="store_true", default=False)
@@ -69,6 +78,9 @@ zeroAll    = args.zero
 printOn    = args.printOn
 printOnly  = args.printOnly
 writeAscii = args.writeAscii
+randomize  = args.randomize
+append     = args.append
+
 
 if( mw.count(None) != 0 ):
   sys.exit(' Error! One of the margins widths is None. Exiting ...')
@@ -100,10 +112,10 @@ B1 = B12[0]; B2 = B12[1]
 T1 = T12[0]; T2 = T12[1]
 
 
-if( not all( L12 == 0 ) ): R[:,L1:L2] = addBlocks( R[:,L1:L2], stride, Lb, mh[0] )
-if( not all( R12 == 0 ) ): R[:,R1:R2] = addBlocks( R[:,R1:R2], stride, Lb, mh[1] )
-if( not all( T12 == 0 ) ): R[T1:T2,:] = addBlocks( R[T1:T2,:], stride, Lb, mh[2] )
-if( not all( B12 == 0 ) ): R[B1:B2,:] = addBlocks( R[B1:B2,:], stride, Lb, mh[3] )
+if( not all( L12 == 0 ) ): R[:,L1:L2] = addBlocks( R[:,L1:L2], stride, Lb, mh[0], randomize, append )
+if( not all( R12 == 0 ) ): R[:,R1:R2] = addBlocks( R[:,R1:R2], stride, Lb, mh[1], randomize, append )
+if( not all( B12 == 0 ) ): R[B1:B2,:] = addBlocks( R[B1:B2,:], stride, Lb, mh[2], randomize, append )
+if( not all( T12 == 0 ) ): R[T1:T2,:] = addBlocks( R[T1:T2,:], stride, Lb, mh[3], randomize, append )
 
 if( printOn or printOnly ):
   

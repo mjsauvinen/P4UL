@@ -78,11 +78,11 @@ fileNos, fileList = filesFromList( strKey+"*" )
 # Process the files:
 for fn in fileNos:
   
-  try:    dat = np.loadtxt( fileList[fn], usecols=Icols )
-  except: dat = np.loadtxt( fileList[fn], usecols=Icols, delimiter=',')
+  try:    dat = np.loadtxt( fileList[fn] )
+  except: dat = np.loadtxt( fileList[fn], delimiter=',')
   
   for j in Icols:
-    if j not in range(dat.shape[1]):
+    if( j > dat.shape[1]-1 ):
       sys.exit(' Error: {} not in range({}). Exiting ...'.format(j,dat.shape[1]) )
   
   # Perform scaling
@@ -95,8 +95,9 @@ for fn in fileNos:
     dat[:,Tcols] = np.transpose(v1); v0 = None # Copy the values back and clear memory.
     
   if( filterOn ):
+    iM = fltN//2
     for j in Icols:
-      dat[:,j] = applyFilter( dat[:,j], ['local', fltN ] )
+      dat[iM:-iM,j] = applyFilter( dat[iM:-iM,j], ['local', fltN ] )
   
   
   fileout = prefix+fileList[fn]
