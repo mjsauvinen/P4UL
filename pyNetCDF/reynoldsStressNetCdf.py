@@ -65,21 +65,17 @@ for fn in fileNos:
   # - - - - - - - - - - - - - - - - - - - - - - - - - -  #
   # First fluctuation component
   cl = 1
-  ncDict = read3dDataFromNetCDF( fileList[fn] , varnames[0], cl )
-  v1 = ncDict['v']   # 'v' is a generic name for a variable in ncDict
-
-  # Second fluctuation component
-  ncDict = read3dDataFromNetCDF( fileList[fn] , varnames[1], cl )
-  v2 = ncDict['v']
-
+  ncDict = read3dDataFromNetCDF( fileList[fn] , varnames, cl )
+  v1 = ncDict.pop(varnames[0])
+  v2 = ncDict.pop(varnames[1])
 
   # Dims
   nt, nz, ny, nx = np.shape( v1 )
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - -  #
   # Spatial coords and time
-  x = ncDict['x']; y = ncDict['y']; z = ncDict['z']
-  time = ncDict['time']
+  x  = ncDict.pop('x'); y = ncDict.pop('y'); z = ncDict.pop('z')
+  time = ncDict.pop('time')
   ncDict = None
 
   # Plot coord. information. This aids the user in the beginning.

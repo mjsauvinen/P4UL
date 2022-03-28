@@ -71,14 +71,14 @@ parameter = True;  variable  = False
 
 # Read data from NETCDF file
 cl = 1
-ncDict = read3dDataFromNetCDF( filename , varname, cl )
-v = ncDict['v']   # 'v' is a generic name for a variable in ncDict
+ncDict = read3dDataFromNetCDF( filename , [varname] , cl )
+v = ncDict.pop(varname) 
 
 # Spatial coords and time
-x = ncDict['x']
-y = ncDict['y']
-z = ncDict['z']
-time = ncDict['time']
+x = ncDict.pop('x')
+y = ncDict.pop('y')
+z = ncDict.pop('z')
+time = ncDict.pop('time')
 
 # Plot coord. information. This aids the user in the beginning.
 infoStr = '''

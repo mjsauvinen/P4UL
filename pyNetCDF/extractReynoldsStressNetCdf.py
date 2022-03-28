@@ -59,18 +59,11 @@ for fn in fileNos:
   
   # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
   # Read in data.
-  dataDict = read3dDataFromNetCDF( fileList[fn] , vnames[0], cl )
-  up = dataDict['v']
-  
-  # Commented out temporarily by Mikko #
-  '''
-  dataDict = read3dDataFromNetCDF( fileList[fn] , vnames[1], cl )
-  vp = dataDict['v']
-  '''
-  dataDict = read3dDataFromNetCDF( fileList[fn] , vnames[2], cl )
-  wp = dataDict['v']
+  dataDict = read3dDataFromNetCDF( fileList[fn] , vnames , cl )
+  up = dataDict.pop(vnames[0])
+  vp = dataDict.pop(vnames[1])
+  wp = dataDict.pop(vnames[2])
 
-  
   if( notPrimes ):
     # Perform coord. rotation for horizontal components
     um = np.mean( up, axis=(0) ); vm = np.mean( vp , axis=(0) )
@@ -84,8 +77,8 @@ for fn in fileNos:
     wp -= np.mean( wp, axis=(0) )
   
   # Coords and time:
-  x = dataDict['x']; y = dataDict['y']; z = dataDict['z']
-  time = dataDict['time']; time_dim = len(time)
+  x  = dataDict.pop('x'); y = dataDict.pop('y'); z = dataDict.pop('z')
+  time = dataDict.pop('time'); time_dim = len(time)
   dataDict = None
 
   # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #

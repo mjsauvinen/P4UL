@@ -12,8 +12,8 @@ from utilities import selectFromList
 
 #==========================================================#
 def readVar( fn, vstr, cl=1 ):
-  xDict = read3dDataFromNetCDF( fn , vstr , cl )
-  v = xDict['v']; x = xDict['x']; y = xDict['y']; z = xDict['z']
+  xDict = read3dDataFromNetCDF( fn , [vstr] , cl )
+  v = xDict.pop(vstr); x = xDict.pop('x'); y = xDict.pop('y'); z = xDict.pop('z')
   xDict = None
   return v, x, y, z
 #==========================================================#
