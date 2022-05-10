@@ -171,7 +171,8 @@ if(not all(v is None for v in [topoConfig, surfConfig, vegConfig])):
 
     setPIDSGlobalAtrributes(pidsStaticDS, globalAttributes)
 
-    processCRS(pidsStaticDS, crsConfig)
+    if (crsConfig is not None):
+      processCRS(pidsStaticDS, crsConfig)
 
     '''
     Write topography with its dimensions into PIDS_STATIC

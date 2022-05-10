@@ -547,14 +547,14 @@ def processCRS(ds,cConf):
     print("WARNING: grid_mapping_name for CRS is not set, using default (transverse_mercator)")
 
   try: 
-    crsVar.semi_major_axis = cConf['semi_major_axis']
-    crsVar.inverse_flattening = cConf['inverse_flattening']
-    crsVar.longitude_of_prime_meridian = cConf['longitude_of_prime_meridian']
-    crsVar.longitude_of_central_meridian = cConf['longitude_of_central_meridian']
-    crsVar.latitude_of_projection_origin = cConf['latitude_of_projection_origin']
-    crsVar.scale_factor_at_central_meridian = cConf['scale_factor_at_central_meridian']
-    crsVar.false_easting = cConf['false_easting']
-    crsVar.false_northing = cConf['false_northing']
+    crsVar.semi_major_axis = float(cConf['semi_major_axis'])
+    crsVar.inverse_flattening = float(cConf['inverse_flattening'])
+    crsVar.longitude_of_prime_meridian = float(cConf['longitude_of_prime_meridian'])
+    crsVar.longitude_of_central_meridian = float(cConf['longitude_of_central_meridian'])
+    crsVar.latitude_of_projection_origin = float(cConf['latitude_of_projection_origin'])
+    crsVar.scale_factor_at_central_meridian = float(cConf['scale_factor_at_central_meridian'])
+    crsVar.false_easting = float(cConf['false_easting'])
+    crsVar.false_northing = float(cConf['false_northing'])
     crsVar.epsg_code = cConf['epsg_code']
   except KeyError:
     print('\nOne or more mandatory crs keys are missing. Make sure you specify all: \n - semi_major_axis\n - inverse_flattening \n'
