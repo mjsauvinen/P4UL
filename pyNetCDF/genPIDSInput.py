@@ -35,7 +35,7 @@ UPDATE:
 - Mikko: In python3 the ConfigParser library is renamed configparser
 - Jani Stromberg: Added building type and surface fractions
 - Mona Kurppa: Added and modified chemistry and salsa variables
-
+- Jukka-Pekka Keskinen: Added support for crs information
 '''
 
 #==========================================================#
@@ -65,6 +65,11 @@ if(globalAttributes is None):
   print("No global attributes specified.")
   globalAttributes={}
   newGlobalAttributes = False
+
+print("\n== CRS ==")
+crsConfig = readConfigSection(config, 'CRS')
+if(crsConfig is None):
+  print("No crs specified. Default will be used (ETRS89, UTM zone from given latitude).")
 
 print("\n== Topography ==")
 topoConfig = readConfigSection(config, 'Topography')
@@ -165,6 +170,9 @@ if(not all(v is None for v in [topoConfig, surfConfig, vegConfig])):
 
 
     setPIDSGlobalAtrributes(pidsStaticDS, globalAttributes)
+
+    if (crsConfig is not None):
+      processCRS(pidsStaticDS, crsConfig)
 
     '''
     Write topography with its dimensions into PIDS_STATIC

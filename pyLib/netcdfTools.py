@@ -324,15 +324,17 @@ def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, 
   if(parameter):
     dso.createDimension(vName, vLen)
   
-  # Convert variable into masked array. Use nans for the mask. 
-  # This ensures the fill_values are inserted correctly in netcdf4 function createVariable().
-  v = v.view( np.ma.MaskedArray )
-  v.mask = np.isnan(v)
-  
+    
   var = dso.createVariable(vName, vType, vTuple, zlib=zlib, fill_value=fill_value)
   var.units = vUnits
-  var[:] = v
-  v = None
+
+  if ( v is not None):
+    # Convert variable into masked array. Use nans for the mask. 
+    # This ensures the fill_values are inserted correctly in netcdf4 function createVariable().
+    v = v.view( np.ma.MaskedArray )
+    v.mask = np.isnan(v)
+    var[:] = v
+    v = None
 
   if(parameter):
     pStr = 'parameter'
