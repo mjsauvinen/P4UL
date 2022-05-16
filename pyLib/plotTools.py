@@ -865,6 +865,7 @@ def addQuiver( X, Y, Ux, Uy , fc,  labelStr, titleStr=" " ):
 def addContourf( X, Y, Q, CfDict=None ):
   Xdims = np.array(X.shape)
   figDims = 12.*(Xdims[::-1].astype(float)/np.max(Xdims))
+  figDims[0] = max( figDims[0] , 9 )
   #figDims  = (11,11)
   #figDims  = (9,11)
   fig = plt.figure(figsize=figDims)

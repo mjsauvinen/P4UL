@@ -31,6 +31,7 @@ def coordsToIJK(x, y, z, Ix, Iy, Iz, dx, dy, dz, kZOn, d=None):
   it = np.round(((x+d[1])/dx), decimals=0).astype(int) + Ix
   kt = np.round(((z+d[3])/dz), decimals=0).astype(int)
   if( kZOn ): iCk = Iz - np.min(kt)
+  else:       iCk = Iz
   kt += iCk
   
   return it, jt, kt 
@@ -72,6 +73,10 @@ parser.add_argument("-IcF", "--centerPixelFile",type=str, default=None,\
   help="Name of file containing all center pixels [iE jN kZ] for the point placement. Overrides -Ic")
 parser.add_argument("-d", "--dGapFill",type=float, default=0.,\
   help="Distance used for filling gaps. Default=None.")
+parser.add_argument("-b", "--binaryClosing", action="store_true", default=False,\
+  help="Perform binary closing (xy plane by plane) after mapping.")
+parser.add_argument("-i", "--invertMask", action="store_true", default=False,\
+  help="Invert the final 3d mask such that 0 <--> 1.")
 parser.add_argument("-na", "--nans", action="store_true", default=False,\
   help="Initialize 3d numpy array with nans. By default, 3d array will be initialzed with zeros.")
 parser.add_argument("-k0", "--kZeroHeight", action="store_true", default=False,\
@@ -91,6 +96,8 @@ dx,dy,dz      = args.Dxyz
 dm            = args.dGapFill
 iCx, iCy, iCz = args.centerPixel # northing, easting, elevation
 fileICntCoord = args.centerPixelFile
+binaryClosing = args.binaryClosing
+invertMask    = args.invertMask
 
 # - - - - - - - - - - #
 if( dm == 0. ):
@@ -178,12 +185,12 @@ for ic in range(nCntCoord):
         dgf[:] = 0.
   print('... done!')
 
-
-print('Perform binary closing  ... ') 
-for k in range(Nz):
-  Sx = binary_closing( S[k,:,:] )
-  S[k,:,:] = Sx[:,:]
-print('... done! ')
+if( binaryClosing ):
+  print('Perform binary closing  ... ') 
+  for k in range(Nz):
+    Sx = binary_closing( S[k,:,:] )
+    S[k,:,:] = Sx[:,:]
+  print('... done! ')
 
 # Make sure the flanks do not leak
 S[:,0,:] = S[:,1,:]; S[:,-1,:] = S[:,-2,:]
@@ -195,7 +202,11 @@ zs = np.linspace(0., Nz*dz, Nz)
 
 #print('xs: {}, ys: {}, zs: {}'.format(np.max(xs), np.max(ys), np.max(zs)))
 
-
+if( invertMask ):
+  id1 = (S == 1)
+  S[:,:,:] = 0
+  S[~id1] = 1
+  id1 = None
 
 if( filenetcdf is not None ):
   dso = netcdfOutputDataset(filenetcdf)
