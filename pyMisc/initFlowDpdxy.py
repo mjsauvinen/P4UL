@@ -12,6 +12,8 @@ parser.add_argument("-s", "--scale", type=float, default=1.,\
   help="Scaling factor [s] for the wind values: Uout = s*Uin.")
 parser.add_argument("-f", "--filename", type=str, default="umag_profil.dat",
                     help="File with reference wind profile.")
+parser.add_argument("-dp", "--pressuregrad", type=float, default=0.002,
+                    help="Magnitude of the pressure gradient.")
 args = parser.parse_args()
 #==========================================================#
 
@@ -21,7 +23,7 @@ alpha  = (270. - args.winddir ) * np.pi/180.
 # = = = = = = = = = = = = = = = 
 
 z, Umag = np.loadtxt(args.filename, usecols=(0,1), unpack=True)
-dpmag   = 0.0018  # Turku setup 
+dpmag   = args.pressuregrad
 
 u = scale * Umag * np.cos( alpha )
 v = scale * Umag * np.sin( alpha )
