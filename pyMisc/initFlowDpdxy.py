@@ -15,7 +15,7 @@ parser.add_argument("-um", "--Umax", type=float, default=None,\
 parser.add_argument("-zm", "--zmax", type=float, default=None,\
   help="Maximum height of the wind profile. Used for scaling the extent "
 "of the wind profile.")
-parser.add_argument("-f", "--filename", type=str, default="umag_profil.dat",
+parser.add_argument("-f", "--filename", type=str, default=None,
                     help="File with reference wind profile.")
 parser.add_argument("-dp", "--pressuregrad", type=float, default=0.002,
                     help="Magnitude of the pressure gradient.")
@@ -24,7 +24,8 @@ parser.add_argument("-z", "--uvheights", type=float, nargs='+',
                     "Input a list of z coordinates separated by spaces. "
                     "Default: every 100 metres up to zmax.")
 parser.add_argument("-i", "--interpolation", type=str, default="linear",
-                    choices=["linear", "cubic", "nearest", "previous","next"],
+                    choices=["linear", "nearest", "nearest-up", "previous",
+                             "next", "zero", "slinear", "quadratic", "cubic"],
                     nargs="?", help="Type of interpolation used for velocity "
                     "profiles.")
 args = parser.parse_args()
@@ -34,7 +35,13 @@ alpha   = (270. - args.winddir ) * np.pi/180.
 
 # = = = = = = = = = = = = = = = 
 
-z, Umag = np.loadtxt(args.filename, usecols=(0,1), unpack=True)
+if args.filename==None:
+    z = np.arange(0,1000,100,dtype=float)
+    Umag = np.array([0.0, 3.8, 5.8, 6.4, 6.9, 7.2, 7.4, 7.7, 7.9, 8.2])
+else:
+    z, Umag = np.loadtxt(args.filename, usecols=(0,1), unpack=True)
+
+
 maxUmag = np.max(Umag)
 maxz    = np.max(z)
 
@@ -62,13 +69,13 @@ pdy = -dpmag * np.sin( alpha )
 
 
 if args.uvheights==None:
-    uvz = np.arange(0,zscale,100,dtype=float)
+    uvz = np.arange(0,zscale+0.1,100,dtype=float)
 else:
     uvz = np.sort(np.asarray(args.uvheights,dtype=float))
     uvz = uvz[uvz>=0] # Remove negative heights
 
-ui = interp1d(z,u,kind=args.interpolation)
-vi = interp1d(z,v,kind=args.interpolation)
+ui = interp1d(z,u,kind=args.interpolation,fill_value='extrapolate')
+vi = interp1d(z,v,kind=args.interpolation,fill_value='extrapolate')
 
 ustr = ' '.join('{:.1f},'.format(ui(zi)) for zi in uvz)
 vstr = ' '.join('{:.1f},'.format(vi(zi)) for zi in uvz)
