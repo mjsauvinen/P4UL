@@ -38,6 +38,11 @@ parser.add_argument("-i", "--interpolation", type=str, default="linear",
                              "next", "zero", "slinear", "quadratic", "cubic"],
                     nargs="?", help="Type of interpolation used for velocity "
                     "profiles.")
+parser.add_argument("-o", "--outputPARIN", type=str, default=None,
+                    help="Output the wind profile and pressure gradient "
+                    "directly to an exsisting PARIN file. NB! Your old wind "
+                    "profile and pressure gradient information will be "
+                    "overwritten. Beware!")
 args = parser.parse_args()
 #==========================================================#
 
@@ -94,12 +99,31 @@ zstr = ' '.join('{:.1f},'.format(zi) for zi in uvz)
 u_output = 'u_profile  = {}'.format(ustr)
 v_output = 'v_profile  = {}'.format(vstr)
 z_output = 'uv_heights = {}'.format(zstr)
-
 dp_output = 'dpdxy =  {:.8f}, {:.8f},'.format( pdx, pdy )
 
-print('        !- wd = {} deg'.format(args.winddir))
-print('        {}\n'.format(dp_output))
-print('        {}'.format(u_output))
-print('        {}'.format(v_output))
-print('        {}'.format(z_output))
-print('        ! - - - - - - - !\n')
+if args.outputPARIN is not None:
+    parinin  = open('PARIN_testi','r').readlines()
+    parinout = open('PARIN_testi','w')
+    wdoutlist = ['!- wd', 'dpdxy', 'u_profile', 'v_profile', 'uv_heights', 'wd -!']
+
+    for j in parinin:
+        if not any ( k in j for k in wdoutlist):
+            parinout.write(j)
+        if "&initialization_parameters" in j:
+            parinout.write('\n        !- wd = {} deg'.format(args.winddir))
+            parinout.write('\n        {}\n'.format(dp_output))
+            parinout.write('\n        {}'.format(u_output))
+            parinout.write('\n        {}'.format(v_output))
+            parinout.write('\n        {}'.format(z_output))
+            parinout.write('\n        ! - - - - - - wd -!\n')
+
+    parinout.close()
+    print("Wind profile and pressure gradient information written to "
+          "file "+args.outputPARIN)
+else:
+    print('        !- wd = {} deg'.format(args.winddir))
+    print('        {}\n'.format(dp_output))
+    print('        {}'.format(u_output))
+    print('        {}'.format(v_output))
+    print('        {}'.format(z_output))
+    print('        ! - - - - - - wd -!\n')
