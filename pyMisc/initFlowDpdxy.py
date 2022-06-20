@@ -5,7 +5,17 @@ import argparse
 from scipy.interpolate import interp1d
 
 #==========================================================#
-parser = argparse.ArgumentParser(prog='flow_init_dpdxy.py')
+parser = argparse.ArgumentParser(prog='flow_init_dpdxy.py',
+                                 description="Generate PARIN entries "
+                                 "for initial wind profiles and pressure "
+                                 "gradient for a given wind direction. "
+                                 "Velocity profile can be given as an "
+                                 "external file which is then interpolated "
+                                 "for desired intervals. The extent and "
+                                 "magnitude of the profile is set using "
+                                 "maximum height and maximum velocity "
+                                 "magnitude. NB! Extrapolation of profiles "
+                                 " can happen. Beware!")
 parser.add_argument("-wd", "--winddir", type=float, default=270.,
   help="Wind direction in degrees relative to grid: 0 equals north (-y),"
                     " 180 south (+y), 270 west (+x). Default = 270.")
