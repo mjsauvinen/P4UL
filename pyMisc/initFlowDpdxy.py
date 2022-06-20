@@ -2,26 +2,36 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
+from scipy.interpolate import interp1d
 
 #==========================================================#
 parser = argparse.ArgumentParser(prog='flow_init_dpdxy.py')
 parser.add_argument("-wd", "--winddir", type=float, default=270.,
   help="Wind direction in degrees relative to grid: 0 equals north (-y),"
                     " 180 south (+y), 270 west (+x). Default = 270.")
-parser.add_argument("-U", "--Umax", type=float, default=None,\
+parser.add_argument("-um", "--Umax", type=float, default=None,\
   help="Maximum value for wind magnitude in the profile. Used for scaling "
 "the magnitude of the wind profile.")
-parser.add_argument("-z", "--zmax", type=float, default=None,\
+parser.add_argument("-zm", "--zmax", type=float, default=None,\
   help="Maximum height of the wind profile. Used for scaling the extent "
-"of the wind profile..")
+"of the wind profile.")
 parser.add_argument("-f", "--filename", type=str, default="umag_profil.dat",
                     help="File with reference wind profile.")
 parser.add_argument("-dp", "--pressuregrad", type=float, default=0.002,
                     help="Magnitude of the pressure gradient.")
+parser.add_argument("-z", "--uvheights", type=float, nargs='+',
+                    help="Locations where velocity profiles are given. "
+                    "Input a list of z coordinates separated by spaces. "
+                    "Default: every 100 metres up to zmax.")
+parser.add_argument("-i", "--interpolation", type=str, default="linear",
+                    choices=["linear", "cubic", "nearest", "previous","next"],
+                    nargs="?", help="Type of interpolation used for velocity "
+                    "profiles.")
 args = parser.parse_args()
 #==========================================================#
 
 alpha   = (270. - args.winddir ) * np.pi/180.
+
 # = = = = = = = = = = = = = = = 
 
 z, Umag = np.loadtxt(args.filename, usecols=(0,1), unpack=True)
@@ -37,23 +47,32 @@ if args.zmax==None:
 else:
     zscale  = args.zmax 
 
-# Normalise profiles. If already normalised, nothing happens
-# If no scaling is specified, use input profiles directly.
-z = z/maxz
-Umag = Umag/maxUmag
+# Normalise and scale profiles. If already normalised, nothing should
+# happen. If no scaling is specified, input profiles are used directly.
+z = zscale*z/maxz
+Umag = Uscale*Umag/maxUmag
 
 dpmag   = args.pressuregrad
 
-u = Uscale * Umag * np.cos( alpha )
-v = Uscale * Umag * np.sin( alpha )
+u = Umag * np.cos( alpha )
+v = Umag * np.sin( alpha )
 
 pdx = -dpmag * np.cos( alpha )
 pdy = -dpmag * np.sin( alpha )
 
 
-ustr = ' '.join('{:.1f},'.format(ui) for ui in u[::6])
-vstr = ' '.join('{:.1f},'.format(vi) for vi in v[::6])
-zstr = ' '.join('{:.1f},'.format(zscale*zi) for zi in z[::6])
+if args.uvheights==None:
+    uvz = np.arange(0,zscale,100,dtype=float)
+else:
+    uvz = np.sort(np.asarray(args.uvheights,dtype=float))
+    uvz = uvz[uvz>=0] # Remove negative heights
+
+ui = interp1d(z,u,kind=args.interpolation)
+vi = interp1d(z,v,kind=args.interpolation)
+
+ustr = ' '.join('{:.1f},'.format(ui(zi)) for zi in uvz)
+vstr = ' '.join('{:.1f},'.format(vi(zi)) for zi in uvz)
+zstr = ' '.join('{:.1f},'.format(zi) for zi in uvz)
 
 u_output = 'u_profile  = {}'.format(ustr)
 v_output = 'v_profile  = {}'.format(vstr)
