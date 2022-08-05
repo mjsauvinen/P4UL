@@ -101,10 +101,9 @@ fig = plt.figure(num=1, figsize=(12,10))
 for fn in fileNos:
   VNU = varname.upper()
   if('MAG' in VNU or 'U1' in VNU or 'U2' in VNU or 'DIR' in VNU):
-    dataDict = read3dDataFromNetCDF( fileList[fn] , 'u', cl )
-    u = dataDict['v']
-    dataDict = read3dDataFromNetCDF( fileList[fn] , 'v', cl )
-    v = dataDict['v']
+    dataDict = read3dDataFromNetCDF( fileList[fn] , ['u','v'], cl )
+    u = dataDict.pop('u')
+    v = dataDict.pop('v')
     
     if('MAG' in VNU ): # vr := Umag
       vr = np.sqrt( u**2 + v**2 ); u = None; v = None
@@ -120,17 +119,15 @@ for fn in fileNos:
     
   elif('TKE' in VNU):
     try:
-      dataDict = read3dDataFromNetCDF( fileList[fn] , 'e', cl )
-      e_sgs = dataDict['v']
+      dataDict = read3dDataFromNetCDF( fileList[fn] , ['e'], cl )
+      e_sgs = dataDict.pop('e')
     except:
       print(' No e_sgs -> Result is RESOLVED TKE! ')
       e_sgs = None
-    dataDict = read3dDataFromNetCDF( fileList[fn] , 'u', cl )
-    u = dataDict['v']; up=u-np.mean(u, axis=0); u = None
-    dataDict = read3dDataFromNetCDF( fileList[fn] , 'v', cl )
-    v = dataDict['v']; vp=v-np.mean(v, axis=0); v = None
-    dataDict = read3dDataFromNetCDF( fileList[fn] , 'w', cl )
-    w = dataDict['v']; wp=w-np.mean(w, axis=0); w = None 
+    dataDict = read3dDataFromNetCDF( fileList[fn] , ['u','v','w'], cl )
+    u = dataDict.pop('u'); up=u-np.mean(u, axis=0); u = None
+    v = dataDict.pop('v'); vp=v-np.mean(v, axis=0); v = None
+    w = dataDict.pop('w'); wp=w-np.mean(w, axis=0); w = None 
     
     e_res = 0.5*(np.mean(up**2,axis=0)+np.mean(vp**2,axis=0)+np.mean(wp**2,axis=0))
     up = None; vp = None; wp = None 
@@ -140,11 +137,11 @@ for fn in fileNos:
     if( e_sgs is not None ): vr += e_sgs
     
   else:
-    dataDict = read3dDataFromNetCDF( fileList[fn] , varname, cl )
-    vr = dataDict['v']
+    dataDict = read3dDataFromNetCDF( fileList[fn] , [varname], cl )
+    vr = dataDict[varname]
   
-  x  = dataDict['x']; y = dataDict['y']; z = dataDict['z']
-  time = dataDict['time']
+  x  = dataDict.pop('x'); y = dataDict.pop('y'); z = dataDict.pop('z')
+  time = dataDict.pop('time')
   dataDict = None
   axs = (0,2,3)
   #axs = (0)

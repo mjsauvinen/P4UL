@@ -23,6 +23,7 @@ UPDATE:
   ids.
 - Mona Kurppa: Added and modified chemistry and salsa variables
                + changes in the function "map". Does not return a list in Python 3.
+- Jukka-Pekka Keskinen: Added CRS support.
 '''
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
@@ -527,6 +528,42 @@ def processSurfaceFraction(fname, ds, vars, dims):
     surfaceFractionNCVar.long_name = "surface fraction"
 
     return surfaceFractionNCVar
+
+def processCRS(ds,cConf):
+  try:
+    crsVar = createNetcdfVariable(ds, None, 'crs', 0, cConf['units'], 'i4', [], False, False,
+                                  fill_value=None, verbose=False)
+  except KeyError:
+    print("WARNING: units for CRS are not set, using default (m)")
+    crsVar = createNetcdfVariable(ds, None, 'crs', 0, 'm', 'i4', [], False, False,
+                                  fill_value=None, verbose=False)
+
+  crsVar.long_name = 'coordinate reference system'
+  
+  try: 
+    crsVar.grid_mapping_name = cConf['grid_mapping_name']
+  except KeyError: 
+    crsVar.grid_mapping_name = 'transverse_mercator'
+    print("WARNING: grid_mapping_name for CRS is not set, using default (transverse_mercator)")
+
+  try: 
+    crsVar.semi_major_axis = float(cConf['semi_major_axis'])
+    crsVar.inverse_flattening = float(cConf['inverse_flattening'])
+    crsVar.longitude_of_prime_meridian = float(cConf['longitude_of_prime_meridian'])
+    crsVar.longitude_of_central_meridian = float(cConf['longitude_of_central_meridian'])
+    crsVar.latitude_of_projection_origin = float(cConf['latitude_of_projection_origin'])
+    crsVar.scale_factor_at_central_meridian = float(cConf['scale_factor_at_central_meridian'])
+    crsVar.false_easting = float(cConf['false_easting'])
+    crsVar.false_northing = float(cConf['false_northing'])
+    crsVar.epsg_code = cConf['epsg_code']
+  except KeyError:
+    print('\nOne or more mandatory crs keys are missing. Make sure you specify all: \n - semi_major_axis\n - inverse_flattening \n'
+    ' - longitude_of_prime_meridian\n - longitude_of_central_meridian\n - latitude_of_projection_origin\n'
+          ' - scale_factor_at_central_meridian\n - false_easting\n - false_northing\n - epsg_code\n')
+    raise KeyError("Missing CRS key(s)")
+
+  return crsVar
+
 
 
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*

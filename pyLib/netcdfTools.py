@@ -178,7 +178,7 @@ def read3DVariableFromDataset(varStr, ds, iTOff=0, iLOff=0, iROff=0, cl=1, meanO
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def read3dDataFromNetCDF( fname, varStr, cl=1, zeroNans=True ):
+def read3dDataFromNetCDF( fname, varNames, cl=1, zeroNans=True ):
   '''
   Establish two boolean variables which indicate whether the created variable is an
   independent or dependent variable in function createNetcdfVariable().
@@ -190,30 +190,39 @@ def read3dDataFromNetCDF( fname, varStr, cl=1, zeroNans=True ):
   and independent (dimList) variables.
   '''
   ds, varList, paramList = netcdfDataset(fname)
-  varStr = partialMatchFromList( varStr , varList )
-  print(' Extracting {} from dataset in {} ... '.format( varStr, fname ))
-  var, dDict = readVariableFromDataset(varStr, ds, cl )
-  print(' {}_dims = {}\n Done!'.format(varStr, var.shape ))
-
-  # Rename the keys in dDict to simplify the future postprocessing
-  for dn in dDict.keys():
-    if( zeroNans ):
-      idNan = np.isnan(dDict[dn]); dDict[dn][idNan] = 0.
+  vDict = dict()
+  
+  for vn in varNames:
+    vname = partialMatchFromList( vn , varList ) # Obtain the correct name 
+    print(' Extracting {} from dataset in {} ... '.format( vname, fname ))
+    var, dDict = readVariableFromDataset(vname, ds, cl )
+    print(' {}_dims = {}\n Done!'.format(vn, var.shape ))
     
-    if( 'time' in dn and 'time' != dn ):
-      dDict['time'] = dDict.pop( dn )
-    elif( 'x' == dn[0] and 'x' != dn ):
-      dDict['x'] = dDict.pop( dn )
-    elif( 'y' == dn[0] and 'y' != dn ):
-      dDict['y'] = dDict.pop( dn )
-    elif( 'z' == dn[0] and 'z' != dn ):
-      dDict['z'] = dDict.pop( dn )
-    else: pass
+    vDict[vn] = var   # Store the variable under the provided name 
+    
+    # Rename the keys in dDict to simplify the future postprocessing
+    for dn in dDict.keys():
+      if( zeroNans ):
+        idNan = np.isnan(dDict[dn]); dDict[dn][idNan] = 0.
+    
+      if( 'time' in dn and 'time' != dn ):
+        dDict['time'] = dDict.pop( dn )
+      elif( 'x' == dn[0] and 'x' != dn ):
+        dDict['x'] = dDict.pop( dn )
+      elif( 'y' == dn[0] and 'y' != dn ):
+        dDict['y'] = dDict.pop( dn )
+      elif( 'z' == dn[0] and 'z' != dn ):
+        dDict['z'] = dDict.pop( dn )
+      else: pass
 
-  # Append the variable into the dict.
-  dDict['v'] = var
+  # Move the coords into the final data dict.
+  vDict['time'] = dDict.pop( 'time' )
+  vDict['x']    = dDict.pop( 'x' )
+  vDict['y']    = dDict.pop( 'y' )
+  vDict['z']    = dDict.pop( 'z' )
+  dDict = None
 
-  return dDict
+  return vDict
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
@@ -315,15 +324,17 @@ def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, 
   if(parameter):
     dso.createDimension(vName, vLen)
   
-  # Convert variable into masked array. Use nans for the mask. 
-  # This ensures the fill_values are inserted correctly in netcdf4 function createVariable().
-  v = v.view( np.ma.MaskedArray )
-  v.mask = np.isnan(v)
-  
+    
   var = dso.createVariable(vName, vType, vTuple, zlib=zlib, fill_value=fill_value)
   var.units = vUnits
-  var[:] = v
-  v = None
+
+  if ( v is not None):
+    # Convert variable into masked array. Use nans for the mask. 
+    # This ensures the fill_values are inserted correctly in netcdf4 function createVariable().
+    v = v.view( np.ma.MaskedArray )
+    v.mask = np.isnan(v)
+    var[:] = v
+    v = None
 
   if(parameter):
     pStr = 'parameter'
@@ -385,10 +396,11 @@ def read3dDictVarFromNetCDF( fname, nameDict, cl=1 ):
   Read cell center coordinates and time.
   Create the output independent variables right away and empty memory.
   '''
-  time, time_dims = read1DVariableFromDataset('time', nameDict['varname'], ds, 0, 0, 1 ) # All values.
-  x, x_dims = read1DVariableFromDataset(nameDict['xname'], nameDict['varname'], ds, 0, 0, cl )
-  y, y_dims = read1DVariableFromDataset(nameDict['yname'], nameDict['varname'], ds, 0, 0, cl )
-  z, z_dims = read1DVariableFromDataset(nameDict['zname'], nameDict['varname'], ds, 0, 0, cl )
+  vn = nameDict['varname']
+  time, time_dims = read1DVariableFromDataset('time', vn, ds, 0, 0, 1 ) # All values.
+  x, x_dims = read1DVariableFromDataset(nameDict['xname'], vn, ds, 0, 0, cl )
+  y, y_dims = read1DVariableFromDataset(nameDict['yname'], vn, ds, 0, 0, cl )
+  z, z_dims = read1DVariableFromDataset(nameDict['zname'], vn, ds, 0, 0, cl )
   x[np.isnan(x)] = 0.  # Clear away NaNs
   y[np.isnan(y)] = 0.  #
   z[np.isnan(z)] = 0.  #
@@ -399,12 +411,12 @@ def read3dDictVarFromNetCDF( fname, nameDict, cl=1 ):
   v(time, zu_3d, yv, x)
   w(time, zw_3d, y, x)
   '''
-  print(' Extracting {} from dataset ... '.format( nameDict['varname'] ))
-  v, v_dims = read3DVariableFromDataset(nameDict['varname'], ds, 0, 0, 0, cl) # All values.
-  print(' {}_dims = {}\n Done!'.format(nameDict['varname'], v_dims ))
+  print(' Extracting {} from dataset ... '.format( vn ))
+  v, v_dims = read3DVariableFromDataset(vn, ds, 0, 0, 0, cl) # All values.
+  print(' {}_dims = {}\n Done!'.format(vn, v_dims ))
 
   dataDict = dict()
-  dataDict['v'] = v
+  dataDict[vn] = v
   dataDict['x'] = x
   dataDict['y'] = y
   dataDict['z'] = z

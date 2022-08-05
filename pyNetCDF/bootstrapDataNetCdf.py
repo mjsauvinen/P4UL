@@ -89,38 +89,37 @@ for fn in fileNos:
   
   for i in range(len(varnames)):
     if( varnames[i].upper() == 'U1' or varnames[i].upper() == 'U2' ):
-      dataDict = read3dDataFromNetCDF( fileList[fn] , 'u', 1 )
-      u = dataDict['v']
-      dataDict = read3dDataFromNetCDF( fileList[fn] , 'v', 1 )
-      v = dataDict['v']
+      dataDict = read3dDataFromNetCDF( fileList[fn] , ['u','v'] , 1 )
+      u = dataDict.pop('u')
+      v = dataDict.pop('v')
       um = np.mean( u, axis=(0) ); vm = np.mean( v, axis=(0) )
       a  = np.arctan( vm/(um+1.e-5) ); um = None; vm = None
       # Carry the data within dataDict.
       if( varnames[i].upper() == 'U1' ):
-        dataDict['v'] = u * np.cos(a) + v * np.sin(a) 
+        dataDict[varnames[i]] = u * np.cos(a) + v * np.sin(a) 
       else:
-        dataDict['v'] =-u * np.sin(a) + v * np.cos(a)
+        dataDict[varnames[i]] =-u * np.sin(a) + v * np.cos(a)
       # Free memory  
       u = None; v = None; a = None                  
       
     else:
-      dataDict = read3dDataFromNetCDF( fileList[fn] , varnames[i], 1 )
+      dataDict = read3dDataFromNetCDF( fileList[fn] , [varnames[i]], 1 )
     
     
     # The data comes in within dataDict
     if( vr is None ):
-      vr = dataDict['v']; vr -= v0[i]; vr /= vs[i]
+      vr = dataDict[varnames[i]]; vr -= v0[i]; vr /= vs[i]
       if( len(varnames) > 1): 
         # If we are computing Reynolds stresses, subtract the mean.
         vr -= np.mean( vr, axis=(0) )
     else:
-      tr = dataDict['v']; tr -= v0[i]; tr /= vs[i]; tr -= np.mean( tr, axis=(0) )
+      tr = dataDict[varnames[i]]; tr -= v0[i]; tr /= vs[i]; tr -= np.mean( tr, axis=(0) )
       vr *= tr
       tr = None 
   
   
-  x  = dataDict['x']; y = dataDict['y']; z = dataDict['z']
-  time = dataDict['time']
+  x  = dataDict.pop('x'); y = dataDict.pop('y'); z = dataDict.pop('z')
+  time = dataDict.pop('time')
   dataDict = None
   
   nt, nk, nj, ni = vr.shape

@@ -65,12 +65,12 @@ first = True
 fig   = None
 
 for fn in fileNos:
-  dataDict = read3dDataFromNetCDF( fileList[fn] , varname, cl )
-  v = dataDict['v']
-  x = dataDict['x']
-  y = dataDict['y']
-  z = dataDict['z']
-  time = dataDict['time']
+  dataDict = read3dDataFromNetCDF( fileList[fn] , [varname] , cl )
+  v = dataDict.pop(varname)
+  x = dataDict.pop('x')
+  y = dataDict.pop('y')
+  z = dataDict.pop('z')
+  time = dataDict.pop('time')
   
   if( first ):
     infoStr = '''

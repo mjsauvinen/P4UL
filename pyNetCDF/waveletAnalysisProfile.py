@@ -58,6 +58,7 @@ kIds      = args.kIndices
 nkpoints  = args.nkpoints
 linearFreq= args.linearFreq
 printOn   = args.printOn
+cl = 1
 #==========================================================# 
 '''
 Establish two boolean variables which indicate whether the created variable is an
@@ -70,16 +71,15 @@ nameDict = dict()
 nameDict['xname'] = args.xname
 nameDict['yname'] = args.yname
 nameDict['zname'] = args.zname
-
-# First fluctuation component
-nameDict['varname'] = varname[0]
-cl = 1
+nameDict['varname'] = varname  
 ncDict = read3dDictVarFromNetCDF( filename , nameDict, cl )
-v = ncDict['v']   # 'v' is a generic name for a variable in ncDict
+v = ncDict.pop(varname)
 
 # Spatial coords and time
-x = ncDict['x']; y = ncDict['y']; z = ncDict['z']
-time = ncDict['time']
+x = ncDict.pop('x')
+y = ncDict.pop('y')
+z = ncDict.pop('z')
+time = ncDict.pop('time')
 
 # Now check whether the given indices make sense 
 # Here we set i = 0 and j = 0.

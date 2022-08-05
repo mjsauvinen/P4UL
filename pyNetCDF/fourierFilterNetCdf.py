@@ -64,14 +64,14 @@ for fn in fileNos:
 
   for vn in varnames:
     # Read in data.
-    dataDict = read3dDataFromNetCDF( fileList[fn] , vn, cl )
-    vp = dataDict['v']
+    dataDict = read3dDataFromNetCDF( fileList[fn] , [vn], cl )
+    vp = dataDict[vn]
     
     
     if( parameter ):
       # Coords and time:
-      x = dataDict['x']; y = dataDict['y']; z = dataDict['z']
-      time = dataDict['time']; time_dim = len(time)
+      x  = dataDict.pop('x'); y = dataDict.pop('y'); z = dataDict.pop('z')
+      time = dataDict.pop('time'); time_dim = len(time)
       
     dataDict = None
 
@@ -116,8 +116,8 @@ for fn in fileNos:
     # - - - - Done , finalize the output - - - - - - - - - -
   
   for vc in varcopy:
-    dataDict = read3dDataFromNetCDF( fileList[fn] , vc, cl )
-    vpc = dataDict['v']
+    dataDict = read3dDataFromNetCDF( fileList[fn] , [vc], cl )
+    vpc = dataDict.pop(vc)
     if( len(np.shape( vpc )) == 4 ):
       voDict[vc] = createNetcdfVariable(dso, vpc, vc, time_dim,'[-]','f4',('time','z','y','x',), variable)
     elif( len(np.shape(vpc)) == 3 ):

@@ -74,16 +74,13 @@ parameter = True;  variable  = False
 
 # First fluctuation component
 cl = 1
-ncDict = read3dDataFromNetCDF( filename , varnames[0], cl )
-v1 = ncDict['v']   # 'v' is a generic name for a variable in ncDict
-
-# Second fluctuation component
-ncDict = read3dDataFromNetCDF( filename , varnames[1], cl )
-v2 = ncDict['v']
+ncDict = read3dDataFromNetCDF( filename , varnames, cl )
+v1 = ncDict.pop(varnames[0])  # First fluctuation component
+v2 = ncDict.pop(varnames[1])  # Second fluctuation component
 
 # Spatial coords and time
-x = ncDict['x']; y = ncDict['y']; z = ncDict['z']
-time = ncDict['time']
+x  = ncDict.pop('x'); y = ncDict.pop('y'); z = ncDict.pop('z')
+time = ncDict.pop('time')
 
 # Plot coord. information. This aids the user in the beginning.
 infoStr = '''
