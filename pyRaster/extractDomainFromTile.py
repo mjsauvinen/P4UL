@@ -99,7 +99,10 @@ if( verbose ): print(' dPx = {} '.format(dPx))
 
 
 # Pivot coordinates in the local coord. system
-pY = rY[iPv[0]//np.abs(dPx[0])]; pX = cX[iPv[1]//np.abs(dPx[1])]
+if args.useGlobCoords == True:
+  pY = rY[iPv[0]//np.abs(dPx[0])]; pX = cX[iPv[1]//np.abs(dPx[1])]
+else:
+  pY = rY[iPv[0]]; pX = cX[iPv[1]]
 print(' Origo in the input Topography data: [N,E] = [{}, {}]'.format(ROrig[0],ROrig[1]))
 print(' Pivot Coords in the input Topography data: [N,E] = [pY={}, pX={}]'.format(pY,pX))
 #NY, EX = np.meshgrid(rY,cX)
