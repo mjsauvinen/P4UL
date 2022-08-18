@@ -17,7 +17,7 @@ Author: Mikko Auvinen
         Finnish Meteorological Institute
 '''
 #==========================================================#
-def replaceMask( Rx, px1, px2, lineOpt, gtval, ltval, Nbd):
+def replaceMask( Rx, px1, px2, lineOpt, gtval, ltval, Nbd, Nans=False):
   '''Return the indices that will be replaced
 
   This function handles all the location specific work. Line mode and rectangle
@@ -25,7 +25,14 @@ def replaceMask( Rx, px1, px2, lineOpt, gtval, ltval, Nbd):
   location selection modes.
 
   '''
-
+  
+  # Treat --fillNans first
+  if( Nans ):
+    idm = np.isnan(Rx) 
+    print('N={} nan values to be filled.'.format( np.count_nonzero(idm) ))
+    return idm
+  
+  # Continue with conventional treatment
   idm = np.zeros( np.shape(Rx), bool )
   
   if( lineOpt ):
@@ -70,6 +77,8 @@ parser.add_argument("-c","--coef", type=float, default=1.0,\
   help="Multiplication coefficient with which masked values are multiplied. Default=1.")
 parser.add_argument("-na", "--nans", action="store_true", default=False,\
   help="Use Nans as replacement values. Overrides the --value specified above.")
+parser.add_argument("-nf", "--fillNans", help="Fill nans with replace value.",\
+  action="store_true", default=False)
 parser.add_argument("-l", "--line", action="store_true", default=False,\
   help="Replace values along line from -p1 to -p2.")
 parser.add_argument("-p", "--printOn", help="Print the resulting raster data.",\
@@ -92,6 +101,7 @@ p1          = np.array( args.pixels1 )
 p2          = np.array( args.pixels2 )
 val         = args.value        # Replacement value
 useNans     = args.nans
+fillNans    = args.fillNans
 cf          = args.coef         # Multiplication coefficient
 gtval       = args.gt           # value greater than which will be replaced by [val]
 ltval       = args.lt           # value less than which will be replaced by [val]
@@ -127,7 +137,7 @@ print(' ROrig = {} '.format(ROrig))
 print(' Value at top left: {} '.format(R[p1[0],p1[1]]))
 print(' Value at bottom right: {} '.format(R[p2[0]-1,p2[1]-1]))
 
-idR = replaceMask( R , p1, p2, lineMode, gtval, ltval, Nbd )
+idR = replaceMask( R , p1, p2, lineMode, gtval, ltval, Nbd, fillNans )
 
 if( useNans ):
   val = np.nan
