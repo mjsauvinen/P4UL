@@ -5,14 +5,15 @@ from netcdfTools import *
 
 '''Calculate Q values
   
-Calculate the Q values for the identification of vortex cores. The script
-expects collocated velocity data. This can be achieved using
-collocateDataNetCdf.py
+Calculate the Q values (Hunt, Wray & Moin, 1988) for the identification of
+vortex cores. The script expects collocated velocity data. This can be achieved
+using collocateDataNetCdf.py
 
 Author:
 Jukka-Pekka Keskinen
 Finnish Meteorological Insitute
 8/2022
+
 '''
 
 #=argument parser=============================================================#
@@ -20,15 +21,15 @@ Finnish Meteorological Insitute
 parser = argparse.ArgumentParser(
     prog='Q.py',
     description='Calculate the Q values for the identification of vortices.')
-parser.add_argument("-f", "--filename",type=str, 
-                    help="Name of the input data file. It has to contain "
-                    "all velocity components.")
-parser.add_argument("-fo", "--fileout",type=str, 
-                    help="Name of output file.")
+parser.add_argument('-f', '--filename',type=str, 
+                    help='Name of the input data file. It has to contain '
+                    'all velocity components.')
+parser.add_argument('-fo', '--fileout',type=str, help='Name of output file.',
+                    default = 'Q.nc')
 
 args = parser.parse_args()
 
-#=calculations================================================================#
+#=inputs######================================================================#
 
 ds, vD, uD = netcdfDataset2(args.filename)
 
@@ -38,8 +39,12 @@ for i in ['u', 'v', 'w']:
             ' Vector component {} not found from variable list: {}'.format(
                 i, vD.keys()))
 
-muoto = ds['u'][:,1:-1,1:-1,1:-1].shape
+if (vD['u']!=vD['v'] or vD['u']!=vD['w']):
+    sys.exit(' Velocity components are not in the same locations. Exiting.') 
 
+#=calculations================================================================#
+
+muoto = ds['u'][:,1:-1,1:-1,1:-1].shape
 
 dudx = ((ds['u'][:,1:-1,1:-1,2:].data - ds['u'][:,1:-1,1:-1,:-2].data) 
         / np.broadcast_to(ds['x'][2:].data - ds['x'][:-2].data, muoto))
