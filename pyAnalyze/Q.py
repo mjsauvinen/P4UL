@@ -9,6 +9,9 @@ Calculate the Q values (Hunt, Wray & Moin, 1988) for the identification of
 vortex cores. The script expects collocated velocity data. This can be achieved
 using collocateDataNetCdf.py
 
+NB: Output dataset has different lenght in z, y, and x directions. Also, there
+might be some space for improvement at the boundaries.
+
 Author:
 Jukka-Pekka Keskinen
 Finnish Meteorological Insitute
@@ -26,6 +29,9 @@ parser.add_argument('-f', '--filename',type=str,
                     'all velocity components.')
 parser.add_argument('-fo', '--fileout',type=str, help='Name of output file.',
                     default = 'Q.nc')
+parser.add_argument('-n', '--missToNan',action="store_true", default=False,
+                    help='Set PALM missing values (-9999.0) to numpy in the'
+                    'calculation of Q. Default: set to 0.0.')
 
 args = parser.parse_args()
 
@@ -42,36 +48,51 @@ for i in ['u', 'v', 'w']:
 if (vD['u']!=vD['v'] or vD['u']!=vD['w']):
     sys.exit(' Velocity components are not in the same locations. Exiting.') 
 
-#=calculations================================================================#
-
 muoto = ds['u'][:,1:-1,1:-1,1:-1].shape
 
-dudx = ((ds['u'][:,1:-1,1:-1,2:].data - ds['u'][:,1:-1,1:-1,:-2].data) 
-        / np.broadcast_to(ds['x'][2:].data - ds['x'][:-2].data, muoto))
-dvdx = ((ds['v'][:,1:-1,1:-1,2:].data - ds['v'][:,1:-1,1:-1,:-2].data) 
-        / np.broadcast_to(ds['x'][2:].data - ds['x'][:-2].data, muoto))
-dwdx = ((ds['w'][:,1:-1,1:-1,2:].data - ds['w'][:,1:-1,1:-1,:-2].data) 
-        / np.broadcast_to(ds['x'][2:].data - ds['x'][:-2].data, muoto))
-dudy = ((ds['u'][:,1:-1,2:,1:-1].data - ds['u'][:,1:-1,:-2,1:-1].data) 
+u = ds['u'][:,:,:,:].data
+v = ds['v'][:,:,:,:].data
+w = ds['w'][:,:,:,:].data
+x = ds['x'][:].data
+y = ds['y'][:].data
+z = ds['z'][:].data
+t = ds['time'][:].data
+
+netcdfWriteAndClose( ds )
+
+if args.missToNan:
+    u[np.isclose(u,-9999.0)]=np.nan
+else:
+    u[np.isclose(u,-9999.0)]=0.0
+
+#=calculations================================================================#
+
+dudx = ((u[:,1:-1,1:-1,2:] - u[:,1:-1,1:-1,:-2])
+        / np.broadcast_to(x[2:] - x[:-2], muoto))
+dvdx = ((v[:,1:-1,1:-1,2:] - v[:,1:-1,1:-1,:-2]) 
+        / np.broadcast_to(x[2:] - x[:-2], muoto))
+dwdx = ((w[:,1:-1,1:-1,2:] - w[:,1:-1,1:-1,:-2]) 
+        / np.broadcast_to(x[2:] - x[:-2], muoto))
+dudy = ((u[:,1:-1,2:,1:-1] - u[:,1:-1,:-2,1:-1]) 
         / np.broadcast_to(np.reshape(
-            ds['y'][2:].data - ds['y'][:-2].data, (muoto[2],1)), muoto))
-dvdy = ((ds['v'][:,1:-1,2:,1:-1].data - ds['v'][:,1:-1,:-2,1:-1].data) 
+            y[2:] - y[:-2], (muoto[2],1)), muoto))
+dvdy = ((v[:,1:-1,2:,1:-1] - v[:,1:-1,:-2,1:-1]) 
         / np.broadcast_to(np.reshape(
-            ds['y'][2:].data - ds['y'][:-2].data, (muoto[2],1)), muoto))
-dwdy = ((ds['w'][:,1:-1,2:,1:-1].data - ds['w'][:,1:-1,:-2,1:-1].data) 
+            y[2:] - y[:-2], (muoto[2],1)), muoto))
+dwdy = ((w[:,1:-1,2:,1:-1] - w[:,1:-1,:-2,1:-1]) 
         / np.broadcast_to(np.reshape(
-            ds['y'][2:].data - ds['y'][:-2].data, (muoto[2],1)), muoto))
-dudz = ((ds['u'][:,2:,1:-1,1:-1].data - ds['u'][:,:-2,1:-1,1:-1].data) 
+            y[2:] - y[:-2], (muoto[2],1)), muoto))
+dudz = ((u[:,2:,1:-1,1:-1] - u[:,:-2,1:-1,1:-1]) 
         / np.broadcast_to(np.reshape(np.broadcast_to(np.reshape(
-            ds['z'][2:].data - ds['z'][:-2].data, (muoto[1],1)), 
+            z[2:] - z[:-2], (muoto[1],1)), 
           (muoto[1],muoto[2])), (muoto[1],muoto[2],1)), muoto))
-dvdz = ((ds['v'][:,2:,1:-1,1:-1].data - ds['v'][:,:-2,1:-1,1:-1].data) 
+dvdz = ((v[:,2:,1:-1,1:-1] - v[:,:-2,1:-1,1:-1]) 
         / np.broadcast_to(np.reshape(np.broadcast_to(np.reshape(
-            ds['z'][2:].data - ds['z'][:-2].data, (muoto[1],1)), 
+            z[2:] - z[:-2], (muoto[1],1)), 
         (muoto[1],muoto[2])), (muoto[1],muoto[2],1)), muoto))
-dwdz = ((ds['w'][:,2:,1:-1,1:-1].data - ds['w'][:,:-2,1:-1,1:-1].data) 
+dwdz = ((w[:,2:,1:-1,1:-1] - w[:,:-2,1:-1,1:-1]) 
         / np.broadcast_to(np.reshape(np.broadcast_to(np.reshape(
-            ds['z'][2:].data - ds['z'][:-2].data, (muoto[1],1)), 
+            z[2:] - z[:-2], (muoto[1],1)), 
         (muoto[1],muoto[2])), (muoto[1],muoto[2],1)), muoto))
 
 Q = dudx**2 + dvdy**2 + dwdz**2 + 2*dudy*dvdx + 2*dudz*dwdx + 2*dvdz*dwdy
@@ -81,23 +102,23 @@ Q = dudx**2 + dvdy**2 + dwdz**2 + 2*dudy*dvdx + 2*dudz*dwdx + 2*dvdz*dwdy
 dso = netcdfOutputDataset( args.fileout )
 
 tv = createNetcdfVariable( 
-    dso, ds['time'][:], 'time', len(ds['time'][:]), uD['time'], 'f4', 
-    ('time',), True )
+    dso, t, 'time', len(t), uD['time'], 'f4', ('time',), True )
 
 xv = createNetcdfVariable( 
-    dso, ds['x'][1:-1] , 'x' , len(ds['x'][1:-1]), uD['x'], 'f4', 
-    ('x',), True )
+    dso, x[1:-1], 'x' , len(x[1:-1]), uD['x'], 'f4', ('x',), True )
 
 yv = createNetcdfVariable( 
-    dso, ds['x'][1:-1] , 'y' , len(ds['x'][1:-1]), uD['y'], 'f4', 
-    ('y',), True )
+    dso, y[1:-1], 'y' , len(y[1:-1]), uD['y'], 'f4', ('y',), True )
 
 zv = createNetcdfVariable( 
-    dso, ds['z'][1:-1] , 'z' , len(ds['z'][1:-1]), uD['z'], 'f4', 
-    ('z',), True )
+    dso, z[1:-1], 'z' , len(z[1:-1]), uD['z'], 'f4', ('z',), True )
 
 Qv = createNetcdfVariable( 
     dso, Q , 'Q' , None , 'm2/s2', 'f4', ('time', 'z', 'y', 'x', ), False )
 
 netcdfWriteAndClose( dso )
-netcdfWriteAndClose( ds )
+
+#                                     |_|/                                    #
+#===================================|_|_|\====================================#
+#                                     |                                       #
+   
