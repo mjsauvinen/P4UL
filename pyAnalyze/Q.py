@@ -50,52 +50,102 @@ if (vD['u']!=vD['v'] or vD['u']!=vD['w']):
 
 muoto = ds['u'][:,1:-1,1:-1,1:-1].shape
 
-u = ds['u'][:,:,:,:].data
-v = ds['v'][:,:,:,:].data
-w = ds['w'][:,:,:,:].data
 x = ds['x'][:].data
 y = ds['y'][:].data
 z = ds['z'][:].data
 t = ds['time'][:].data
 
-netcdfWriteAndClose( ds )
 
+#=calculations================================================================#
+
+# In order to consume less memory, variables are emptied when they are not
+# needed anymore.
+
+print('  Calculating Q.')
+
+u = ds['u'][:,:,:,:].data
 if args.missToNan:
     u[np.isclose(u,-9999.0)]=np.nan
 else:
     u[np.isclose(u,-9999.0)]=0.0
 
-#=calculations================================================================#
-
 dudx = ((u[:,1:-1,1:-1,2:] - u[:,1:-1,1:-1,:-2])
         / np.broadcast_to(x[2:] - x[:-2], muoto))
-dvdx = ((v[:,1:-1,1:-1,2:] - v[:,1:-1,1:-1,:-2]) 
-        / np.broadcast_to(x[2:] - x[:-2], muoto))
-dwdx = ((w[:,1:-1,1:-1,2:] - w[:,1:-1,1:-1,:-2]) 
-        / np.broadcast_to(x[2:] - x[:-2], muoto))
+
+Q = dudx**2
+dudx = None
+
 dudy = ((u[:,1:-1,2:,1:-1] - u[:,1:-1,:-2,1:-1]) 
-        / np.broadcast_to(np.reshape(
-            y[2:] - y[:-2], (muoto[2],1)), muoto))
-dvdy = ((v[:,1:-1,2:,1:-1] - v[:,1:-1,:-2,1:-1]) 
-        / np.broadcast_to(np.reshape(
-            y[2:] - y[:-2], (muoto[2],1)), muoto))
-dwdy = ((w[:,1:-1,2:,1:-1] - w[:,1:-1,:-2,1:-1]) 
         / np.broadcast_to(np.reshape(
             y[2:] - y[:-2], (muoto[2],1)), muoto))
 dudz = ((u[:,2:,1:-1,1:-1] - u[:,:-2,1:-1,1:-1]) 
         / np.broadcast_to(np.reshape(np.broadcast_to(np.reshape(
             z[2:] - z[:-2], (muoto[1],1)), 
           (muoto[1],muoto[2])), (muoto[1],muoto[2],1)), muoto))
+
+u = None
+
+v = ds['v'][:,:,:,:].data
+if args.missToNan:
+    v[np.isclose(v,-9999.0)]=np.nan
+else:
+    v[np.isclose(v,-9999.0)]=0.0
+
+dvdx = ((v[:,1:-1,1:-1,2:] - v[:,1:-1,1:-1,:-2]) 
+        / np.broadcast_to(x[2:] - x[:-2], muoto))
+
+Q = Q + 2*dudy*dvdx
+dudy = None
+dvdx = None 
+
+dvdy = ((v[:,1:-1,2:,1:-1] - v[:,1:-1,:-2,1:-1]) 
+        / np.broadcast_to(np.reshape(
+            y[2:] - y[:-2], (muoto[2],1)), muoto))
+
+Q = Q + dvdy**2
+dvdy = None
+
 dvdz = ((v[:,2:,1:-1,1:-1] - v[:,:-2,1:-1,1:-1]) 
         / np.broadcast_to(np.reshape(np.broadcast_to(np.reshape(
             z[2:] - z[:-2], (muoto[1],1)), 
         (muoto[1],muoto[2])), (muoto[1],muoto[2],1)), muoto))
+
+v = None
+
+w = ds['w'][:,:,:,:].data
+netcdfWriteAndClose( ds )
+
+if args.missToNan:
+    w[np.isclose(w,-9999.0)]=np.nan
+else:
+    w[np.isclose(w,-9999.0)]=0.0
+
+dwdx = ((w[:,1:-1,1:-1,2:] - w[:,1:-1,1:-1,:-2]) 
+        / np.broadcast_to(x[2:] - x[:-2], muoto))
+
+Q = Q + 2*dudz*dwdx
+dudz = None
+dwdx = None
+
+dwdy = ((w[:,1:-1,2:,1:-1] - w[:,1:-1,:-2,1:-1]) 
+        / np.broadcast_to(np.reshape(
+            y[2:] - y[:-2], (muoto[2],1)), muoto))
+
+Q = Q + 2*dvdz*dwdy
+dvdz = None
+dwdy = None
+
 dwdz = ((w[:,2:,1:-1,1:-1] - w[:,:-2,1:-1,1:-1]) 
         / np.broadcast_to(np.reshape(np.broadcast_to(np.reshape(
             z[2:] - z[:-2], (muoto[1],1)), 
         (muoto[1],muoto[2])), (muoto[1],muoto[2],1)), muoto))
 
-Q = dudx**2 + dvdy**2 + dwdz**2 + 2*dudy*dvdx + 2*dudz*dwdx + 2*dvdz*dwdy
+w = None
+Q = Q + dwdz**2 
+dwdz = None
+
+
+
 
 #=output======================================================================#
 
