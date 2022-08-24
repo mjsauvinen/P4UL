@@ -10,7 +10,7 @@ def ibound(x, dx, N):
 
 #= = = = = = = = = = = = = = = = = = = = = # 
 class Box:
-  def __init__(self, x1, x2, y1, y2, z1, z2, w ):
+  def __init__(self, x1, x2, y1, y2, z1, z2, w=0. ):
     self.xb = [ x1, x2 ]
     self.yb = [ y1, y2 ]
     self.zb = [ z1, z2 ]
@@ -46,6 +46,7 @@ class Domain:
     self.Ntot = (self.Nx * self.Ny * self.Nz)
     # The 3d raster needs to be arranged as S[j,i,k] to maintain compatibility with 2d rasters.
     self.S  = np.zeros( (self.Ny, self.Nx, self.Nz), np.int8 )
+    
     ostr = '''
     {}:
     nx={}, ny={}, nz={}
@@ -84,8 +85,7 @@ class Domain:
     
     #print(' k1={}, k2={}, j1={}, j2={}, i1={}, i2={}'.format(k1,k2,j1,j2,i1,i2))
     #print(' Number of non-zeros {}'.format( np.count_nonzero( self.S[kw1:kw2,j1:j2,i1:i2] ) ))
-    
-    
+        
 #= = = = = = = = = = = = = = = = = = = = = # 
 
   def makeHoleWithPlate( self, Hx, nb=0 ):
