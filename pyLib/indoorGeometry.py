@@ -264,4 +264,18 @@ class Domain:
     
 #= = = = = = = = = = = = = = = = = = = = = #
 
+  def writeWallTemp( self, Temp, fileout ):
+    T = self.S.copy().astype(np.float16)
+    ids = (T > 0.1) 
+    T[ids] = Temp  # 273. + 20.
+    idnan = (T<(Temp-2.))
+    T[idnan] = np.nan
+    
+    Tdict = dict()
+    Tdict['S'] = T
+    Tdict['dPx'] = np.array([ self.dy, self.dx, self.dz ])
+    Tdict['GlobOrig'] = np.zeros( 3 )
+    fileout = fileout.strip('.npz')+'_temp.npz'
+    np.savez_compressed(fileout, **Tdict )
+    
 #= = = = = = = = = = = = = = = = = = = = = #

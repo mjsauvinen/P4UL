@@ -259,25 +259,25 @@ def processBuildings(fname,ds,vars,dims):
     buildR = buildDict['S'][::-1,:,:]   # Mirror j-direction in 3D array data (at this point)
   else:
     sys.exit('No R or S array present in the given building file.')
-  buildDPx = buildDict['dPx']
-  buildNPx = np.shape(buildR)
-  buildLOD = len(buildNPx)-1 # 1=2D height field, 2=3D mask
+  dPx = buildDict['dPx']
+  nPx = np.shape(buildR)
+  bLOD = len(nPx)-1 # 1=2D height field, 2=3D mask
 
-  if(buildLOD==1):
+  if(bLOD==1):
     # Save as a 2D building height array
     if('buildings_2d' in vars):
       ds.variables['buildings_2d'][:]=buildR
       return ds.variables['buildings_2d']
     else:
-      x_dim = createXDim(ds, buildNPx, buildDPx, dims)
-      y_dim = createYDim(ds, buildNPx, buildDPx, dims)
+      x_dim = createXDim(ds, nPx, dPx, dims)
+      y_dim = createYDim(ds, nPx, dPx, dims)
       buildNCVar = createNetcdfVariable(ds, buildR, 'buildings_2d', 0, 'm', 'f4', ('y','x'), False,
                                         False, fill_value=-9999., verbose=False)
       buildNCVar.long_name = "building_height"
-      buildNCVar.lod = int(buildLOD)
+      buildNCVar.lod = int(bLOD)
       return buildNCVar
 
-  elif(buildLOD==2):
+  elif(bLOD==2):
     '''
     The 3d numpy array must come in in [j,i,k] order. Here it is rolled back into [k,j,i] 
     for NetCDF output. Thus, we roll axis=2 such that it ends up before the 0th axis.
@@ -287,16 +287,16 @@ def processBuildings(fname,ds,vars,dims):
       ds.variables['buildings_3d'][:]=topo
       return ds.variables['buildings_3d']
     else:
-      x_dim = createXDim(ds, buildNPx, buildDPx, dims)
-      y_dim = createYDim(ds, buildNPx, buildDPx, dims)
-      z_dim = createZDim(ds, buildNPx, buildDPx, dims, offset=-0.5)
+      x_dim = createXDim(ds, nPx, dPx, dims)
+      y_dim = createYDim(ds, nPx, dPx, dims)
+      z_dim = createZDim(ds, nPx, dPx, dims, offset=-0.5)
       buildNCVar = createNetcdfVariable(ds, topo, 'buildings_3d', 0, 'm', 'b', ('z','y','x'), False,
                                         False, fill_value=-127, verbose=False)
       buildNCVar.long_name = "building_flag"
-      buildNCVar.lod = int(buildLOD)
+      buildNCVar.lod = int(bLOD)
       return buildNCVar
   else:
-    raise ValueError("invalid number of dimensions in buildings array: {}".format(buildLOD+1))
+    raise ValueError("invalid number of dimensions in buildings array: {}".format(bLOD+1))
 
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
