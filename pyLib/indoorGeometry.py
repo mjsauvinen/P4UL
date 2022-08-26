@@ -133,7 +133,7 @@ class Domain:
       '''.format(self.name,i1,i2,self.Ny-j2,self.Ny-j1,k1,k2)
       print(ostr)
       
-    if( Hx.normal == 'y'):
+    if('y' in Hx.normal):
       joff = np.round( Hx.Loff/dy ).astype(int)
       jo1 = j1 + joff
       jo2 = j2 + joff 
@@ -157,7 +157,7 @@ class Domain:
       '''.format(self.name,i1,i2,self.Ny-j2,self.Ny-j1,k1,k2)
       print(ostr)
     
-    if( Hx.normal == 'x'):
+    if('x' in Hx.normal):
       ioff = np.round( Hx.Loff/dx ).astype(int)
       io1 = i1 + ioff
       io2 = i2 + ioff 
@@ -192,7 +192,7 @@ class Domain:
     i1 = ibound( Hx.xc-Hx.L/2 , dx , self.Nx )
     i2 = ibound( Hx.xc+Hx.L/2 , dx , self.Nx )
     
-    if( Hx.normal == 'z'):
+    if('z' in Hx.normal):
       self.S[j1:j2, i1:i2,  k1:k2] = 0
       ostr = '''
       {}:
@@ -206,7 +206,7 @@ class Domain:
       '''.format(self.name,i1,i2,self.Ny-j2,self.Ny-j1,k1,k2)
       print(ostr)
     
-    if( Hx.normal == 'y'):
+    if('y' in Hx.normal):
       self.S[ j1:j2 , i1:i2, k1:k2] = 0
       ostr = '''
       {}:
@@ -220,7 +220,7 @@ class Domain:
       '''.format(self.name,i1,i2,self.Ny-j2,self.Ny-j1,k1,k2)
       print(ostr)
     
-    if( Hx.normal == 'x'):
+    if('x' in Hx.normal):
       self.S[j1:j2, i1:i2, k1:k2] = 0
       ostr = '''
       {}:
