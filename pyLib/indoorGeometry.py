@@ -19,16 +19,16 @@ class Box:
 #= = = = = = = = = = = = = = = = = = = = = # 
 class Hole_with_plate:
   def __init__(self, xc, yc, zc, L , Loffset, normal):
-    if( normal not in ['x','y','z'] ):
+    if( normal not in ['x','y','z','+x','+y','+z','-x','-y','-z'] ):
       sys.exit(' normal direction {} not correctly specified. Exiting ...'.format(normal)) 
     self.xc = xc
     self.yc = yc
     self.zc = zc
     self.L  = L
-    self.Loff   = Loffset
     self.normal = normal # 'x', 'y', 'z' 
-
-
+    self.Loff = Loffset
+    if('-' in normal): self.Loff = -np.abs(Loffset)
+    
 #= = = = = = = = = = = = = = = = = = = = = #
 class Domain:
   def __init__(self, name, Lx, Ly, Lz, dx, dy, dz):
@@ -109,7 +109,7 @@ class Domain:
     i1 = ibound( Hx.xc-Hx.L/2 , dx , self.Nx )
     i2 = ibound( Hx.xc+Hx.L/2 , dx , self.Nx )
     
-    if( Hx.normal == 'z'):
+    if('z' in Hx.normal):
       koff = np.round( Hx.Loff/dz ).astype(int)
       ko1 = k1 + koff  #; print(' k1 = {}, koff = {}'.format(k1, koff))
       ko2 = k2 + koff  #; print(' k2 = {}, koff = {}'.format(k2, koff))
