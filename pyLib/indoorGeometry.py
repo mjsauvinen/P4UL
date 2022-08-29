@@ -50,7 +50,7 @@ class Domain:
     ostr = '''
     {}:
     nx={}, ny={}, nz={}
-    dx={:2.5f}, dy={:2.5f}, dz={:2.5f}
+    dx={:2.6f}, dy={:2.6f}, dz={:2.6f}
     '''.format(name,self.Nx, self.Ny, self.Nz, self.dx, self.dy, self.dz)
     print(ostr)
     
