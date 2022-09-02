@@ -30,6 +30,7 @@ class Hole_with_plate:
     if('-' in normal): self.Loff = -np.abs(Loffset)
     
 #= = = = = = = = = = = = = = = = = = = = = #
+#= = = = = = = = = = = = = = = = = = = = = #
 class Domain:
   def __init__(self, name, Lx, Ly, Lz, dx, dy, dz):
     self.name = str(name)
@@ -43,6 +44,13 @@ class Domain:
     self.Ny = np.round( Ly/dy ).astype(int)
     self.Nz = np.round( Lz/dz ).astype(int)
     
+    if( (Lx/dx)/self.Nx != 1.0 ): 
+      print(' {}: Warning! Rounding Lx/dx = {}'.format(self.name,Lx/dx))
+    if( (Ly/dy)/self.Ny != 1.0 ):
+      print(' {}: Warning! Rounding Ly/dy = {}'.format(self.name,Ly/dy))    
+    if( (Lz/dz)/self.Nz != 1.0 ):
+      print(' {}: Warning! Rounding Lz/dz = {}'.format(self.name,Lz/dz))
+    
     self.Ntot = (self.Nx * self.Ny * self.Nz)
     # The 3d raster needs to be arranged as S[j,i,k] to maintain compatibility with 2d rasters.
     self.S  = np.zeros( (self.Ny, self.Nx, self.Nz), np.int8 )
@@ -53,7 +61,9 @@ class Domain:
     dx={:2.6f}, dy={:2.6f}, dz={:2.6f}
     '''.format(name,self.Nx, self.Ny, self.Nz, self.dx, self.dy, self.dz)
     print(ostr)
-    
+  
+  #= = = = = = = = = = = = = = = = = = = = = # 
+  
   def addBox( self, Bx ):
     dx = self.dx; dy = self.dy; dz = self.dz
     k1 = ibound( Bx.zb[0] , dz , self.Nz )
@@ -85,7 +95,8 @@ class Domain:
     
     #print(' k1={}, k2={}, j1={}, j2={}, i1={}, i2={}'.format(k1,k2,j1,j2,i1,i2))
     #print(' Number of non-zeros {}'.format( np.count_nonzero( self.S[kw1:kw2,j1:j2,i1:i2] ) ))
-
+  
+  #= = = = = = = = = = = = = = = = = = = = = # 
   
   def addSolidBlock( self, Bx ):
     dx = self.dx; dy = self.dy; dz = self.dz
@@ -98,8 +109,8 @@ class Domain:
     
     self.S[j1:j2,i1:i2,k1:k2] = 1 # fill in the whole box 
     
-#= = = = = = = = = = = = = = = = = = = = = # 
-
+  #= = = = = = = = = = = = = = = = = = = = = # 
+  
   def makeHoleWithPlate( self, Hx, nb=0 ):
     dx = self.dx; dy = self.dy; dz = self.dz
     k1 = ibound( Hx.zc-Hx.L/2 , dz , self.Nz )
@@ -181,8 +192,8 @@ class Domain:
       '''.format(self.name,i1,i2,self.Ny-j2,self.Ny-j1,k1,k2)
       print(ostr)
       
-#= = = = = = = = = = = = = = = = = = = = = #
-
+  #= = = = = = = = = = = = = = = = = = = = = #
+  
   def makeHoleOnly( self, Hx ):
     dx = self.dx; dy = self.dy; dz = self.dz
     k1 = ibound( Hx.zc-Hx.L/2 , dz , self.Nz )
@@ -233,27 +244,27 @@ class Domain:
       k_sbt = {},
       '''.format(self.name,i1,i2,self.Ny-j2,self.Ny-j1,k1,k2)
       print(ostr)
-
-#= = = = = = = = = = = = = = = = = = = = = #
-
+  
+  #= = = = = = = = = = = = = = = = = = = = = #
+  
   def save( self ):
     
     filename = self.name+'.npy'
     with open( filename, 'wb') as fout:
       pickle.dump(self, fout, pickle.HIGHEST_PROTOCOL)
-
-#= = = = = = = = = = = = = = = = = = = = = #
-
+  
+  #= = = = = = = = = = = = = = = = = = = = = #
+  
   def load( self ):
-
+  
     filename = self.name+'.npy'
     with open( filename, 'rb') as fin:
       Dobj = pickle.load(fin)
       
     return Dobj
-
-#= = = = = = = = = = = = = = = = = = = = = #
-
+  
+  #= = = = = = = = = = = = = = = = = = = = = #
+  
   def writeout( self, fileout ):
     Sdict = dict()
     Sdict['S'] = self.S  # [j,i,k] format
@@ -262,8 +273,8 @@ class Domain:
     fileout = fileout.strip('.npz')+'.npz'
     np.savez_compressed(fileout, **Sdict )
     
-#= = = = = = = = = = = = = = = = = = = = = #
-
+  #= = = = = = = = = = = = = = = = = = = = = #
+  
   def writeWallTemp( self, Temp, fileout ):
     T = self.S.copy().astype(np.float16)
     ids = (T > 0.1) 
@@ -278,4 +289,18 @@ class Domain:
     fileout = fileout.strip('.npz')+'_temp.npz'
     np.savez_compressed(fileout, **Tdict )
     
-#= = = = = = = = = = = = = = = = = = = = = #
+  #= = = = = = = = = = = = = = = = = = = = = #
+  
+  def coordsAsPalmIJK( self, strId, xc, yc, zc ):
+    i = ibound( xc , self.dx , self.Nx )
+    j = ibound( yc , self.dy , self.Ny )
+    k = ibound( zc , self.dz , self.Nz )
+    j = (self.Ny-j)  # Palm origin is bottom left
+    
+    ostr = ''' ID: {}
+    {}: x={:4.1f}, y={:4.1f}, z={:4.1f}
+      --> i={:4d}, j={:4d}, k={:4d}
+    '''.format(strId,self.name, xc,yc,zc,i,j,k)
+    print(ostr)
+     
+  #= = = = = = = = = = = = = = = = = = = = = #
