@@ -30,6 +30,19 @@ class Hole_with_plate:
     if('-' in normal): self.Loff = -np.abs(Loffset)
     
 #= = = = = = = = = = = = = = = = = = = = = #
+
+class Cylinder:
+  def __init__(self, xc, yc, zc, radius, H, normal ):
+    if( normal not in ['x','y','z','+x','+y','+z','-x','-y','-z'] ):
+      sys.exit(' normal direction {} not correctly specified. Exiting ...'.format(normal))
+    self.xc = xc
+    self.yc = yc
+    self.zc = zc
+    self.radius = radius
+    self.H = H         # height
+    self.normal = normal
+    
+
 #= = = = = = = = = = = = = = = = = = = = = #
 class Domain:
   def __init__(self, name, Lx, Ly, Lz, dx, dy, dz):
@@ -62,8 +75,79 @@ class Domain:
     '''.format(name,self.Nx, self.Ny, self.Nz, self.dx, self.dy, self.dz)
     print(ostr)
   
-  #= = = = = = = = = = = = = = = = = = = = = # 
+  #= = = = = = = = = = = = = = = = = = = = = #
   
+  def addCylindricalRing( self, Cx ):
+    # X Normal
+    if( 'x' in Cx.normal ):
+      y = np.linspace(0., (self.Ny-1)*self.dy, self.Ny)
+      z = np.linspace(0., (self.Nz-1)*self.dz, self.Nz)
+      Y,Z = np.meshgrid(y,z, indexing='ij') 
+      idc  =  ( np.sqrt( (Y-Cx.yc)**2 + (Z-Cx.zc)**2 ) < (Cx.radius+self.dy) )
+      idc *= ~( np.sqrt( (Y-Cx.yc)**2 + (Z-Cx.zc)**2 ) < (Cx.radius-self.dy) )
+      
+      if( '-' in Cx.normal ):
+        ic1  = ibound( Cx.xc-Cx.H, self.dx , self.Nx )
+        ic2  = ibound( Cx.xc     , self.dx , self.Nx )
+      else:
+        ic1  = ibound( Cx.xc     , self.dx , self.Nx )
+        ic2  = ibound( Cx.xc+Cx.H, self.dx , self.Nx )
+      
+      if( ic2 == ic1 ): ic2 += 1
+      
+      for ic in range(ic1,ic2):
+        Stmp = self.S[:,ic,:]
+        Stmp += idc.astype(int)
+        Stmp[(Stmp > 1)] = 1
+        self.S[:,ic,:] = Stmp
+    
+    # Y Normal     
+    if( 'y' in Cx.normal ):
+      x = np.linspace(0., (self.Nx-1)*self.dx, self.Nx)
+      z = np.linspace(0., (self.Nz-1)*self.dz, self.Nz)
+      X,Z = np.meshgrid(x,z, indexing='ij') 
+      idc  =  ( np.sqrt( (X-Cx.xc)**2 + (Z-Cx.zc)**2 ) < (Cx.radius+self.dx) )
+      idc *= ~( np.sqrt( (X-Cx.xc)**2 + (Z-Cx.zc)**2 ) < (Cx.radius-self.dx) )
+      
+      if( '-' in Cx.normal ):
+        jc1  = ibound( Cx.yc-Cx.H, self.dy , self.Ny )
+        jc2  = ibound( Cx.yc     , self.dy , self.Ny )
+      else:
+        jc1  = ibound( Cx.yc     , self.dy , self.Ny )
+        jc2  = ibound( Cx.yc+Cx.H, self.dy , self.Ny )
+      
+      if( jc2 == jc1 ): jc2 += 1
+      
+      for jc in range(jc1,jc2):
+        Stmp = self.S[jc,:,:]
+        Stmp += idc.astype(int)
+        Stmp[(Stmp > 1)] = 1
+        self.S[jc,:,:] = Stmp
+        
+    # Z Normal 
+    if( 'z' in Cx.normal ):
+      x = np.linspace(0., (self.Nx-1)*self.dx, self.Nx)
+      y = np.linspace(0., (self.Ny-1)*self.dy, self.Ny)
+      X,Y = np.meshgrid(x,y, indexing='ij') 
+      idc  =  ( np.sqrt( (X-Cx.xc)**2 + (Y-Cx.yc)**2 ) < (Cx.radius+self.dx) )
+      idc *= ~( np.sqrt( (X-Cx.xc)**2 + (Z-Cx.yc)**2 ) < (Cx.radius-self.dx) )
+      
+      if( '-' in Cx.normal ):
+        kc1  = ibound( Cx.zc-Cx.H, self.dz , self.Nz )
+        kc2  = ibound( Cx.zc     , self.dz , self.Nz )
+      else:
+        kc1  = ibound( Cx.zc     , self.dz , self.Nz )
+        kc2  = ibound( Cx.zc+Cx.H, self.dz , self.Nz )
+      
+      if( kc2 == kc1 ): kc2 += 1
+      
+      for kc in range(kc1,kc2):
+        Stmp = self.S[:,:,kc]
+        Stmp += idc.astype(int)
+        Stmp[(Stmp > 1)] = 1
+        self.S[:,:,kc] = Stmp 
+  
+  #= = = = = = = = = = = = = = = = = = = = = # 
   def addBox( self, Bx ):
     dx = self.dx; dy = self.dy; dz = self.dz
     k1 = ibound( Bx.zb[0] , dz , self.Nz )
