@@ -128,7 +128,7 @@ class Domain:
     if( 'z' in Cx.normal ):
       x = np.linspace(0., (self.Nx-1)*self.dx, self.Nx)
       y = np.linspace(0., (self.Ny-1)*self.dy, self.Ny)
-      X,Y = np.meshgrid(x,y, indexing='ij') 
+      Y,X = np.meshgrid(y,x, indexing='ij') 
       idc  =  ( np.sqrt( (X-Cx.xc)**2 + (Y-Cx.yc)**2 ) < (Cx.radius+self.dx) )
       idc *= ~( np.sqrt( (X-Cx.xc)**2 + (Z-Cx.yc)**2 ) < (Cx.radius-self.dx) )
       
@@ -197,7 +197,7 @@ class Domain:
     if( 'z' in Cx.normal ):
       x = np.linspace(0., (self.Nx-1)*self.dx, self.Nx)
       y = np.linspace(0., (self.Ny-1)*self.dy, self.Ny)
-      X,Y = np.meshgrid(x,y, indexing='ij') 
+      Y,X = np.meshgrid(y,x, indexing='ij') 
       idc  =  ( np.sqrt( (X-Cx.xc)**2 + (Y-Cx.yc)**2 ) < (Cx.radius) )
       
       if( '-' in Cx.normal ):
