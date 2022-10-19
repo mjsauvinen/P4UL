@@ -8,22 +8,25 @@ from mapTools import applyFilter
 
 #==========================================================#
 parser = argparse.ArgumentParser(prog='extractColumnsFromFiles.py')
-parser.add_argument("strKey", help="Search string for collecting files.",\
-  nargs='?', default=None)
-parser.add_argument('-x', '--prefix', help='Prefix for file names. Default=CX_ ',\
-  type=str, default='CX_')
-parser.add_argument('-c', '--cols', type=int, help='Columns to extract. Ex: 0,1,2,4',\
-  nargs='+')
-parser.add_argument('-s', '--scale', help='Scaling factors for columns. Ex: 1,10,10,10',\
-  nargs='+', type=float, default=[1.])
-parser.add_argument('-vc', '--vcols', type=int, help='Vector columns for transformation (x,y,z).',\
-  nargs=3, default=[None,None,None])
+parser.add_argument("strKey", nargs='?', default=None,\
+  help="Search string for collecting files.")
+parser.add_argument('-x', '--prefix', type=str, default='CX_',\
+  help='Prefix for file names. Default=CX_ ')
+parser.add_argument('-c', '--cols', type=int, nargs='+',\
+  help='Columns to extract. Ex: 0,1,2,4')
+parser.add_argument('-s', '--scale', nargs='+', type=float, default=[1.],\
+  help='Scaling factors for columns. Ex: 1,10,10,10')
+parser.add_argument('-vc', '--vcols', type=int, nargs=3, default=[None,None,None],\
+  help='Vector columns for transformation (x,y,z).')
 EulerHelp=''''Euler angles (around z-, y- and x-axes) in [deg] for applying rotation of 3D vector values, 
 which are specified via -vc or --vcols arguments. 
 Note! The rotation is applied in the following order: z, y, x. '''
-parser.add_argument('-ea', '--euler', type=float, help=EulerHelp, nargs=3, default=[None,None,None])
+parser.add_argument('-ea', '--euler', type=float, nargs=3, default=[None,None,None],\
+  help=EulerHelp)
 parser.add_argument("-lf", "--localFilter", type=int, default=None,\
-  help="Apply local filter with a given integer width to all columns.")
+  help='Apply local filter with a given integer width to all columns.')
+parser.add_argument('-rl', '--ratioLimits', type=float, nargs=2, default=[None,None],\
+  help=' Start and stop as ratios (0-1) for selective extraction of data series.')
 
 args = parser.parse_args()
 writeLog( parser, args )
@@ -36,6 +39,7 @@ vcols  = args.vcols
 scale  = np.array(args.scale)  # Should be numpy array.
 euler  = args.euler
 fltN   = args.localFilter      # Local filter width 
+rl     = args.ratioLimits
 
 if( fltN is None ):
   filterOn = False
@@ -85,6 +89,13 @@ for fn in fileNos:
     if( j > dat.shape[1]-1 ):
       sys.exit(' Error: {} not in range({}). Exiting ...'.format(j,dat.shape[1]) )
   
+  # Extract only section of the whole dataset
+  if( np.count_nonzero( rl ) > 0 ):
+    N = len(dat)
+    i1 = np.round(rl[0]*N, decimals=0).astype(int)
+    i2 = np.round(rl[1]*N, decimals=0).astype(int)
+    dat = dat[i1:i2]
+    
   # Perform scaling
   dat[:,Icols] *= sc  
   
