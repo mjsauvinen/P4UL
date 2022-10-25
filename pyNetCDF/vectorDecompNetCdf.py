@@ -21,7 +21,7 @@ def decomp3( q ):
   qda     = np.mean( qtilde )     # double average
   qtilde -= qda
   
-  return qda, qtilde, qp
+  return np.array([qda]), qtilde, qp
 
 #==========================================================#
 parser = argparse.ArgumentParser(prog='vectorDecompNetCdf.py')
@@ -33,6 +33,8 @@ parser.add_argument("-vn", "--vnames",type=str, nargs=3, default=['u','v','w'],\
   help="Names of the vector components in (x,y,z)-order. Default = ['u','v','w'].")
 parser.add_argument("-nt", "--ntimeskip", type=int, default=0,\
   help="Skip <nt> number of time steps. Default = 0.")
+parser.add_argument('-m',"--mags", action="store_true", default=False,\
+  help="Compute and write magnitudes of each decomposition component.")
 parser.add_argument("-c", "--coarse", type=int, default=1,\
   help="Coarsening level. Int > 1. Default = 1.")
 args = parser.parse_args()
@@ -45,6 +47,7 @@ filename   = args.filename
 fileout    = args.fileout
 vnames     = args.vnames
 nt         = args.ntimeskip
+magsOn     = args.mags
 cl         = abs(int(args.coarse))
 
 '''
@@ -92,7 +95,16 @@ u = None
 
 udo = createNetcdfVariable(dso, uda   , 'uda'   , 1 , units, ft,('uda',) , parameter )
 uto = createNetcdfVariable(dso, utilde, 'utilde', Nt, units, ft,('z','y','x',) , variable )
-upo = createNetcdfVariable(dso, utilde, 'up'    , Nt, units, ft,('time','z','y','x',) , variable )
+upo = createNetcdfVariable(dso, up    , 'up'    , Nt, units, ft,('time','z','y','x',) , variable )
+
+if( magsOn ):
+  Udamag    = uda**2
+  Upmag     = up**2     ; up = None
+  Utildemag = utilde**2 ; utilde = None
+else:
+  up = None
+  utilde = None
+
 
 ## v components  ##
 vda, vtilde, vp = decomp3( v )
@@ -100,7 +112,16 @@ v = None
 
 vdo = createNetcdfVariable(dso, vda   , 'vda'   , 1 , units, ft,('vda',) , parameter )
 vto = createNetcdfVariable(dso, vtilde, 'vtilde', Nt, units, ft,('z','y','x',) , variable )
-vpo = createNetcdfVariable(dso, vtilde, 'vp'    , Nt, units, ft,('time','z','y','x',) , variable )
+vpo = createNetcdfVariable(dso, vp    , 'vp'    , Nt, units, ft,('time','z','y','x',) , variable )
+
+if( magsOn ):
+  Udamag    += vda**2
+  Upmag     += vp**2     ; vp = None
+  Utildemag += vtilde**2 ; vtilde = None
+else:
+  vp = None
+  vtilde = None
+
 
 ## w components  ##
 wda, wtilde, wp = decomp3( w )
@@ -108,7 +129,24 @@ w = None
 
 wdo = createNetcdfVariable(dso, wda   , 'wda'   , 1 , units, ft,('wda',) , parameter )
 wto = createNetcdfVariable(dso, wtilde, 'wtilde', Nt, units, ft,('z','y','x',) , variable )
-wpo = createNetcdfVariable(dso, wtilde, 'wp'    , Nt, units, ft,('time','z','y','x',) , variable )
+wpo = createNetcdfVariable(dso, wp    , 'wp'    , Nt, units, ft,('time','z','y','x',) , variable )
+
+if( magsOn ):
+  Udamag    += wda**2
+  Upmag     += wp**2     ; wp = None
+  Utildemag += wtilde**2 ; wtilde = None
+
+  Udamag    **=(0.5);  Upmag **=(0.5); Utildemag **=(0.5)
+
+  Udamag = np.concatenate( (Udamag, np.array([np.mean(Utildemag), np.mean(Upmag) ])) )
+
+  Udo = createNetcdfVariable(dso, Udamag   , 'Uda'   , 3 , units, ft,('Uda',) , parameter )
+  Uto = createNetcdfVariable(dso, Utildemag, 'Utilde', Nt, units, ft,('z','y','x',) , variable )
+  Upo = createNetcdfVariable(dso, Upmag    , 'Up'    , Nt, units, ft,('time','z','y','x',) , variable )
+  Udamag = Upmag = Utildemag = None
+else:
+  wp = None
+  wtilde = None
 
 # - - - - Done , finalize the output - - - - - - - - - -
 netcdfWriteAndClose( dso )
