@@ -118,7 +118,7 @@ args = parser.parse_args()
 writeLog( parser, args )
 
 #==========================================================#
-# Initial renaming operations and variable declarations. That's all.
+# Initial renaming operations and variable declarations. 
 
 filename   = args.filename
 fileout    = args.fileout
