@@ -19,16 +19,16 @@ Finnish Meteorological Insitute
 
 parser = argparse.ArgumentParser(
     prog='SGSDissipation.py',
-    description='Calculate SGS dissipation (ϵ).')
+    description="Calculate the SGS dissipation (ϵ) using Deardorff's "
+    "approach.")
 parser.add_argument('-f', '--filename',type=str, 
                     help='Name of the input data file. It has to contain '
                     'SGS TKE (e) and local SGS eddy diffusivity (K_m) in '
                     'their native grids .')
 parser.add_argument('-fo', '--fileout',type=str, help='Name of output file.',
                     default = 'epsilon.nc')
-#parser.add_argument('-n', '--missToNan',action="store_true", default=False,
-#                    help='Set PALM missing values (-9999.0) to numpy in the'
-#                    'calculation of Q. Default: set to 0.0.')
+parser.add_argument('-n', '--missval',type=float, help='Value for missing '
+                    'values in output file. Default = NaN.', default = None)
 
 args = parser.parse_args()
 
@@ -42,29 +42,51 @@ for i in ['e', 'km']:
             '{} not found from variable list: {}'.format(
                 i, vD.keys()))
 
+for i in ['x', 'y', 'zw_3d', 'zu_3d', 'time']:
+    if (i not in ds.dimensions.keys() ):
+        sys.exit(
+            '{} not found from dimension list: {}'.format(
+                i, ds.dimensions.keys()))
+        
 Cm = 0.1   # SGS model constant
         
 
-x = 
-y = ds['y'][:].data
-z = ds['zu_3d'][:].data
-t = ds['time'][:].data
-
-
 #=calculations================================================================#
 
-# Miten paikallinen hilaväli määritellään? Ei ole ihan selvää. Ehkä symmetrisesti?
-dx = ds['x'][1:].data - ds['x'][:-1].data
-dx = np.hstack((dx[0],dx))
-dy = ds['y'][1:].data - ds['y'][:-1].data
-dy = np.hstack((dy[0],dy))
-dz = ds['zu_3d'][1:].data - ds['zu_3d'][:-1].data
-dz = np.hstack((dz[0],dz))
+print('   Calculating SGS dissipation.')
 
-epsi = 0.19*Cm*(ds['e'][:,:,:,:].data)**2+0.74*(ds['e'][:,:,:,:].data)**(3/2)
+x = ds['x'][:].data
+y = ds['y'][:].data
 
+dx = x[1] - x[0]
+dy = y[1] - y[0]
+dz = ds['zw_3d'][1:].data - ds['zw_3d'][:-1].data
+e = ds['e'][:,:,:,:].data
+e[np.isclose(e,-9999.0)] = np.nan
+km = ds['km'][:,:,:,:]
+km[np.isclose(km,-9999.0)] = np.nan
+
+muoto = ds['e'][:,:,:,:].data.shape
+delta = np.broadcast_to(
+    np.reshape(
+        np.broadcast_to(
+            np.reshape(
+                np.hstack(
+                    (np.nan,
+                     np.minimum((dx*dy*dz)**(1/3),1.8*ds['zu_3d'][1:].data))),
+                (muoto[1],1)),
+            (muoto[1],muoto[2])),
+        (muoto[1],muoto[2],1)), muoto)
+
+epsi = (0.19*Cm*(e**2)/km + 0.74*(e**(3/2))/delta)
+
+if args.missval != None:
+    epsi[np.isnan(epsi)] = args.missval
 
 #=output======================================================================#
+
+z = ds['zu_3d'][:].data
+t = ds['time'][:].data
 
 dso = netcdfOutputDataset( args.fileout )
 
@@ -72,16 +94,16 @@ tv = createNetcdfVariable(
     dso, t, 'time', len(t), uD['time'], 'f4', ('time',), True )
 
 xv = createNetcdfVariable( 
-    dso, x, 'x' , len(x[1:-1]), uD['x'], 'f4', ('x',), True )
+    dso, x, 'x' , len(x), uD['x'], 'f4', ('x',), True )
 
 yv = createNetcdfVariable( 
-    dso, y, 'y' , len(y[1:-1]), uD['y'], 'f4', ('y',), True )
+    dso, y, 'y' , len(y), uD['y'], 'f4', ('y',), True )
 
 zv = createNetcdfVariable( 
-    dso, z, 'zu_3d' , len(z[1:-1]), uD['zu_3d'], 'f4', ('z',), True )
+    dso, z, 'zu_3d' , len(z), uD['zu_3d'], 'f4', ('zu_3d',), True )
 
 Ev = createNetcdfVariable( 
-    dso, epsi , 'SGS dissipation' , None , 'm2/s2', 'f4', ('time', 'zu_3d', 'y', 'x', ), False )
+    dso, epsi , 'ee' , None , 'm2/s3', 'f4', ('time', 'zu_3d', 'y', 'x', ), False )
 
 netcdfWriteAndClose( dso )
 
