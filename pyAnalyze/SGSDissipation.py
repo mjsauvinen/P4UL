@@ -29,6 +29,9 @@ parser.add_argument('-fo', '--fileout',type=str, help='Name of output file.',
                     default = 'epsilon.nc')
 parser.add_argument('-n', '--missval',type=float, help='Value for missing '
                     'values in output file. Default = NaN.', default = None)
+parser.add_argument('-c', '--collocated', action='store_true', default=False,
+                    help='Save coordinates in a manner that conforms with the'
+                    ' collocateDataNetCdf.py.')
 
 args = parser.parse_args()
 
@@ -57,23 +60,25 @@ print('   Calculating SGS dissipation.')
 
 x = ds['x'][:].data
 y = ds['y'][:].data
+z = ds['zu_3d'][:].data
+t = ds['time'][:].data
 
 dx = x[1] - x[0]
 dy = y[1] - y[0]
-dz = ds['zw_3d'][1:].data - ds['zw_3d'][:-1].data
+dz = z[1:] - z[:-1]
 e = ds['e'][:,:,:,:].data
 e[np.isclose(e,-9999.0)] = np.nan
 km = ds['km'][:,:,:,:]
 km[np.isclose(km,-9999.0)] = np.nan
 
-muoto = ds['e'][:,:,:,:].data.shape
+muoto = e.shape
 delta = np.broadcast_to(
     np.reshape(
         np.broadcast_to(
             np.reshape(
                 np.hstack(
                     (np.nan,
-                     np.minimum((dx*dy*dz)**(1/3),1.8*ds['zu_3d'][1:].data))),
+                     np.minimum((dx*dy*dz)**(1/3),1.8*z[1:]))),
                 (muoto[1],1)),
             (muoto[1],muoto[2])),
         (muoto[1],muoto[2],1)), muoto)
@@ -85,9 +90,15 @@ if args.missval != None:
 
 #=output======================================================================#
 
-z = ds['zu_3d'][:].data
-t = ds['time'][:].data
-
+if args.collocated:
+    x = x[:-1]
+    y = y[:-1]
+    z = z[1:]    
+    zname = 'z'
+    epsi = epsi[:,1:,:-1,:-1]
+else:
+    zname = 'zu_3d'
+    
 dso = netcdfOutputDataset( args.fileout )
 
 tv = createNetcdfVariable( 
@@ -100,10 +111,10 @@ yv = createNetcdfVariable(
     dso, y, 'y' , len(y), uD['y'], 'f4', ('y',), True )
 
 zv = createNetcdfVariable( 
-    dso, z, 'zu_3d' , len(z), uD['zu_3d'], 'f4', ('zu_3d',), True )
+    dso, z, zname , len(z), uD['zu_3d'], 'f4', (zname,), True )
 
 Ev = createNetcdfVariable( 
-    dso, epsi , 'ee' , None , 'm2/s3', 'f4', ('time', 'zu_3d', 'y', 'x', ), False )
+    dso, epsi , 'ee' , None , 'm2/s3', 'f4', ('time', zname, 'y', 'x', ), False )
 
 netcdfWriteAndClose( dso )
 
