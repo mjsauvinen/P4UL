@@ -23,15 +23,11 @@ parser = argparse.ArgumentParser(
     "approach.")
 parser.add_argument('-f', '--filename',type=str, 
                     help='Name of the input data file. It has to contain '
-                    'SGS TKE (e) and local SGS eddy diffusivity (K_m) in '
-                    'their native grids .')
+                    'SGS TKE (e) and local SGS eddy diffusivity (K_m). ')
 parser.add_argument('-fo', '--fileout',type=str, help='Name of output file.',
                     default = 'epsilon.nc')
 parser.add_argument('-n', '--missval',type=float, help='Value for missing '
                     'values in output file. Default = NaN.', default = None)
-parser.add_argument('-c', '--collocated', action='store_true', default=False,
-                    help='Save coordinates in a manner that conforms with the'
-                    ' collocateDataNetCdf.py.')
 
 args = parser.parse_args()
 
@@ -45,7 +41,7 @@ for i in ['e', 'km']:
             '{} not found from variable list: {}'.format(
                 i, vD.keys()))
 
-for i in ['x', 'y', 'zw_3d', 'zu_3d', 'time']:
+for i in ['x', 'y', 'z', 'time']:
     if (i not in ds.dimensions.keys() ):
         sys.exit(
             '{} not found from dimension list: {}'.format(
@@ -60,12 +56,12 @@ print('   Calculating SGS dissipation.')
 
 x = ds['x'][:].data
 y = ds['y'][:].data
-z = ds['zu_3d'][:].data
+z = ds['z'][:].data
 t = ds['time'][:].data
 
 dx = x[1] - x[0]
 dy = y[1] - y[0]
-dz = z[1:] - z[:-1]
+dz = np.append(z[0],z[1:] - z[:-1])
 e = ds['e'][:,:,:,:].data
 e[np.isclose(e,-9999.0)] = np.nan
 km = ds['km'][:,:,:,:]
@@ -76,9 +72,7 @@ delta = np.broadcast_to(
     np.reshape(
         np.broadcast_to(
             np.reshape(
-                np.hstack(
-                    (np.nan,
-                     np.minimum((dx*dy*dz)**(1/3),1.8*z[1:]))),
+                np.minimum((dx*dy*dz)**(1/3),1.8*z),
                 (muoto[1],1)),
             (muoto[1],muoto[2])),
         (muoto[1],muoto[2],1)), muoto)
@@ -90,15 +84,7 @@ if args.missval != None:
 
 #=output======================================================================#
 
-if args.collocated:
-    x = x[:-1]
-    y = y[:-1]
-    z = z[1:]    
-    zname = 'z'
-    epsi = epsi[:,1:,:-1,:-1]
-else:
-    zname = 'zu_3d'
-    
+   
 dso = netcdfOutputDataset( args.fileout )
 
 tv = createNetcdfVariable( 
@@ -111,10 +97,10 @@ yv = createNetcdfVariable(
     dso, y, 'y' , len(y), uD['y'], 'f4', ('y',), True )
 
 zv = createNetcdfVariable( 
-    dso, z, zname , len(z), uD['zu_3d'], 'f4', (zname,), True )
+    dso, z, 'z' , len(z), uD['z'], 'f4', ('z',), True )
 
 Ev = createNetcdfVariable( 
-    dso, epsi , 'ee' , None , 'm2/s3', 'f4', ('time', zname, 'y', 'x', ), False )
+    dso, epsi , 'ee' , None , 'm2/s3', 'f4', ('time', 'z', 'y', 'x', ), False )
 
 netcdfWriteAndClose( dso )
 
