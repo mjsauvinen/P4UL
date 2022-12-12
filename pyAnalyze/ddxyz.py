@@ -35,7 +35,7 @@ parser.add_argument('-z', '--ddz', action="store_true", default=False,
                     help = 'Calculate z derivative.')
 parser.add_argument('-n', '--missToNan',action="store_true", default=False,
                     help='Set PALM missing values (-9999.0) to numpy in the'
-                    'calculation of Q. Default: set to 0.0.')
+                    'calculation of the derivatives. Default: set to 0.0.')
 args = parser.parse_args()
 
 #=inputs######================================================================#
@@ -69,6 +69,9 @@ for i in args.variable:
         else:
             A[np.isclose(A,-9999.0)]=0.0
 
+        # Set lower boundary as zero. 
+        A = np.concatenate((np.zeros((A.shape[0],1,A.shape[2],A.shape[3])),A),axis=1)
+        z = np.insert(ds['z'][:].data,0,0.0)
         muoto = A[:,1:-1,1:-1,1:-1].shape
         if args.ddx:
             print('  d'+i+'dx')
@@ -85,16 +88,42 @@ for i in args.variable:
                                                     muoto))
         if args.ddz:
             print('  d'+i+'dz')
-            outddx['d'+i+'dz'] = ((A[:,2:,1:-1,1:-1] - A[:,:-2,1:-1,1:-1]) 
+            # In z direction, the mesh spacing can be nonuniform.
+            # Calculate ddz with (4.3.7) from Hirsch.
+            outddx['d'+i+'dz'] = ((( A[:,2:,1:-1,1:-1]
+                                     - A[:,1:-1,1:-1,1:-1])
+                                   * np.broadcast_to(
+                                       np.reshape(
+                                           np.broadcast_to(
+                                               np.reshape(
+                                                   (z[1:-1] - z[0:-2])
+                                                   / (z[2:] - z[1:-1]),
+                                                   (muoto[1],1)),
+                                               (muoto[1],muoto[2])),
+                                           (muoto[1],muoto[2],1)),
+                                       muoto)
+                                   + ( A[:,1:-1,1:-1,1:-1]
+                                       - A[:,0:-2,1:-1,1:-1])
+                                   * np.broadcast_to(
+                                       np.reshape(
+                                           np.broadcast_to(
+                                               np.reshape(                                       
+                                                   (z[2:] - z[1:-1])
+                                                   / (z[1:-1] - z[0:-2]),
+                                                (muoto[1],1)),
+                                               (muoto[1],muoto[2])),
+                                           (muoto[1],muoto[2],1)),
+                                       muoto))
                                   / np.broadcast_to(
                                       np.reshape(
                                           np.broadcast_to(
                                               np.reshape(
-                                                  ds['z'][2:] - ds['z'][:-2],
+                                                  z[2:] - z[:-2],
                                                   (muoto[1],1)),
                                               (muoto[1],muoto[2])),
                                           (muoto[1],muoto[2],1)),
                                       muoto))
+             
         A = None
     else:
         print('* Warning: Variable '+i+' does not have four coordinates.')
@@ -118,7 +147,7 @@ yv = createNetcdfVariable(
     'f4', ('y',), True )
 
 zv = createNetcdfVariable( 
-    dso, ds['z'][1:-1].data, 'z' , len(ds['z'][1:-1].data), uD['z'],
+    dso, z[1:-1], 'z' , len(z[1:-1]), uD['z'],
     'f4', ('z',), True )
 
 for i in outddx:
