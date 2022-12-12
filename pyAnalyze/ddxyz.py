@@ -36,6 +36,10 @@ parser.add_argument('-z', '--ddz', action="store_true", default=False,
 parser.add_argument('-n', '--missToNan',action="store_true", default=False,
                     help='Set PALM missing values (-9999.0) to numpy in the'
                     'calculation of the derivatives. Default: set to 0.0.')
+parser.add_argument('-cy', '--cyclicy', action="store_true", default=False,
+                    help = 'Cyclic boundaries in y direction.')
+parser.add_argument('-cx', '--cyclicx', action="store_true", default=False,
+                    help = 'Cyclic boundaries in x direction.')
 args = parser.parse_args()
 
 #=inputs######================================================================#
@@ -61,6 +65,21 @@ print(' Calculating derivatives.')
 
 outddx = {}
 
+if args.cyclicx:
+    x = ds['x'][:].data
+else:
+    x = ds['x'][1:-1].data
+
+if args.cyclicy:
+    y = ds['y'][:].data
+else:
+    y = ds['y'][1:-1].data
+    
+# Assume uniform mesh in x and y directions
+dx = x[1]-x[0]
+dy = y[1]-y[0]
+
+
 for i in args.variable:
     if len(vD[i]) == 4:
         A = ds[i][:,:,:,:].data
@@ -71,21 +90,23 @@ for i in args.variable:
 
         # Set lower boundary as zero. 
         A = np.concatenate((np.zeros((A.shape[0],1,A.shape[2],A.shape[3])),A),axis=1)
+        # Apply cyclic boundaries if applicable
+        if args.cyclicx:
+            A = np.insert(A,0,A[:,:,:,-1],axis=3)
+            A = np.insert(A,A.shape[3],A[:,:,:,1],axis=3)
+        if args.cyclicy:
+            A = np.insert(A,0,A[:,:,-1,:],axis=2)
+            A = np.insert(A,A.shape[2],A[:,:,1,:],axis=2)
         z = np.insert(ds['z'][:].data,0,0.0)
         muoto = A[:,1:-1,1:-1,1:-1].shape
         if args.ddx:
             print('  d'+i+'dx')
             outddx['d'+i+'dx'] = ((A[:,1:-1,1:-1,2:] - A[:,1:-1,1:-1,:-2])
-                                  / np.broadcast_to(
-                                      ds['x'][2:] - ds['x'][:-2],
-                                      muoto))
+                                  / dx)
         if args.ddy:
             print('  d'+i+'dy')
             outddx['d'+i+'dy'] = ((A[:,1:-1,2:,1:-1] - A[:,1:-1,:-2,1:-1]) 
-                                  / np.broadcast_to(np.reshape(
-                                      ds['y'][2:] - ds['y'][:-2],
-                                      (muoto[2],1)),
-                                                    muoto))
+                                  / dy )
         if args.ddz:
             print('  d'+i+'dz')
             # In z direction, the mesh spacing can be nonuniform.
@@ -139,12 +160,10 @@ tv = createNetcdfVariable(
     'f4', ('time',), True )
 
 xv = createNetcdfVariable( 
-    dso, ds['x'][1:-1].data, 'x' , len(ds['x'][1:-1].data), uD['x'],
-    'f4', ('x',), True )
+    dso, x, 'x' , len(x), uD['x'], 'f4', ('x',), True )
 
 yv = createNetcdfVariable( 
-    dso, ds['y'][1:-1].data, 'y' , len(ds['y'][1:-1].data), uD['y'],
-    'f4', ('y',), True )
+    dso, y, 'y' , len(y), uD['y'], 'f4', ('y',), True )
 
 zv = createNetcdfVariable( 
     dso, z[1:-1], 'z' , len(z[1:-1]), uD['z'],
