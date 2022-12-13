@@ -186,19 +186,21 @@ uc = np.zeros( cc_dims )
 uc, um = interpolatePalmVectors( u0, cc_dims, 'i' , decompOn ); u0 = None
 
 if( not args.decompOnly ):
-  uv = createNetcdfVariable( dso, \
-    uc, vn[0].replace(suffix,''), None, uD[vn[0]], 'f4',(tn,zn,yn,xn,) , variable )
+  uv = createNetcdfVariable( dso, uc, vn[0].replace(suffix,''), None, uD[vn[0]],
+                             'f4',(tn,zn,yn,xn,) , variable , fill_value=-9999.0)
   if( not decompOn ): uc = None
 
 if( decompOn ):
   up = vectorPrimeComponent( uc, um ); uc = None
   
-  upv = createNetcdfVariable( dso, \
-    up, vn[0].replace(suffix,'')+'p', None, uD[vn[0]], 'f4',(tn,zn,yn,xn,), variable )
+  upv = createNetcdfVariable( dso, up, vn[0].replace(suffix,'')+'p', None,
+                              uD[vn[0]], 'f4',(tn,zn,yn,xn,), variable,
+                              fill_value=-9999.0 )
   up = None
   
-  umv = createNetcdfVariable( dso, \
-    um, vn[0].replace(suffix,'')+'m', None, uD[vn[0]], 'f4',(zn,yn,xn,), variable )
+  umv = createNetcdfVariable( dso, um, vn[0].replace(suffix,'')+'m', None,
+                              uD[vn[0]], 'f4',(zn,yn,xn,), variable,
+                              fill_value=-9999.0 )
   um = None
 
 
@@ -214,17 +216,19 @@ else:
   wc, wm = interpolatePalmVectors( w0, cc_dims, 'k' , decompOn ); w0 = None
 
 if( not args.decompOnly ):
-  wv = createNetcdfVariable( dso, \
-    wc, vn[2].replace(suffix,''), None, uD[vn[2]], 'f4',(tn,zn,yn,xn,) , variable )
+  wv = createNetcdfVariable( dso, wc, vn[2].replace(suffix,''), None, uD[vn[2]],
+                             'f4',(tn,zn,yn,xn,) , variable , fill_value=-9999.0)
   if( not decompOn ): wc = None  # ASAP
 if( decompOn ):
   wp = vectorPrimeComponent( wc, wm )
-  wpv = createNetcdfVariable( dso, \
-    wp, vn[2].replace(suffix,'')+'p', None, uD[vn[2]], 'f4',(tn,zn,yn,xn,) , variable )
+  wpv = createNetcdfVariable( dso, wp, vn[2].replace(suffix,'')+'p', None,
+                              uD[vn[2]], 'f4',(tn,zn,yn,xn,) , variable,
+                              fill_value=-9999.0 )
   wp = None
   
-  wmv = createNetcdfVariable( dso, \
-    wm, vn[2].replace(suffix,'')+'m', None, uD[vn[2]], 'f4',(zn,yn,xn,) , variable )
+  wmv = createNetcdfVariable( dso, wm, vn[2].replace(suffix,'')+'m', None,
+                              uD[vn[2]], 'f4',(zn,yn,xn,) , variable,
+                              fill_value=-9999.0 )
   wm = None
 
 
@@ -236,18 +240,20 @@ vc = np.zeros( cc_dims )
 vc, vm = interpolatePalmVectors( v0, cc_dims, 'j' , decompOn ); v0 = None
 
 if( not args.decompOnly ):
-  vv = createNetcdfVariable( dso, \
-    vc, vn[1].replace(suffix,''), None, uD[vn[1]], 'f4',(tn,zn,yn,xn,) , variable )
+  vv = createNetcdfVariable( dso, vc, vn[1].replace(suffix,''), None, uD[vn[1]],
+                             'f4',(tn,zn,yn,xn,) , variable , fill_value=-9999.0)
   if( not decompOn ): vc = None
 
 if( decompOn ):
   vp = vectorPrimeComponent( vc, vm ); vc = None
-  vpv = createNetcdfVariable( dso, \
-    vp, vn[1].replace(suffix,'')+'p', None, uD[vn[1]],'f4',(tn,zn,yn,xn,), variable )
+  vpv = createNetcdfVariable( dso, vp, vn[1].replace(suffix,'')+'p', None,
+                              uD[vn[1]],'f4',(tn,zn,yn,xn,), variable,
+                              fill_value=-9999.0)
   vp = None
   
-  vmv = createNetcdfVariable( dso, \
-    vm, vn[1].replace(suffix,'')+'m', None, uD[vn[1]],'f4',(zn,yn,xn,) , variable )
+  vmv = createNetcdfVariable( dso, vm, vn[1].replace(suffix,'')+'m', None,
+                              uD[vn[1]],'f4',(zn,yn,xn,) , variable,
+                              fill_value=-9999.0 )
   vm = None
 
 # - - - - Fouth, possible scalars - - - - - - - - - -
@@ -268,19 +274,19 @@ if( sn ):
     sc = s0[:,1:,:-1,:-1].copy(); s0 = None
     
     if( not args.decompOnly ):
-      sv = createNetcdfVariable(dso, \
-        sc, si.replace('suffix',''), None, uD[si],'f4',(tn,zn,yn,xn,), variable )
+      sv = createNetcdfVariable(dso, sc, si.replace('suffix',''), None,
+                                uD[si],'f4',(tn,zn,yn,xn,), variable, fill_value=-9999.0 )
       if( not decompOn ): sc = None
     
     if( decompOn ):
       sm = np.mean( sc, axis=0 )
       sp = vectorPrimeComponent( sc, sm ); sc = None
-      spv = createNetcdfVariable( dso, \
-        sp, si.replace('suffix','')+'p', None, uD[si], 'f4',(tn,zn,yn,xn,) , variable )
+      spv = createNetcdfVariable( dso, sp, si.replace('suffix','')+'p', None,
+                                  uD[si], 'f4',(tn,zn,yn,xn,) , variable, fill_value=-9999.0 )
       sp = None
       
-      smv = createNetcdfVariable( dso, \
-        sm, si.replace('suffix','')+'m', None, uD[si], 'f4',(zn,yn,xn,) , variable )
+      smv = createNetcdfVariable( dso, sm, si.replace('suffix','')+'m', None,
+                                  uD[si], 'f4',(zn,yn,xn,) , variable, fill_value=-9999.0 )
       sm = None
 
 
