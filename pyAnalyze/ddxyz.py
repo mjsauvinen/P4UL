@@ -16,7 +16,7 @@ Finnish Meteorological Insitute
 
 #=functions===================================================================#
 
-def one_sided_ddxy(ddxyarray, Mmm, Mm, M, Mp, Mpp, Amm, Am, A, Ap, App):
+def one_sided_ddxy(ddxyarray, Mmm, Mm, M, Mp, Mpp, Amm, Am, A, Ap, App, d):
     # Calculate incorrectly calculated near-mask points using one-sided 
     # differenced ormulas.
 
@@ -33,13 +33,13 @@ def one_sided_ddxy(ddxyarray, Mmm, Mm, M, Mp, Mpp, Amm, Am, A, Ap, App):
     # Point n+1 in mask, 2nd order backward difference
     Mk = ( Mp & ~M & ~Mm & ~Mmm )
     Mkn2 += np.count_nonzero(Mk[0,:,:,:])
-    ddxyarray[Mk] = (3*A[Mk] - 4*Am[Mk] + Amm[Mk])/(2*dx)
+    ddxyarray[Mk] = (3*A[Mk] - 4*Am[Mk] + Amm[Mk])/(2*d)
     Mk = None
                 
     # Point n+1 in mask, 1st order backward difference
     Mk = ( Mp & ~M & ~Mm & Mmm )
     Mkn1 += np.count_nonzero(Mk[0,:,:,:])
-    ddxyarray[Mk] = (A[Mk] - Am[Mk])/dx
+    ddxyarray[Mk] = (A[Mk] - Am[Mk])/d
     Mk = None
 
     # Point n+1 in mask, not enough points for 1st order difference
@@ -51,13 +51,13 @@ def one_sided_ddxy(ddxyarray, Mmm, Mm, M, Mp, Mpp, Amm, Am, A, Ap, App):
     # Point n-1 in mask, 2nd order forward difference
     Mk = ( Mm & ~M & ~Mp & ~Mpp )
     Mkn2 += np.count_nonzero(Mk[0,:,:,:])
-    ddxyarray[Mk] = (-3*A[Mk] + 4*Ap[Mk] - App[Mk])/(2*dx)
+    ddxyarray[Mk] = (-3*A[Mk] + 4*Ap[Mk] - App[Mk])/(2*d)
     Mk = None
                 
     # Point n-1 in mask, 1st order forward difference
     Mk = ( Mm & ~M & ~Mp & Mpp )
     Mkn1 += np.count_nonzero(Mk[0,:,:,:])
-    ddxyarray[Mk] = (Ap[Mk] - A[Mk])/dx
+    ddxyarray[Mk] = (Ap[Mk] - A[Mk])/d
     Mk = None
 
     # Point n-1 in mask, not enough points for 1st order difference
@@ -173,9 +173,7 @@ for i in args.variable:
             #       if args.cyclicy:
             #A = np.insert(A,0,A[:,:,-1,:],axis=2)
             #A = np.insert(A,A.shape[2],A[:,:,1,:],axis=2)
-
-        
-#=x direction=================================================================#
+       
         if args.ddx:
             print('  d'+i+'dx')
 
@@ -208,7 +206,8 @@ for i in args.variable:
 
                 outddx['d'+i+'dx'] = one_sided_ddxy(outddx['d'+i+'dx'],
                                                     Mmm, Mm, M, Mp, Mpp,
-                                                    Amm, Am, A, Ap, App)
+                                                    Amm, Am, A, Ap, App,
+                                                    dx)
 
                 Mmm = None
                 Mm = None
@@ -219,14 +218,50 @@ for i in args.variable:
                 Ap = None
                 App = None
                 
-#=y direction=================================================================#
-
         if args.ddy:
             print('  d'+i+'dy')
-            outddx['d'+i+'dy'] = ((A[:,1:-1,2:,1:-1] - A[:,1:-1,:-2,1:-1]) 
+            # Initialise output with missing values.
+            outddx['d'+i+'dy'] = -9999.0*np.ones(A.shape)
+            
+            # Calculates derivatives for inner points. This is incorrect close
+            # to walls due to contamination by masked points.
+            outddx['d'+i+'dy'] = ((A[:,:,2:,:] - A[:,:,:-2,:]) 
                                   / 2*dy )
+            
+            if args.all:
+                # Prepare difference masks
+                temp = np.pad(M, ((0, 0), (0,0), (2,2), (0,0)),
+                             'constant', constant_values=True)
+                Mmm = temp[:,:,:-4,:] # n-2
+                Mm = temp[:,:,1:-3,:] # n-1
+                Mp = temp[:,:,3:-1,:] # n+1
+                Mpp = temp[:,:,4:,:]  # n+2
+                temp = None
 
-#=z direction=================================================================#            
+                # Prepare Values
+                temp = np.pad(A, ((0, 0), (0,0), (2,2), (0,0)),
+                              'constant', constant_values=-9999.0)
+                Amm = temp[:,:,:-4,:] # n-2
+                Am = temp[:,:,1:-3,:] # n-1
+                Ap = temp[:,:,3:-1,:] # n+1
+                App = temp[:,:,4:,:]  # n+2
+                temp = None
+
+                outddx['d'+i+'dy'] = one_sided_ddxy(outddx['d'+i+'dy'],
+                                                    Mmm, Mm, M, Mp, Mpp,
+                                                    Amm, Am, A, Ap, App,
+                                                    dy)
+
+                Mmm = None
+                Mm = None
+                Mp = None
+                Mpp = None
+                Amm = None
+                Am = None
+                Ap = None
+                App = None
+
+
         if args.ddz:
             print('  d'+i+'dz')
             muoto = A[:,1:-1,1:-1,1:-1].shape
