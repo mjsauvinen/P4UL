@@ -5,9 +5,7 @@ from netcdfTools import *
 
 '''Calculate derivatives
 
-Calculate derivatives for a given field. 
-
-NB! Boundaries are not treated properly.
+Calculates derivatives for a given field. 
 
 Author:
 Jukka-Pekka Keskinen
@@ -34,12 +32,18 @@ parser.add_argument('-y', '--ddy', action="store_true", default=False,
 parser.add_argument('-z', '--ddz', action="store_true", default=False,
                     help = 'Calculate z derivative.')
 parser.add_argument('-n', '--missToNan',action="store_true", default=False,
-                    help='Set PALM missing values (-9999.0) to numpy in the'
+                    help='Set PALM missing values (-9999.0) to nan in the'
                     'calculation of the derivatives. Default: set to 0.0.')
 parser.add_argument('-cy', '--cyclicy', action="store_true", default=False,
                     help = 'Cyclic boundaries in y direction.')
 parser.add_argument('-cx', '--cyclicx', action="store_true", default=False,
                     help = 'Cyclic boundaries in x direction.')
+parser.add_argument('-a', '--all', action="store_true", default=False,
+                    help = 'Calculate derivatives on all grid points ie. do '
+                    'not skip boundaries. One-sided differences will be used '
+                    'close to boundaries. Missing values will be set to ???.')
+parser.add_argument('-zb', '--zerobottom', action="store_true", default=False,
+                    help = 'Use zero for values below the grid.')
 args = parser.parse_args()
 
 #=inputs######================================================================#
@@ -65,16 +69,18 @@ print(' Calculating derivatives.')
 
 outddx = {}
 
-if args.cyclicx:
+if args.cyclicx or args.all:
     x = ds['x'][:].data
 else:
     x = ds['x'][1:-1].data
 
-if args.cyclicy:
+if args.cyclicy or args.all:
     y = ds['y'][:].data
 else:
     y = ds['y'][1:-1].data
-    
+
+z = ds['z'][:].data
+
 # Assume uniform mesh in x and y directions
 dx = x[1]-x[0]
 dy = y[1]-y[0]
@@ -83,32 +89,127 @@ dy = y[1]-y[0]
 for i in args.variable:
     if len(vD[i]) == 4:
         A = ds[i][:,:,:,:].data
-        if args.missToNan:
-            A[np.isclose(A,-9999.0)]=np.nan
-        else:
-            A[np.isclose(A,-9999.0)]=0.0
+        #        if args.missToNan or args.all:
+        #            A[np.isclose(A,-9999.0)]=np.nan
+        #        else:
+        #            A[np.isclose(A,-9999.0)]=0.0
 
-        # Set lower boundary as zero. 
-        A = np.concatenate((np.zeros((A.shape[0],1,A.shape[2],A.shape[3])),A),axis=1)
+            
+        if args.all:
+            # True when missing value
+            M = ds[i][:,:,:,:].mask
+            #        elif args.zerobottom:
+            # Set lower boundary as zero.
+            #A = np.concatenate(
+            #                (np.zeros((A.shape[0],1,A.shape[2],A.shape[3])),A),axis=1)                
+            #z = np.insert(ds['z'][:].data,0,0.0)
         # Apply cyclic boundaries if applicable
-        if args.cyclicx:
-            A = np.insert(A,0,A[:,:,:,-1],axis=3)
-            A = np.insert(A,A.shape[3],A[:,:,:,1],axis=3)
-        if args.cyclicy:
-            A = np.insert(A,0,A[:,:,-1,:],axis=2)
-            A = np.insert(A,A.shape[2],A[:,:,1,:],axis=2)
-        z = np.insert(ds['z'][:].data,0,0.0)
-        muoto = A[:,1:-1,1:-1,1:-1].shape
+            #        if args.cyclicx:
+            #A = np.insert(A,0,A[:,:,:,-1],axis=3)
+            #A = np.insert(A,A.shape[3],A[:,:,:,1],axis=3)
+            #       if args.cyclicy:
+            #A = np.insert(A,0,A[:,:,-1,:],axis=2)
+            #A = np.insert(A,A.shape[2],A[:,:,1,:],axis=2)
+
+        
+#=x direction=================================================================#
         if args.ddx:
             print('  d'+i+'dx')
-            outddx['d'+i+'dx'] = ((A[:,1:-1,1:-1,2:] - A[:,1:-1,1:-1,:-2])
-                                  / dx)
+
+            # Initialise output with missing values.
+            outddx['d'+i+'dx'] = -9999.0*np.ones(A.shape)
+            
+            # Calculates derivatives for inner points. This is incorrect close
+            # to walls due to contamination by masked points.
+            outddx['d'+i+'dx'][:,:,:,1:-1] = ((A[:,:,:,2:] - A[:,:,:,:-2])
+                                              / 2*dx)
+            
+            if args.all:
+                # Masks
+                temp = np.pad(M, ((0, 0), (0,0), (0,0), (2,2)),
+                             'constant', constant_values=True)
+                Mmm = temp[:,:,:,:-4] # n-2
+                Mm = temp[:,:,:,1:-3] # n-1
+                Mp = temp[:,:,:,3:-1] # n+1
+                Mpp = temp[:,:,:,4:]  # n+2
+                temp = None
+
+                # Values
+                temp = np.pad(A, ((0, 0), (0,0), (0,0), (2,2)),
+                              'constant', constant_values=-9999.0)
+                Amm = temp[:,:,:,:-4] # n-2
+                Am = temp[:,:,:,1:-3] # n-1
+                Ap = temp[:,:,:,3:-1] # n+1
+                App = temp[:,:,:,4:]  # n+2
+                temp = None
+
+                # Remove values calculated using masked points.
+                outddx['d'+i+'dx'][M] = -9999.0
+                outddx['d'+i+'dx'][Mm] = -9999.0
+                outddx['d'+i+'dx'][Mp] = -9999.0
+
+
+                # Calculate new values with one-sided derivatives.                
+                Mkn2 = 0
+                Mkn1 = 0
+                Mkn0 = 0
+
+                # Point n+1 in mask, 2nd order backward difference
+                Mk = ( Mp & ~M & ~Mm & ~Mmm )
+                Mkn2 += np.count_nonzero(Mk[0,:,:,:])
+                outddx['d'+i+'dx'][Mk] = (3*A[Mk] - 4*Am[Mk] + Amm[Mk])/(2*dx)
+                Mk = None
+                
+                # Point n+1 in mask, 1st order backward difference
+                Mk = ( Mp & ~M & ~Mm & Mmm )
+                Mkn1 += np.count_nonzero(Mk[0,:,:,:])
+                outddx['d'+i+'dx'][Mk] = (A[Mk] - Am[Mk])/dx
+                Mk = None
+
+                # Point n+1 in mask, not enough points for 1st order difference
+                Mk = ( Mp & ~M & Mm)
+                Mkn0 += np.count_nonzero(Mk[0,:,:,:])
+                outddx['d'+i+'dx'][Mk] = 0.0
+                Mk = None
+                
+                # Point n-1 in mask, 2nd order forward difference
+                Mk = ( Mm & ~M & ~Mp & ~Mpp )
+                Mkn2 += np.count_nonzero(Mk[0,:,:,:])
+                outddx['d'+i+'dx'][Mk] = (-3*A[Mk] + 4*Ap[Mk] - App[Mk])/(2*dx)
+                Mk = None
+                
+                # Point n-1 in mask, 1st order forward difference
+                Mk = ( Mm & ~M & ~Mp & Mpp )
+                Mkn1 += np.count_nonzero(Mk[0,:,:,:])
+                outddx['d'+i+'dx'][Mk] = (Ap[Mk] - A[Mk])/dx
+                Mk = None
+
+                # Point n-1 in mask, not enough points for 1st order difference
+                Mk = ( Mm & ~M & Mp)
+                Mkn0 += np.count_nonzero(Mk[0,:,:,:])
+                outddx['d'+i+'dx'][Mk] = 0.0
+                Mk = None
+
+                print('   Close to boundaries and topography, one-sided '
+                      'differences were used.')
+                print('   2nd order: '+str(Mkn2)+' points ('
+                      + str(np.round(100*Mkn2/np.size(M),1))+' %)')
+                print('   1st order: '+str(Mkn1)+' points ('
+                      + str(np.round(100*Mkn1/np.size(M),1))+' %)')
+                print('   failed:    '+str(Mkn0)+' points ('
+                      + str(np.round(100*Mkn0/np.size(M),1))+' %)')
+                
+#=y direction=================================================================#
+
         if args.ddy:
             print('  d'+i+'dy')
             outddx['d'+i+'dy'] = ((A[:,1:-1,2:,1:-1] - A[:,1:-1,:-2,1:-1]) 
-                                  / dy )
+                                  / 2*dy )
+
+#=z direction=================================================================#            
         if args.ddz:
             print('  d'+i+'dz')
+            muoto = A[:,1:-1,1:-1,1:-1].shape
             # In z direction, the mesh spacing can be nonuniform.
             # Calculate ddz with (4.3.7) from Hirsch.
             outddx['d'+i+'dz'] = ((( A[:,2:,1:-1,1:-1]
@@ -166,7 +267,7 @@ yv = createNetcdfVariable(
     dso, y, 'y' , len(y), uD['y'], 'f4', ('y',), True )
 
 zv = createNetcdfVariable( 
-    dso, z[1:-1], 'z' , len(z[1:-1]), uD['z'],
+    dso, z, 'z' , len(z), uD['z'],
     'f4', ('z',), True )
 
 for i in outddx:
