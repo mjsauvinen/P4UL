@@ -14,6 +14,69 @@ Finnish Meteorological Insitute
 
 '''
 
+#=functions===================================================================#
+
+def one_sided_ddxy(ddxyarray, Mmm, Mm, M, Mp, Mpp, Amm, Am, A, Ap, App):
+    # Calculate incorrectly calculated near-mask points using one-sided 
+    # differenced ormulas.
+
+    # Remove values calculated using masked points.
+    ddxyarray[M] = -9999.0
+    ddxyarray[Mm] = -9999.0
+    ddxyarray[Mp] = -9999.0
+
+    # Calculate new values with one-sided derivatives.                
+    Mkn2 = 0
+    Mkn1 = 0
+    Mkn0 = 0
+
+    # Point n+1 in mask, 2nd order backward difference
+    Mk = ( Mp & ~M & ~Mm & ~Mmm )
+    Mkn2 += np.count_nonzero(Mk[0,:,:,:])
+    ddxyarray[Mk] = (3*A[Mk] - 4*Am[Mk] + Amm[Mk])/(2*dx)
+    Mk = None
+                
+    # Point n+1 in mask, 1st order backward difference
+    Mk = ( Mp & ~M & ~Mm & Mmm )
+    Mkn1 += np.count_nonzero(Mk[0,:,:,:])
+    ddxyarray[Mk] = (A[Mk] - Am[Mk])/dx
+    Mk = None
+
+    # Point n+1 in mask, not enough points for 1st order difference
+    Mk = ( Mp & ~M & Mm)
+    Mkn0 += np.count_nonzero(Mk[0,:,:,:])
+    ddxyarray[Mk] = 0.0
+    Mk = None
+                
+    # Point n-1 in mask, 2nd order forward difference
+    Mk = ( Mm & ~M & ~Mp & ~Mpp )
+    Mkn2 += np.count_nonzero(Mk[0,:,:,:])
+    ddxyarray[Mk] = (-3*A[Mk] + 4*Ap[Mk] - App[Mk])/(2*dx)
+    Mk = None
+                
+    # Point n-1 in mask, 1st order forward difference
+    Mk = ( Mm & ~M & ~Mp & Mpp )
+    Mkn1 += np.count_nonzero(Mk[0,:,:,:])
+    ddxyarray[Mk] = (Ap[Mk] - A[Mk])/dx
+    Mk = None
+
+    # Point n-1 in mask, not enough points for 1st order difference
+    Mk = ( Mm & ~M & Mp)
+    Mkn0 += np.count_nonzero(Mk[0,:,:,:])
+    ddxyarray[Mk] = 0.0
+    Mk = None
+
+    print('   Close to boundaries and topography, one-sided '
+          'differences were used.')
+    print('   2nd order: '+str(Mkn2)+' points ('
+          + str(np.round(100*Mkn2/np.size(M),1))+' %)')
+    print('   1st order: '+str(Mkn1)+' points ('
+          + str(np.round(100*Mkn1/np.size(M),1))+' %)')
+    print('   failed:    '+str(Mkn0)+' points ('
+          + str(np.round(100*Mkn0/np.size(M),1))+' %)')
+
+    return ddxyarray
+
 #=argument parser=============================================================#
 
 parser = argparse.ArgumentParser(
@@ -125,7 +188,7 @@ for i in args.variable:
                                               / 2*dx)
             
             if args.all:
-                # Masks
+                # Prepare difference masks
                 temp = np.pad(M, ((0, 0), (0,0), (0,0), (2,2)),
                              'constant', constant_values=True)
                 Mmm = temp[:,:,:,:-4] # n-2
@@ -134,7 +197,7 @@ for i in args.variable:
                 Mpp = temp[:,:,:,4:]  # n+2
                 temp = None
 
-                # Values
+                # Prepare Values
                 temp = np.pad(A, ((0, 0), (0,0), (0,0), (2,2)),
                               'constant', constant_values=-9999.0)
                 Amm = temp[:,:,:,:-4] # n-2
@@ -143,61 +206,18 @@ for i in args.variable:
                 App = temp[:,:,:,4:]  # n+2
                 temp = None
 
-                # Remove values calculated using masked points.
-                outddx['d'+i+'dx'][M] = -9999.0
-                outddx['d'+i+'dx'][Mm] = -9999.0
-                outddx['d'+i+'dx'][Mp] = -9999.0
+                outddx['d'+i+'dx'] = one_sided_ddxy(outddx['d'+i+'dx'],
+                                                    Mmm, Mm, M, Mp, Mpp,
+                                                    Amm, Am, A, Ap, App)
 
-
-                # Calculate new values with one-sided derivatives.                
-                Mkn2 = 0
-                Mkn1 = 0
-                Mkn0 = 0
-
-                # Point n+1 in mask, 2nd order backward difference
-                Mk = ( Mp & ~M & ~Mm & ~Mmm )
-                Mkn2 += np.count_nonzero(Mk[0,:,:,:])
-                outddx['d'+i+'dx'][Mk] = (3*A[Mk] - 4*Am[Mk] + Amm[Mk])/(2*dx)
-                Mk = None
-                
-                # Point n+1 in mask, 1st order backward difference
-                Mk = ( Mp & ~M & ~Mm & Mmm )
-                Mkn1 += np.count_nonzero(Mk[0,:,:,:])
-                outddx['d'+i+'dx'][Mk] = (A[Mk] - Am[Mk])/dx
-                Mk = None
-
-                # Point n+1 in mask, not enough points for 1st order difference
-                Mk = ( Mp & ~M & Mm)
-                Mkn0 += np.count_nonzero(Mk[0,:,:,:])
-                outddx['d'+i+'dx'][Mk] = 0.0
-                Mk = None
-                
-                # Point n-1 in mask, 2nd order forward difference
-                Mk = ( Mm & ~M & ~Mp & ~Mpp )
-                Mkn2 += np.count_nonzero(Mk[0,:,:,:])
-                outddx['d'+i+'dx'][Mk] = (-3*A[Mk] + 4*Ap[Mk] - App[Mk])/(2*dx)
-                Mk = None
-                
-                # Point n-1 in mask, 1st order forward difference
-                Mk = ( Mm & ~M & ~Mp & Mpp )
-                Mkn1 += np.count_nonzero(Mk[0,:,:,:])
-                outddx['d'+i+'dx'][Mk] = (Ap[Mk] - A[Mk])/dx
-                Mk = None
-
-                # Point n-1 in mask, not enough points for 1st order difference
-                Mk = ( Mm & ~M & Mp)
-                Mkn0 += np.count_nonzero(Mk[0,:,:,:])
-                outddx['d'+i+'dx'][Mk] = 0.0
-                Mk = None
-
-                print('   Close to boundaries and topography, one-sided '
-                      'differences were used.')
-                print('   2nd order: '+str(Mkn2)+' points ('
-                      + str(np.round(100*Mkn2/np.size(M),1))+' %)')
-                print('   1st order: '+str(Mkn1)+' points ('
-                      + str(np.round(100*Mkn1/np.size(M),1))+' %)')
-                print('   failed:    '+str(Mkn0)+' points ('
-                      + str(np.round(100*Mkn0/np.size(M),1))+' %)')
+                Mmm = None
+                Mm = None
+                Mp = None
+                Mpp = None
+                Amm = None
+                Am = None
+                Ap = None
+                App = None
                 
 #=y direction=================================================================#
 
