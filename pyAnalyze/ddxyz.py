@@ -142,7 +142,7 @@ if args.cyclicy or args.all:
     y = ds['y'][:].data
 else:
     y = ds['y'][1:-1].data
-    
+
 z = ds['z'][:].data
 
 # Assume uniform mesh in x and y directions
@@ -170,13 +170,13 @@ for i in args.variable:
                 A = np.concatenate(
                     (np.zeros((A.shape[0],1,A.shape[2],A.shape[3])),A),axis=1)                
                 z = np.insert(ds['z'][:].data,0,0.0)
-        # Apply cyclic boundaries if applicable
-            #        if args.cyclicx:
-            #A = np.insert(A,0,A[:,:,:,-1],axis=3)
-            #A = np.insert(A,A.shape[3],A[:,:,:,1],axis=3)
-            #       if args.cyclicy:
-            #A = np.insert(A,0,A[:,:,-1,:],axis=2)
-            #A = np.insert(A,A.shape[2],A[:,:,1,:],axis=2)
+            # Apply cyclic boundaries if applicable
+            if args.cyclicx:
+                A = np.insert(A,0,A[:,:,:,-1],axis=3)
+                A = np.insert(A,A.shape[3],A[:,:,:,1],axis=3)
+            if args.cyclicy:
+                A = np.insert(A,0,A[:,:,-1,:],axis=2)
+                A = np.insert(A,A.shape[2],A[:,:,1,:],axis=2)
        
         if args.ddx:
             print('  d'+i+'dx')
@@ -223,8 +223,7 @@ for i in args.variable:
                 Ap = None
                 App = None
             else:
-                if args.zerobottom:                    
-                    outddx['d'+i+'dx'] = outddx['d'+i+'dx'][:,1:-1,1:-1,1:-1]
+                outddx['d'+i+'dx'] = outddx['d'+i+'dx'][:,1:-1,1:-1,1:-1]
 
                 
         if args.ddy:
@@ -271,8 +270,7 @@ for i in args.variable:
                 App = None
 
             else:
-                if args.zerobottom:                    
-                    outddx['d'+i+'dy'] = outddx['d'+i+'dy'][:,1:-1,1:-1,1:-1]
+                outddx['d'+i+'dy'] = outddx['d'+i+'dy'][:,1:-1,1:-1,1:-1]
             
 
 
@@ -362,8 +360,7 @@ for i in args.variable:
                 App = None
                 
             else:
-                if args.zerobottom:                    
-                    outddx['d'+i+'dz'] = outddx['d'+i+'dz'][:,1:-1,1:-1,1:-1]
+                outddx['d'+i+'dz'] = outddx['d'+i+'dz'][:,1:-1,1:-1,1:-1]
                 
              
         A = None
@@ -374,7 +371,7 @@ for i in args.variable:
     
 #=output======================================================================#
 
-if args.zerobottom:
+if not args.all:
     z = z[1:-1]
 
 dso = netcdfOutputDataset( args.fileout )
