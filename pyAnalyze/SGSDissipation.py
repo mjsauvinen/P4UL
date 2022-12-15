@@ -99,8 +99,9 @@ yv = createNetcdfVariable(
 zv = createNetcdfVariable( 
     dso, z, 'z' , len(z), uD['z'], 'f4', ('z',), True )
 
-Ev = createNetcdfVariable( 
-    dso, epsi , 'ee' , None , 'm2/s3', 'f4', ('time', 'z', 'y', 'x', ), False )
+Ev = createNetcdfVariable(dso, epsi , 'ee' , None , 'm2/s3', 'f4',
+                          ('time', 'z', 'y', 'x', ), False,
+                          fill_value =-9999.0 )
 
 netcdfWriteAndClose( dso )
 
