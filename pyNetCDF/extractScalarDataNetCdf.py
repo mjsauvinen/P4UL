@@ -120,7 +120,9 @@ for sname in scalarNames:
     #s = np.zeros( st_dims )   # This is not really needed.
     s, sm = interpolatePalmVectors( s0, s0_dims, 'k' , decompOn ); #s0 = None
     sp = vectorPrimeComponent( s, sm )
-    sv.append(createNetcdfVariable( dso, sp, sname+'p', st_dims[0],'','f4',('time','z','y','x',), variable ))
+    sv.append(
+      createNetcdfVariable(
+        dso, sp, sname+'p', st_dims[0],'','f4',('time','z','y','x',), variable, fill_value =-9999.0 ))
   else:
     # Take the portion that matches the coords.
     if( copyOnly ): s = s0
@@ -128,6 +130,8 @@ for sname in scalarNames:
     
   s_dims = np.shape(s)
   print(' Final shape = {} '.format(s_dims) )
-  sv.append( createNetcdfVariable(dso, s, sname, s_dims[0],'[]','f4',('time','z','y','x',), variable) )
+  sv.append(
+    createNetcdfVariable(
+      dso, s, sname, s_dims[0],'[]','f4',('time','z','y','x',), variable, fill_value =-9999.0) )
 
 netcdfWriteAndClose( dso )
