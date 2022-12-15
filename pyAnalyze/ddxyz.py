@@ -72,7 +72,7 @@ def one_sided_ddxy(ddxyarray, Mmm, Mm, M, Mp, Mpp, Amm, Am, A, Ap, App, d):
           + str(np.round(100*Mkn2/np.size(M),1))+' %)')
     print('   1st order: '+str(Mkn1)+' points ('
           + str(np.round(100*Mkn1/np.size(M),1))+' %)')
-    print('   failed:    '+str(Mkn0)+' points ('
+    print('   0th order: '+str(Mkn0)+' points ('
           + str(np.round(100*Mkn0/np.size(M),1))+' %)')
 
     return ddxyarray
@@ -161,6 +161,8 @@ for i in args.variable:
         if args.all:
             # True when missing value
             M = ds[i][:,:,:,:].mask
+            if M.shape==():
+                sys.exit('** Error: Variable '+i+' does not have a mask.')   
             #        elif args.zerobottom:
             # Set lower boundary as zero.
             #A = np.concatenate(
@@ -204,6 +206,7 @@ for i in args.variable:
                 App = temp[:,:,:,4:]  # n+2
                 temp = None
 
+                
                 outddx['d'+i+'dx'] = one_sided_ddxy(outddx['d'+i+'dx'],
                                                     Mmm, Mm, M, Mp, Mpp,
                                                     Amm, Am, A, Ap, App,
@@ -225,7 +228,7 @@ for i in args.variable:
             
             # Calculates derivatives for inner points. This is incorrect close
             # to walls due to contamination by masked points.
-            outddx['d'+i+'dy'] = ((A[:,:,2:,:] - A[:,:,:-2,:]) 
+            outddx['d'+i+'dy'][:,:,1:-1,:] = ((A[:,:,2:,:] - A[:,:,:-2,:]) 
                                   / 2*dy )
             
             if args.all:
@@ -264,11 +267,14 @@ for i in args.variable:
 
         if args.ddz:
             print('  d'+i+'dz')
-            muoto = A[:,1:-1,1:-1,1:-1].shape
+            # Initialise output with missing values.
+            outddx['d'+i+'dz'] = -9999.0*np.ones(A.shape)
+            
+            muoto = A[:,1:-1,:,:].shape
             # In z direction, the mesh spacing can be nonuniform.
             # Calculate ddz with (4.3.7) from Hirsch.
-            outddx['d'+i+'dz'] = ((( A[:,2:,1:-1,1:-1]
-                                     - A[:,1:-1,1:-1,1:-1])
+            outddx['d'+i+'dz'][:,1:-1,:,:] = ((( A[:,2:,:,:]
+                                     - A[:,1:-1,:,:])
                                    * np.broadcast_to(
                                        np.reshape(
                                            np.broadcast_to(
@@ -279,8 +285,8 @@ for i in args.variable:
                                                (muoto[1],muoto[2])),
                                            (muoto[1],muoto[2],1)),
                                        muoto)
-                                   + ( A[:,1:-1,1:-1,1:-1]
-                                       - A[:,0:-2,1:-1,1:-1])
+                                   + ( A[:,1:-1,:,:]
+                                       - A[:,0:-2,:,:])
                                    * np.broadcast_to(
                                        np.reshape(
                                            np.broadcast_to(
@@ -300,6 +306,51 @@ for i in args.variable:
                                               (muoto[1],muoto[2])),
                                           (muoto[1],muoto[2],1)),
                                       muoto))
+
+            if args.all:
+                
+                # Prepare difference masks
+                temp = np.pad(M, ((0, 0), (2,2), (0,0), (0,0)),
+                             'constant', constant_values=True)
+                Mmm = temp[:,:-4,:,:] # n-2
+                Mm = temp[:,1:-3,:,:] # n-1
+                Mp = temp[:,3:-1,:,:] # n+1
+                Mpp = temp[:,4:,:,:]  # n+2
+                temp = None
+
+                # Prepare Values
+                temp = np.pad(A, ((0, 0), (2,2), (0,0), (0,0)),
+                              'constant', constant_values=-9999.0)
+                Amm = temp[:,:-4,:,:] # n-2
+                Am = temp[:,1:-3,:,:] # n-1
+                Ap = temp[:,3:-1,:,:] # n+1
+                App = temp[:,4:,:,:]  # n+2
+                temp = None
+
+                dz = z[1]-z[0]
+                if np.any(~np.isclose(dz,z[1:]-z[0:-1])):
+                    print('** Warning: Non-uniform mesh in z direction. '
+                          'Accuracy will be degraded next ')
+                    print('   to boundaries at following levels:')
+                    for j in range(z.size):
+                        if ~np.isclose(dz,z[j]):
+                            print('   '+str(j))
+                
+                outddx['d'+i+'dz'] = one_sided_ddxy(outddx['d'+i+'dz'],
+                                                    Mmm, Mm, M, Mp, Mpp,
+                                                    Amm, Am, A, Ap, App,
+                                                    dz)
+
+                Mmm = None
+                Mm = None
+                Mp = None
+                Mpp = None
+                Amm = None
+                Am = None
+                Ap = None
+                App = None
+
+            
              
         A = None
     else:
