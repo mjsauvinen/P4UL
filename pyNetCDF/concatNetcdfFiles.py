@@ -132,10 +132,10 @@ nt = len(time)
 nx = len(xc); ny = len(yc); nz = len(zc)
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
 
-tv = createNetcdfVariable( dso, time,'time', nt ,'s','f4',('time',), parameter )
-xv = createNetcdfVariable( dso, xc   , 'x' , nx , 'm', 'f4', ('x',)   , parameter )
-yv = createNetcdfVariable( dso, yc   , 'y' , ny , 'm', 'f4', ('y',)   , parameter )
-zv = createNetcdfVariable( dso, zc   , 'z' , nz , 'm', 'f4', ('z',)   , parameter )
+tv = createNetcdfVariable( dso, time,'time', nt ,'seconds','f4',('time',), parameter )
+xv = createNetcdfVariable( dso, xc   , 'x' , nx , 'meters', 'f4', ('x',)   , parameter )
+yv = createNetcdfVariable( dso, yc   , 'y' , ny , 'meters', 'f4', ('y',)   , parameter )
+zv = createNetcdfVariable( dso, zc   , 'z' , nz , 'meters', 'f4', ('z',)   , parameter )
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
 

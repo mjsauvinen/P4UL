@@ -136,7 +136,7 @@ else:        xk = 1
 z, z_dims = read1DVariableFromDataset(zn, vn[0], ds, xk, 0, cl ) # Exclude determined by xk
 if(('k' in zn)  and (k2z is not None) ):
   print(' NOTE: Converting vertical coord from index {} to z [m] using dz={} m.'.format(zn,k2z))
-  z *= k2z;  zn = 'z'; zunit = 'm'
+  z *= k2z;  zn = 'z'; zunit = 'meters'
 zv = createNetcdfVariable( dso, z  , zn , len(z)   , zunit, 'f4', (zn,), parameter )
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
