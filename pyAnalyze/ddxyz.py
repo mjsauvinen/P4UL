@@ -191,37 +191,28 @@ for i in args.variable:
             
             if args.all:
                 # Prepare difference masks
-                temp = np.pad(M, ((0, 0), (0,0), (0,0), (2,2)),
+                Mpad = np.pad(M, ((0, 0), (0,0), (0,0), (2,2)),
                              'constant', constant_values=True)
-                Mmm = temp[:,:,:,:-4] # n-2
-                Mm = temp[:,:,:,1:-3] # n-1
-                Mp = temp[:,:,:,3:-1] # n+1
-                Mpp = temp[:,:,:,4:]  # n+2
-                temp = None
-
-                # Prepare Values
-                temp = np.pad(A, ((0, 0), (0,0), (0,0), (2,2)),
+                # Prepare difference Values
+                Apad = np.pad(A, ((0, 0), (0,0), (0,0), (2,2)),
                               'constant', constant_values=-9999.0)
-                Amm = temp[:,:,:,:-4] # n-2
-                Am = temp[:,:,:,1:-3] # n-1
-                Ap = temp[:,:,:,3:-1] # n+1
-                App = temp[:,:,:,4:]  # n+2
-                temp = None
-
                 
                 outddx['d'+i+'dx'] = one_sided_ddxy(outddx['d'+i+'dx'],
-                                                    Mmm, Mm, M, Mp, Mpp,
-                                                    Amm, Am, A, Ap, App,
+                                                    Mpad[:,:,:,:-4],
+                                                    Mpad[:,:,:,1:-3],
+                                                    M,
+                                                    Mpad[:,:,:,3:-1],
+                                                    Mpad[:,:,:,4:],
+                                                    Apad[:,:,:,:-4],
+                                                    Apad[:,:,:,1:-3],
+                                                    A,
+                                                    Apad[:,:,:,3:-1],
+                                                    Apad[:,:,:,4:],
                                                     dx)
+                                                    
+                Mpad = None
+                Apad = None
 
-                Mmm = None
-                Mm = None
-                Mp = None
-                Mpp = None
-                Amm = None
-                Am = None
-                Ap = None
-                App = None
             else:
                 outddx['d'+i+'dx'] = outddx['d'+i+'dx'][:,1:-1,1:-1,1:-1]
 
@@ -238,36 +229,27 @@ for i in args.variable:
             
             if args.all:
                 # Prepare difference masks
-                temp = np.pad(M, ((0, 0), (0,0), (2,2), (0,0)),
+                Mpad = np.pad(M, ((0, 0), (0,0), (2,2), (0,0)),
                              'constant', constant_values=True)
-                Mmm = temp[:,:,:-4,:] # n-2
-                Mm = temp[:,:,1:-3,:] # n-1
-                Mp = temp[:,:,3:-1,:] # n+1
-                Mpp = temp[:,:,4:,:]  # n+2
-                temp = None
 
                 # Prepare Values
-                temp = np.pad(A, ((0, 0), (0,0), (2,2), (0,0)),
+                Apad = np.pad(A, ((0, 0), (0,0), (2,2), (0,0)),
                               'constant', constant_values=-9999.0)
-                Amm = temp[:,:,:-4,:] # n-2
-                Am = temp[:,:,1:-3,:] # n-1
-                Ap = temp[:,:,3:-1,:] # n+1
-                App = temp[:,:,4:,:]  # n+2
-                temp = None
 
                 outddx['d'+i+'dy'] = one_sided_ddxy(outddx['d'+i+'dy'],
-                                                    Mmm, Mm, M, Mp, Mpp,
-                                                    Amm, Am, A, Ap, App,
+                                                    Mpad[:,:,:-4,:],
+                                                    Mpad[:,:,1:-3,:],
+                                                    M,
+                                                    Mpad[:,:,3:-1,:],
+                                                    Mpad[:,:,4:,:],
+                                                    Apad[:,:,:-4,:],
+                                                    Apad[:,:,1:-3,:],
+                                                    A,
+                                                    Apad[:,:,3:-1,:],
+                                                    Apad[:,:,4:,:],
                                                     dy)
-
-                Mmm = None
-                Mm = None
-                Mp = None
-                Mpp = None
-                Amm = None
-                Am = None
-                Ap = None
-                App = None
+                Mpad = None
+                Apad = None
 
             else:
                 outddx['d'+i+'dy'] = outddx['d'+i+'dy'][:,1:-1,1:-1,1:-1]
@@ -319,22 +301,12 @@ for i in args.variable:
             if args.all:
                 
                 # Prepare difference masks
-                temp = np.pad(M, ((0, 0), (2,2), (0,0), (0,0)),
+                Mpad = np.pad(M, ((0, 0), (2,2), (0,0), (0,0)),
                              'constant', constant_values=True)
-                Mmm = temp[:,:-4,:,:] # n-2
-                Mm = temp[:,1:-3,:,:] # n-1
-                Mp = temp[:,3:-1,:,:] # n+1
-                Mpp = temp[:,4:,:,:]  # n+2
-                temp = None
 
                 # Prepare Values
-                temp = np.pad(A, ((0, 0), (2,2), (0,0), (0,0)),
+                Apad = np.pad(A, ((0, 0), (2,2), (0,0), (0,0)),
                               'constant', constant_values=-9999.0)
-                Amm = temp[:,:-4,:,:] # n-2
-                Am = temp[:,1:-3,:,:] # n-1
-                Ap = temp[:,3:-1,:,:] # n+1
-                App = temp[:,4:,:,:]  # n+2
-                temp = None
 
                 dz = z[2]-z[1]
                 if np.any(~np.isclose(dz,z[1:]-z[0:-1])):
@@ -346,18 +318,20 @@ for i in args.variable:
                             print('   '+str(j))
                 
                 outddx['d'+i+'dz'] = one_sided_ddxy(outddx['d'+i+'dz'],
-                                                    Mmm, Mm, M, Mp, Mpp,
-                                                    Amm, Am, A, Ap, App,
+                                                    Mpad[:,:-4,:,:],
+                                                    Mpad[:,1:-3,:,:],
+                                                    M,
+                                                    Mpad[:,3:-1,:,:],
+                                                    Mpad[:,4:,:,:],
+                                                    Apad[:,:-4,:,:],
+                                                    Apad[:,1:-3,:,:],
+                                                    A,
+                                                    Apad[:,3:-1,:,:],
+                                                    Apad[:,4:,:,:],
                                                     dz)
 
-                Mmm = None
-                Mm = None
-                Mp = None
-                Mpp = None
-                Amm = None
-                Am = None
-                Ap = None
-                App = None
+                Mpad = None
+                Apad = None
                 
             else:
                 outddx['d'+i+'dz'] = outddx['d'+i+'dz'][:,1:-1,1:-1,1:-1]
@@ -399,7 +373,7 @@ for i in outddx:
         
     createNetcdfVariable(
         dso, outddx[i] , i , None , nu,
-        'f4', ('time', 'z', 'y', 'x', ), False )
+        'f4', ('time', 'z', 'y', 'x', ), False, fill_value =-9999.0 )
 
 netcdfWriteAndClose( dso )
         
