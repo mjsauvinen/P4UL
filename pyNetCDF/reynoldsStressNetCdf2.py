@@ -32,6 +32,9 @@ parser.add_argument('-i', '--invert',action="store_true", default=False,
                     help='Output also the inverse of the Reynolds stress '
                     'tensor. If partial input data is given, symmetry of the '
                     'Reynolds stress tensor is assumed.')
+parser.add_argument('-n', '--missval',type=float, help='Value for missing '
+                    'values in output file. Default = NaN.', default = None)
+
 args = parser.parse_args()
 
 #=inputs######================================================================#
@@ -41,9 +44,10 @@ first = True
 
 for i in args.files:
     ds, vD, uD = netcdfDataset2(i)
-    for j in ['u', 'v', 'w', 'uu', 'vv', 'ww', 'uv', 'uw', 'vw', 'vu', 'wu', 'wc']:
+    for j in ['u','v','w','uu','vv','ww','uv','uw','vw','vu','wu','wv']:
         if ( j not in vels and j in vD.keys() ):
            vels[j] = ds[j][:,:,:,:].data
+           vels[j][np.isclose(vels[j],-9999.0)] = np.nan
            if first:
                x = ds['x'][:].data
                udx = uD['x']
@@ -77,9 +81,13 @@ for i in ['u', 'v', 'w']:
     for j in ['u', 'v', 'w']:
         if i in vels and j in vels and i+j in vels and 'R'+i+j not in vels:
             vels['R'+i+j] = vels[i+j]-vels[i]*vels[j]
+
+            if args.missval != None:
+                vels['R'+i+j][np.isnan(vels['R'+i+j])] = args.missval
+
             createNetcdfVariable(
                 dso, vels['R'+i+j] , 'R'+i+j, None , 'm2/s2', 'f4',
-                ('time', 'z', 'y', 'x', ), False )
+                ('time', 'z', 'y', 'x', ), False, fill_value =-9999.0  )
 
 if args.invert:
     print(' Inverting the Reynolds stress tensor.')
@@ -132,9 +140,13 @@ if args.invert:
     for i in ['u', 'v', 'w']:
         for j in ['u', 'v', 'w']:
             if 'L'+i+j in vels:
+                if args.missval != None:
+                    vels['L'+i+j][np.isnan(vels['L'+i+j])] = args.missval
+
+                
                 createNetcdfVariable(
                     dso, vels['L'+i+j] , 'L'+i+j, None , 's2/m2', 'f4',
-                    ('time', 'z', 'y', 'x', ), False )
+                    ('time', 'z', 'y', 'x', ), False, fill_value =-9999.0  )
 
 netcdfWriteAndClose( dso )
 
