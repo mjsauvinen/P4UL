@@ -95,9 +95,6 @@ parser.add_argument('-y', '--ddy', action="store_true", default=False,
                     help = 'Calculate y derivative.')
 parser.add_argument('-z', '--ddz', action="store_true", default=False,
                     help = 'Calculate z derivative.')
-parser.add_argument('-n', '--missToNan',action="store_true", default=False,
-                    help='Set PALM missing values (-9999.0) to nan in the'
-                    'calculation of the derivatives. Default: set to 0.0.')
 parser.add_argument('-cy', '--cyclicy', action="store_true", default=False,
                     help = 'Cyclic boundaries in y direction.')
 parser.add_argument('-cx', '--cyclicx', action="store_true", default=False,
@@ -153,10 +150,6 @@ dy = y[1]-y[0]
 for i in args.variable:
     if len(vD[i]) == 4:
         A = ds[i][:,:,:,:].data
-        #        if args.missToNan or args.all:
-        #            A[np.isclose(A,-9999.0)]=np.nan
-        #        else:
-        #            A[np.isclose(A,-9999.0)]=0.0
 
             
         if args.all:
