@@ -81,7 +81,8 @@ def one_sided_ddxy(ddxyarray, Mmm, Mm, M, Mp, Mpp, Amm, Am, A, Ap, App, d):
 
 parser = argparse.ArgumentParser(
     prog='ddxyz.py',
-    description="Calculate derivatives for a given field.")
+    description='Calculate derivatives for a given field. A collocated grid '
+    'is assumed.')
 parser.add_argument('-f', '--filename',type=str, 
                     help='Name of the input data file. ', required=True)
 parser.add_argument('-fo', '--fileout',type=str, help='Name of output file.',
@@ -102,9 +103,9 @@ parser.add_argument('-cy', '--cyclicy', action="store_true", default=False,
 parser.add_argument('-cx', '--cyclicx', action="store_true", default=False,
                     help = 'Cyclic boundaries in x direction.')
 parser.add_argument('-a', '--all', action="store_true", default=False,
-                    help = 'Calculate derivatives on all grid points ie. do '
-                    'not skip boundaries. One-sided differences will be used '
-                    'close to boundaries. Missing values will be set to ???.')
+                    help = 'Calculate derivatives on all grid points ie. '
+                    'preserve original grid. One-sided differences will be '
+                    'used close to boundaries and topography. ')
 parser.add_argument('-zb', '--zerobottom', action="store_true", default=False,
                     help = 'Use zero for values below the grid.')
 args = parser.parse_args()
@@ -141,7 +142,7 @@ if args.cyclicy or args.all:
     y = ds['y'][:].data
 else:
     y = ds['y'][1:-1].data
-
+    
 z = ds['z'][:].data
 
 # Assume uniform mesh in x and y directions
@@ -162,12 +163,13 @@ for i in args.variable:
             # True when missing value
             M = ds[i][:,:,:,:].mask
             if M.shape==():
-                sys.exit('** Error: Variable '+i+' does not have a mask.')   
-            #        elif args.zerobottom:
-            # Set lower boundary as zero.
-            #A = np.concatenate(
-            #                (np.zeros((A.shape[0],1,A.shape[2],A.shape[3])),A),axis=1)                
-            #z = np.insert(ds['z'][:].data,0,0.0)
+                sys.exit('** Error: Variable '+i+' does not have a mask.')
+        else:
+            if args.zerobottom:
+                # Set lower boundary as zero.
+                A = np.concatenate(
+                    (np.zeros((A.shape[0],1,A.shape[2],A.shape[3])),A),axis=1)                
+                z = np.insert(ds['z'][:].data,0,0.0)
         # Apply cyclic boundaries if applicable
             #        if args.cyclicx:
             #A = np.insert(A,0,A[:,:,:,-1],axis=3)
@@ -220,6 +222,10 @@ for i in args.variable:
                 Am = None
                 Ap = None
                 App = None
+            else:
+                if args.zerobottom:                    
+                    outddx['d'+i+'dx'] = outddx['d'+i+'dx'][:,1:-1,1:-1,1:-1]
+
                 
         if args.ddy:
             print('  d'+i+'dy')
@@ -263,6 +269,11 @@ for i in args.variable:
                 Am = None
                 Ap = None
                 App = None
+
+            else:
+                if args.zerobottom:                    
+                    outddx['d'+i+'dy'] = outddx['d'+i+'dy'][:,1:-1,1:-1,1:-1]
+            
 
 
         if args.ddz:
@@ -327,7 +338,7 @@ for i in args.variable:
                 App = temp[:,4:,:,:]  # n+2
                 temp = None
 
-                dz = z[1]-z[0]
+                dz = z[2]-z[1]
                 if np.any(~np.isclose(dz,z[1:]-z[0:-1])):
                     print('** Warning: Non-uniform mesh in z direction. '
                           'Accuracy will be degraded next ')
@@ -349,8 +360,11 @@ for i in args.variable:
                 Am = None
                 Ap = None
                 App = None
-
-            
+                
+            else:
+                if args.zerobottom:                    
+                    outddx['d'+i+'dz'] = outddx['d'+i+'dz'][:,1:-1,1:-1,1:-1]
+                
              
         A = None
     else:
@@ -359,6 +373,9 @@ for i in args.variable:
 
     
 #=output======================================================================#
+
+if args.zerobottom:
+    z = z[1:-1]
 
 dso = netcdfOutputDataset( args.fileout )
 
