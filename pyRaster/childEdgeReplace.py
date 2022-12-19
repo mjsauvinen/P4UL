@@ -15,7 +15,7 @@ that the child edge flow areas match exactly with the corresponding flow area on
 Files must be processed one by one (use options -fc, -fp, and -fo). If there is no building information on 
 the parent side, use the argument -npr (--noParent) and NaNs will be set to the child edge zones automatically.
 The edge zone width can be set by the option -e, but the default value 1 parent cell width is recommended.
-Tested 17.11.2022.
+19.12.2022.
 
 Author: Mia Aarnio
         mia.aarnio@fmi.fi
@@ -27,11 +27,15 @@ Author: Mia Aarnio
 '''
 #==========================================================#
 parser = argparse.ArgumentParser(prog='childEdgeReplace.py',
-      description='''Copies values from lower resolution parent raster and pastes them to higher resolution child raster outer edge.''')
-parser.add_argument("-fc", "--child", metavar="CHILD", type=str,
+      description='''Adjusts the terrain-topography, building and building id raster edges of a child domain such that the terrain+building contours in child edge match exactly with the contour in parent. This is to make sure that the child edge flow areas match exactly with the corresponding flow area on the parent side. 
+Files must be processed one by one (use options -fc, -fp, and -fo). If there is no building information on 
+the parent side, use the argument -npr (--noParent) and NaNs will be set to the child edge zones automatically.
+The edge zone width can be set by the option -e, but the default value 1 parent cell width is recommended.
+Tested 17.11.2022.''')
+parser.add_argument("-fc", "--filechild", metavar="FILECHILD", type=str,
                     help="Child domain raster data file (.npz).")
-parser.add_argument("-fp", "--parent", metavar="PARENT", type=str, help="Parent domain raster data file (.npz).")
-parser.add_argument("-fo", "--fileout", metavar="CHILD", type=str, help="Output modified child raster data file (.npz).")
+parser.add_argument("-fp", "--fileparent", metavar="FILEPARENT", type=str, help="Parent domain raster data file (.npz).")
+parser.add_argument("-fo", "--fileout", metavar="FILEOUT", type=str, help="Output modified child raster data file (.npz).")
 parser.add_argument("-e", "--ebw", type=int, default = 1,help="Edge buffer width in parent-grid spacings (default = 1).")
 parser.add_argument("-npr", "--noParent", action="store_true", default=False, help="No parent building related raster. Make NaN-filled edge to child raster. You must give parent terrain raster as -fp.")   
 parser.add_argument("-p", "--printOn", action="store_true", default=False, help="Print the resulting raster data.")
@@ -44,8 +48,8 @@ writeLog(parser, args)
 
 #==========================================================#
 # Renaming ...
-parentFile = args.parent 
-childFile  = args.child
+parentFile = args.fileparent 
+childFile  = args.filechild
 fileout    = args.fileout
 ebw        = args.ebw
 tolefactor = args.tolefactor
@@ -54,7 +58,7 @@ printOn    = args.printOn
 printOnly  = args.printOnly
 
 # Read grid information from both files
-#print('\n# - - - - - PARENT INFO - - - - - - - - #')
+print('\n# - - - - - PARENT INFO - - - - - - - - #')
 RdictParent  = readNumpyZTile(parentFile)   #pick up metadata t
 Rparent      = RdictParent['R']    # pick up non-metadata e.g. the raster data
 Rtype_parent = Rparent.dtype       # file datatype
@@ -67,7 +71,8 @@ RdictParent  = None                     #removing the original data file from me
 print(' Size: [j,i] = [{}, {}]'.format(*nPxParent))
 print(' Resolution: [dPy,dPx] = [{}, {}]'.format(*dPxParent))
 
-#print('\n# - - - - - CHILD INFO - - - - - - - - #')  # all of these are python
+print('\n# - - - - - CHILD INFO - - - - - - - - #')
+# all of these are python
 # The following are python lists except Rchild (numpy-array) and Rtype
 RdictChild  = readNumpyZTile(childFile) #pick up metadata 
 Rchild      = RdictChild['R']           #pick up non-metadata e.g. the raster data 
@@ -121,8 +126,14 @@ ChildOrigBL[0] =  ( ROrigChild[0] + dPxChild[0]/2.0 - nPxChild[0] * dPxChild[0] 
                   ( ROrigParent[0] + dPxParent[0]/2.0 - nPxParent[0] * dPxParent[0] )
 ChildOrigBL[1] =  ( ROrigChild[1] - dPxChild[1]/2.0 ) - (ROrigParent[1] - dPxParent[1]/2.0 )
 
+# Child origo top left in Parent coordinates   [0]=y & [1]=x !!!
+ChildOrigTL = np.zeros(2)
+ChildOrigTL[0] = ( ROrigParent[0] + dPxParent[0]/2.0 ) - ( ROrigChild[0] + dPxChild[0]/2.0 )
+ChildOrigTL[1] =  ChildOrigBL[1]
+
 # Child origo in Parent coordinates
-print( ' Child origo bottom left corner:[j,i] = [{}, {}]'.format(*ChildOrigBL))
+print( ' Child origo bottom left corner:[y,x] = [{}, {}]'.format(*ChildOrigBL))
+print( ' Child origo top left corner:[y,x] = [{}, {}]'.format(*ChildOrigTL))
 
 # Check that child is located inside the parent from left and south
 if ( ChildOrigBL[0] < 0.0 or ChildOrigBL[1] < 0.0 ):
@@ -133,13 +144,13 @@ ChildURcorner = np.zeros(2)
 ParentURcorner = np.zeros(2)
 ChildURcorner = ChildOrigBL + dPxChild*nPxChild
 ParentURcorner = dPxParent*nPxParent
-print( 'ChildURcorner:[j,i] = [{}, {}]'.format(*ChildURcorner))
-print( 'ParentURcorner:[j,i] = [{}, {}]'.format(*ParentURcorner))
+print( 'ChildURcorner:[y,x] = [{}, {}]'.format(*ChildURcorner))
+print( 'ParentURcorner:[y,x] = [{}, {}]'.format(*ParentURcorner))
 if ( ChildURcorner[0] > ParentURcorner[0] or ChildURcorner[1] > ParentURcorner[1] ):        
   sys.exit( ' Child not fully located inside the Parent. Exiting...')
     
 # If parentRLcorner = ChildRLcorner, print " parentRLcorner = ChildRLcorner, are you
-# doing vertical nesting? if yes then this is right"
+# doing vertical nesting? if yes then this is right"     this in origo=BL system!
 if ( ChildOrigBL[0] == 0.0 or ChildOrigBL[1] == 0.0 or
      ChildURcorner[0] == ParentURcorner[0] or ChildURcorner[1] == ParentURcorner[1] ):        
   print( ' Warning: Child edge located on Parent edge. Vertical nesting intended? ')
@@ -152,12 +163,12 @@ iCorner=np.zeros(2).astype(int)                   # oli .astype(np.int) jos tuli
 
 # jCorner[1] and iCorner[1] have +1 because of python slicing excludes the upper bounding
 # element (creating RparentSlice1 below) 
-jCorner[0] = np.round( ChildOrigBL[0]/dPxParent[0] ).astype(int)
-jCorner[1] = np.round( jCorner[0] + nPxChild[0]/gsr[0] - 1 ).astype(int) + 1   
-iCorner[0] = np.round( ChildOrigBL[1]/dPxParent[1] ).astype(int)
+jCorner[0] = np.round( ChildOrigTL[0]/dPxParent[0] ).astype(int)
+jCorner[1] = np.round( jCorner[0] + nPxChild[0]/gsr[0] - 1 ).astype(int) + 1
+iCorner[0] = np.round( ChildOrigTL[1]/dPxParent[1] ).astype(int)
 iCorner[1] = np.round( iCorner[0] + nPxChild[1]/gsr[1] - 1 ).astype(int) + 1
-print( ' Child bottom left corner in parent indices: [j, i] = ', jCorner[0], iCorner[0] )
-print( ' Child top right corner in parent indices: [j, i] = ', jCorner[1], iCorner[1] )
+print( ' Child top left corner in parent indices: [j, i] = ', jCorner[0], iCorner[0] )
+print( ' Child bottom right corner in parent indices: [j, i] = ', jCorner[1], iCorner[1] )
 
 # Cut child area from parent at parent resolution
 RparentSlice1 = Rparent[jCorner[0]:jCorner[1], iCorner[0]:iCorner[1]]
