@@ -249,52 +249,87 @@ def interpolatePalmVectors(v0, vc_dims, cmpStr, meanOn=False):
   else:
     print('Invalid component string: {}. Exiting ...'.format(cmpStr))
     sys.exit(1)
-
-  vc = np.zeros(vc_dims)
+    
+  vMasked = False
   
-  if(meanOn):
-    vm = np.zeros(vc_dims[1:])
+  if( np.ma.is_masked(v0) ):
+    vMasked = True
+    vc = np.ma.zeros( vc_dims )
+    mc = np.zeros( vc_dims[1:], bool ) # Skip time axis 
   else:
-    vm = np.array([])  # Empty array.
+    vc = np.zeros(vc_dims)
+  
+  if( meanOn ):
+    if( vMasked ): vm = np.ma.zeros(vc_dims[1:])
+    else:          vm = np.zeros(vc_dims[1:])
+  else:
+    vm = np.array([])
 
   # Create index arrays for interpolation.
   jl = np.arange(0, vc_dims[icmp]); jr = jl + 1  # x,y,z: left < right
 
-  nTo,   nzo, nyo, nxo = np.shape(v0)
-  nTimes, nz,  ny, nx  = vc_dims
+  nTo,    nzo, nyo, nxo = np.shape(v0)
+  nTimes, nz,  ny,  nx  = vc_dims
   
   if( nz == nzo ): k1 = 0
   else:            k1 = 1
   
   for i in range(nTimes):
-    tmp0 = v0[i, :, :, :].copy()
+    if( vMasked ): tmp0 = v0[i, :, :, :].data.view()
+    else:          tmp0 = v0[i, :, :, :].view()
 
     if(iOn):
-      tmp1 = (tmp0[:, :, jl] + tmp0[:, :, jr]) * 0.5; tmp0 = None
-      tmp2 = tmp1[k1:, 0:-1, :]
+      tmp1 = (tmp0[:, :, jl] + tmp0[:, :, jr]) * 0.5
+      tmp2 = tmp1[k1:, 0:-1, :].view()
     if(jOn):
-      tmp1 = (tmp0[:, jl, :] + tmp0[:, jr, :]) * 0.5; tmp0 = None
-      tmp2 = tmp1[k1:, :, 0:-1]
+      tmp1 = (tmp0[:, jl, :] + tmp0[:, jr, :]) * 0.5
+      tmp2 = tmp1[k1:, :, 0:-1].view()
     if(kOn):
-      tmp1 = (tmp0[jl, :, :] + tmp0[jr, :, :]) * 0.5; tmp0 = None
-      tmp2 = tmp1[:, 0:-1, 0:-1]
+      tmp1 = (tmp0[jl, :, :] + tmp0[jr, :, :]) * 0.5
+      tmp2 = tmp1[:, 0:-1, 0:-1].view()
     if( kCopy ):
-      tmp1 = tmp0[jl, :, :]; tmp0 = None
-      tmp2 = tmp1[:, 0:-1, 0:-1]
-    tmp1 = None
+      tmp1 = tmp0[jl, :, :].view()
+      tmp2 = tmp1[:, 0:-1, 0:-1].view()
 
     vc[i, :, :, :] = tmp2
 
     if(meanOn):
-      vm += tmp2.copy()
+      vm += tmp2
 
   # Clear memory.
-  tmp0 = None
-  tmp1 = None
-  tmp2 = None
+  tmp0 = None; tmp1 = None; tmp2 = None
+
+  if( vMasked ):
+    tmp0 = v0[nTo//2,:,:,:].mask.view()
+    
+    if( iOn ):
+      tmp1 = (tmp0[:, :, jl] * tmp0[:, :, jr])
+      tmp2 = tmp1[k1:,0:-1, :].view()
+    if(jOn):
+      tmp1 = (tmp0[:, jl, :] * tmp0[:, jr, :])
+      tmp2 = tmp1[k1:, :, 0:-1].view()
+    if(kOn):
+      tmp1 = (tmp0[jl, :, :] * tmp0[jr, :, :])
+      tmp2 = tmp1[:, 0:-1, 0:-1].view()
+    if( kCopy ):
+      tmp1 = tmp0[jl, :, :].view()
+      tmp2 = tmp1[:, 0:-1, 0:-1].view()
+    
+    mc[:,:,:] = tmp2
+    
+    # Clear memory again
+    tmp0 = None; tmp1 = None; tmp2 = None
+    
+    mc = np.reshape( mc, (1, nz, ny, nx))
+    vc.mask = np.repeat( mc, nTimes, axis=0 ) # Seems wasteful but appears to be mandatory
+    mc = None  # Clear 
+
+
 
   if(meanOn):
-    vm /= float(nTimes)
+    vm *= float(nTimes)**(-1)
+    if( vMasked ):
+      vm.mask = vc.mask[0,:,:,:]
 
   print(' Interpolation along the {}^th direction completed.'.format(cmpStr))
 
@@ -304,7 +339,7 @@ def interpolatePalmVectors(v0, vc_dims, cmpStr, meanOn=False):
 
 def vectorPrimeComponent(vc, vm):
   vc_dims = np.shape(vc)
-  vp = np.zeros(np.shape(vc))
+  vp = np.zeros_like( vc )
 
   nTimes = vc_dims[0]
   print(' Computing primes for {} times ... '.format(nTimes))
@@ -315,7 +350,6 @@ def vectorPrimeComponent(vc, vm):
   print(' ... done.')
 
   return vp
-
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 

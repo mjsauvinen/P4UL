@@ -13,13 +13,23 @@ Author: Mikko Auvinen
 '''
 #==========================================================#
 def replaceValues( q, qa, qb ):
-  if( qa[0] != 1e9 ):
-    idr = (q > qa[0])
-    q[idr] = qa[1]
-  if( qb[0] != -1e9 ):
-    idr = (q < qb[0])
-    q[idr] = qb[1]
-    
+  
+  
+  if( type(q) is not np.ma.MaskedArray ):
+    if( qa[0] != 1e9 ):
+      idr = (q > qa[0])
+      q[idr] = qa[1]
+    if( qb[0] != -1e9 ):
+      idr = (q < qb[0])
+      q[idr] = qb[1]
+  else:
+    if( qa[0] != 1e9 ):
+      idr = (q.mask + (q > qa[0]))
+      q[idr] = qa[1]
+    if( qb[0] != -1e9 ):
+      idr = (q.mask + (q < qb[0]))
+      q[idr] = qb[1]
+  
   return q
 
 #==========================================================#
@@ -143,7 +153,7 @@ zv = createNetcdfVariable( dso, z  , zn , len(z)   , zunit, 'f4', (zn,), paramet
 # Include additional (derived) coordinates into the output file.
 if( dn ):
   for di in dn:
-    dc = ds.variables[di][:]
+    dc = ds.variables[di][:]  # This operation maintains the dataType
     dc_dims = np.shape( dc )
     if(   len( dc_dims ) == 1 ): 
       dc = dc[:-1]
@@ -169,12 +179,14 @@ Example PALM netCDF4 format:
 
 # - - - - First, u-component - - - - - - - - - -
 u0, u0_dims = read3DVariableFromDataset( vn[0], ds, ntskip, 0, 0, cl ) # All values.
+dataType = type(u0)
 u0 = replaceValues(u0, va, vb)
 
 ''' 
 New, cell-center dimension lengths: 
 Number of times remains the same, but coord. lengths 
 are reduced by one due to interpolation.
+
 '''
 cc_dims  = np.array( u0_dims )  # Change to numpy array for manipulation
 if( kcopy ): cc_dims[2:] -= 1   # Reduce the x, y coord. dimensions by one. Note: time=cc_dims[0].
@@ -182,7 +194,11 @@ else:        cc_dims[1:] -= 1   # Reduce all coord. dimensions by one.
 print(' u0_dims = {}, cc_dims = {} '.format(u0_dims,cc_dims))
 
 
-uc = np.zeros( cc_dims )
+if( dataType is np.ma.MaskedArray ):
+  uc = np.ma.zeros( cc_dims )
+else:
+  uc = np.zeros( cc_dims )
+
 uc, um = interpolatePalmVectors( u0, cc_dims, 'i' , decompOn ); u0 = None
 
 if( not args.decompOnly ):
