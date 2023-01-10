@@ -352,9 +352,11 @@ def vectorPrimeComponent(vc, vm):
   return vp
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+# NOTE below: variables after *args are interpreted as keyword arguments with default values.
 
-def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, zlib=False, fill_value=None, verbose=True):
-
+def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, *args,\
+  zlib=False, fill_value=-9999., verbose=True, mask_value=-9999.):
+  
   if(parameter):
     dso.createDimension(vName, vLen)
   
@@ -362,18 +364,22 @@ def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, 
   var = dso.createVariable(vName, vType, vTuple, zlib=zlib, fill_value=fill_value)
   var.units = vUnits
 
-  if ( v is not None ):
-    # Convert variable into masked array. Use nans for the mask. 
+  if(not np.ma.is_masked(v)):
+    # Convert variable into masked array. Use [mask_value] to define the mask. 
     # This ensures the fill_values are inserted correctly in netcdf4 function createVariable().
     v = v.view( np.ma.MaskedArray )
-    v.mask = np.isnan(v)
-    var[:] = v
-    v = None
+    if( (mask_value is not np.nan)  and (mask_value is not None)): 
+      v.mask = (v==mask_value)
+    elif( mask_value is np.nan ):
+      v.mask = np.isnan(v)
+    else:
+      v.mask = False
+  
+  var[:] = v
+  v = None
 
-  if(parameter):
-    pStr = 'parameter'
-  else:
-    pStr = 'variable'
+  if(parameter): pStr = 'parameter'
+  else:          pStr = 'variable'
 
   if(verbose):
     print(' NetCDF {} {} successfully created. '.format(pStr, vName))
