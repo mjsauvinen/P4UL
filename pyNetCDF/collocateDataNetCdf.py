@@ -23,11 +23,15 @@ def replaceValues( q, qa, qb ):
       idr = (q < qb[0])
       q[idr] = qb[1]
   else:
+    #print(' replaceValues ')
     if( qa[0] != 1e9 ):
-      idr = (q.mask + (q > qa[0]))
+      idr = (q.data > qa[0])
+      idr *= ~q.mask
+      #print('nn = {}'.format(np.count_nonzero(idr)))
       q[idr] = qa[1]
     if( qb[0] != -1e9 ):
-      idr = (q.mask + (q < qb[0]))
+      idr = (q.data < qb[0])
+      idr *= ~q.mask
       q[idr] = qb[1]
   
   return q
@@ -223,7 +227,11 @@ if( decompOn ):
 w0, w0_dims = read3DVariableFromDataset( vn[2], ds, ntskip, 0, 0, cl ) # All values.
 w0 = replaceValues(w0, va, vb)
 
-wc = np.zeros( cc_dims )
+if( dataType is np.ma.MaskedArray ):
+  wc = np.ma.zeros( cc_dims )
+else:
+  wc = np.zeros( cc_dims )
+
 if( kcopy ):
   wc, wm = interpolatePalmVectors( w0, cc_dims, 'kc' , decompOn ); w0 = None
 else:
@@ -248,7 +256,11 @@ if( decompOn ):
 v0, v0_dims = read3DVariableFromDataset( vn[1], ds, ntskip, 0, 0, cl ) # All values.
 v0 = replaceValues(v0, va, vb)
 
-vc = np.zeros( cc_dims )
+if( dataType is np.ma.MaskedArray ):
+  vc = np.ma.zeros( cc_dims )
+else:
+  vc = np.zeros( cc_dims )
+
 vc, vm = interpolatePalmVectors( v0, cc_dims, 'j' , decompOn ); v0 = None
 
 if( not args.decompOnly ):
@@ -282,7 +294,6 @@ if( sn ):
 
     if( np.ma.is_masked(s0) ):
       sc = np.ma.zeros( sc_dims )
-      
     else:
       sc = np.zeros( sc_dims )
 
