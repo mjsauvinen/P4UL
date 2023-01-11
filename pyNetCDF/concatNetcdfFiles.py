@@ -38,7 +38,7 @@ filenames  = args.filenames
 fileout    = args.fileout
 scalars    = args.scalars
 ntskip     = args.ntimeskip
-scalarsOnly      = args.scalarsOnly
+scalarsOnly= args.scalarsOnly
 
 parameter = True;  variable  = False
 dtol      = 1E-5  # distance tolerance
@@ -138,13 +138,19 @@ yv = createNetcdfVariable( dso, yc   , 'y' , ny , 'm', 'f4', ('y',)   , paramete
 zv = createNetcdfVariable( dso, zc   , 'z' , nz , 'm', 'f4', ('z',)   , parameter )
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
-
 if( not scalarsOnly ):
-
   print('Concatenating u arrays ...')
-  uc = np.zeros( (nt, nz, ny, nx) ); print(' u concat shape = {} '.format((nt, nz, ny, nx)))
+  allocated = False 
+  
   for n in range(Nf):
     u, u_dims = read3DVariableFromDataset( 'u', dsL[n], ntskip, 0, 0, 1 ) # All values.
+
+    if( not allocated ):
+      if( np.ma.is_masked(u) ): uc = np.ma.zeros( (nt, nz, ny, nx) )
+      else:                     uc = np.zeros(    (nt, nz, ny, nx) )
+      allocated = True
+      print(' concat shape = {} '.format((nt, nz, ny, nx)))
+
     print(' u dims = {} '.format(u_dims))
     i1, i2 = idBounds(xMin, xMaxL[n], xMinL[n], dx, nx )
     print(' i1, i2 = {}, {} '.format(i1,i2))
@@ -157,13 +163,22 @@ if( not scalarsOnly ):
   
     uc[:,k1:k2, j1:j2, i1:i2] = u[:,:,:,:]
     u = None
+  
   uv = createNetcdfVariable(dso,uc,'u', nt, 'm/s', 'f4',('time','z','y','x',), variable)
   uc = None
+  
   # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
   print('Concatenating v arrays ...')
-  vc = np.zeros( (nt, nz, ny, nx) )
+  allocated = False
+  
   for n in range(Nf):
     v, v_dims = read3DVariableFromDataset( 'v', dsL[n], ntskip, 0, 0, 1 ) # All values.
+    
+    if( not allocated ):
+      if( np.ma.is_masked(v) ): vc = np.ma.zeros( (nt, nz, ny, nx) )
+      else:                     vc = np.zeros(    (nt, nz, ny, nx) )
+      allocated = True
+    
     i1, i2 = idBounds( xMin, xMaxL[n], xMinL[n], dx, nx )
     j1, j2 = idBounds( yMin, yMaxL[n], yMinL[n], dy, ny )
     k1, k2 = idBounds( zMin, zMaxL[n], zMinL[n], dz, nz )
@@ -175,9 +190,16 @@ if( not scalarsOnly ):
   vc = None
   # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
   print('Concatenating w arrays ...')
-  wc = np.zeros( (nt, nz, ny, nx) )
+  allocated = False 
+  
   for n in range(Nf):
     w, w_dims = read3DVariableFromDataset( 'w', dsL[n], ntskip, 0, 0, 1 ) # All values.
+    
+    if( not allocated ):
+      if( np.ma.is_masked(w) ): wc = np.ma.zeros( (nt, nz, ny, nx) )
+      else:                     wc = np.zeros(    (nt, nz, ny, nx) )
+      allocated = True
+    
     i1, i2 = idBounds( xMin, xMaxL[n], xMinL[n], dx, nx )
     j1, j2 = idBounds( yMin, yMaxL[n], yMinL[n], dy, ny )
     k1, k2 = idBounds( zMin, zMaxL[n], zMinL[n], dz, nz )
@@ -193,9 +215,16 @@ if( scalars ):
   sv = list()
   for sn in scalars:
     print('Concatenating {} arrays ...'.format(sn))
-    sc = np.zeros( (nt, nz, ny, nx) )
+    allocated = False
+    
     for n in range(Nf):
       s, s_dims = read3DVariableFromDataset( sn, dsL[n], ntskip, 0, 0, 1 ) # All values.
+      
+      if( not allocated ):
+        if( np.ma.is_masked(s) ): sc = np.ma.zeros( (nt, nz, ny, nx) )
+        else:                     sc = np.zeros(    (nt, nz, ny, nx) )
+        allocated = True      
+      
       i1, i2 = idBounds( xMin, xMaxL[n], xMinL[n], dx, nx )
       j1, j2 = idBounds( yMin, yMaxL[n], yMinL[n], dy, ny )
       k1, k2 = idBounds( zMin, zMaxL[n], zMinL[n], dz, nz )

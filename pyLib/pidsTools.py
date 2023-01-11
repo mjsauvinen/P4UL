@@ -212,8 +212,8 @@ def processOrography(fname,ds,vars,dims):
     x_dim = createXDim(ds, oroNPx, oroDPx, dims)
     y_dim = createYDim(ds, oroNPx, oroDPx, dims)
 
-    oroNCVar = createNetcdfVariable(ds, oroR, 'zt', 0, 'm', 'f4', ('y','x'), False, False,
-                                    fill_value=-9999., verbose=False)
+    oroNCVar = createNetcdfVariable(ds, oroR, 'zt', 0, 'm', 'f4', ('y','x'), False,\
+      fill_value=-9999., mask_value=np.nan, verbose=False)
     oroNCVar.long_name= "terrain_height"
 
     return oroNCVar
@@ -243,8 +243,8 @@ def processLAD(fname,ds,vars,dims):
     y_dim = createYDim(ds, ladNPx, ladDPx, dims)
     zlad_dim = createZLADDim(ds, ladNPx, ladDPx, dims)
 
-    ladNCVar = createNetcdfVariable(ds, ladR, 'lad', 0, 'm', 'f4', ('zlad','y','x'), False, False,
-                                    fill_value=-9999., verbose=False)
+    ladNCVar = createNetcdfVariable(ds, ladR, 'lad', 0, 'm', 'f4', ('zlad','y','x'), False,\
+      fill_value=-9999., mask_value=np.nan, verbose=False)
     ladNCVar.long_name = "basal area density"
 
     return ladNCVar
@@ -271,8 +271,8 @@ def processBuildings(fname,ds,vars,dims):
     else:
       x_dim = createXDim(ds, nPx, dPx, dims)
       y_dim = createYDim(ds, nPx, dPx, dims)
-      buildNCVar = createNetcdfVariable(ds, buildR, 'buildings_2d', 0, 'm', 'f4', ('y','x'), False,
-                                        False, fill_value=-9999., verbose=False)
+      buildNCVar = createNetcdfVariable(ds, buildR, 'buildings_2d', 0, 'm', 'f4', ('y','x'), False,\
+        fill_value=-9999., mask_value=np.nan, verbose=False)
       buildNCVar.long_name = "building_height"
       buildNCVar.lod = int(bLOD)
       return buildNCVar
@@ -290,8 +290,8 @@ def processBuildings(fname,ds,vars,dims):
       x_dim = createXDim(ds, nPx, dPx, dims)
       y_dim = createYDim(ds, nPx, dPx, dims)
       z_dim = createZDim(ds, nPx, dPx, dims, offset=-0.5)
-      buildNCVar = createNetcdfVariable(ds, topo, 'buildings_3d', 0, 'm', 'b', ('z','y','x'), False,
-                                        False, fill_value=-127, verbose=False)
+      buildNCVar = createNetcdfVariable(ds, topo, 'buildings_3d', 0, 'm', 'b', ('z','y','x'), False,\
+        fill_value=-127, mask_value=0., verbose=False)
       buildNCVar.long_name = "building_flag"
       buildNCVar.lod = int(bLOD)
       return buildNCVar
@@ -320,8 +320,8 @@ def processSurfaceTemperature(fname,ds,vars,dims):
     else:
       x_dim = createXDim(ds, NPx, dPx, dims)
       y_dim = createYDim(ds, NPx, dPx, dims)
-      NCVar = createNetcdfVariable(ds, Rst, 'theta_2d', 0, 'K', 'f4', ('y','x'), False,
-                                        False, fill_value=-9999., verbose=False)
+      NCVar = createNetcdfVariable(ds, Rst, 'theta_2d', 0, 'K', 'f4', ('y','x'), False,\
+        fill_value=-9999., mask_value=np.nan, verbose=False)
       NCVar.long_name = "surface_temperature"
       NCVar.lod = int(LOD)
       return NCVar
@@ -340,8 +340,8 @@ def processSurfaceTemperature(fname,ds,vars,dims):
       x_dim = createXDim(ds, NPx, dPx, dims)
       y_dim = createYDim(ds, NPx, dPx, dims)
       z_dim = createZDim(ds, NPx, dPx, dims, offset=-0.5)
-      NCVar = createNetcdfVariable(ds, T3d, 'theta_3d', 0, 'K', 'f4', ('z','y','x'), False,
-                                        False, fill_value=-9999., verbose=False)
+      NCVar = createNetcdfVariable(ds, T3d, 'theta_3d', 0, 'K', 'f4', ('z','y','x'), False,\
+        fill_value=-9999., mask_value=np.nan, verbose=False)
       NCVar.long_name = "surface temperature"
       NCVar.lod = int(LOD)
       return NCVar
@@ -363,8 +363,8 @@ def processBuildingIDs(fname,ds,vars,dims):
     x_dim = createXDim(ds, buildIDNPx, buildIDDPx, dims)
     y_dim = createYDim(ds, buildIDNPx, buildIDDPx, dims)
 
-    buildIDNCVar = createNetcdfVariable(ds, buildIDR, 'building_id', 0, 'm', 'i4', ('y','x'), False,
-                                        False, fill_value=-9999, verbose=False)
+    buildIDNCVar = createNetcdfVariable(ds, buildIDR, 'building_id', 0, 'm', 'i4', ('y','x'), False,\
+      fill_value=-9999, mask_value=np.nan, verbose=False)
     buildIDNCVar.long_name = "building id numbers"
 
     return buildIDNCVar
@@ -384,8 +384,8 @@ def processPavementType(fname,ds,vars,dims):
     x_dim = createXDim(ds, pavementTypeNPx, pavementTypeDPx, dims)
     y_dim = createYDim(ds, pavementTypeNPx, pavementTypeDPx, dims)
 
-    pavementTypeNCVar = createNetcdfVariable(ds, pavementTypeR, 'pavement_type', 0, 'm', 'b',
-                                             ('y','x'), False, False, fill_value=-127, verbose=False)
+    pavementTypeNCVar = createNetcdfVariable(ds, pavementTypeR, 'pavement_type', 0, 'm', 'b',('y','x'), False,\
+      fill_value=-127, mask_value=0, verbose=False)
     pavementTypeNCVar.long_name = "pavement type classification"
 
     return pavementTypeNCVar
@@ -405,8 +405,8 @@ def processWaterType(fname,ds,vars,dims):
     x_dim = createXDim(ds, waterTypeNPx, waterTypeDPx, dims)
     y_dim = createYDim(ds, waterTypeNPx, waterTypeDPx, dims)
 
-    waterTypeNCVar = createNetcdfVariable(ds, waterTypeR, 'water_type', 0, 'm', 'b', ('y','x'),
-                                          False, False, fill_value=-127, verbose=False)
+    waterTypeNCVar = createNetcdfVariable(ds, waterTypeR, 'water_type', 0, 'm', 'b', ('y','x'),False,\
+      fill_value=-127, mask_value=0, verbose=False)
     waterTypeNCVar.long_name = "water type classification"
 
     return waterTypeNCVar
@@ -426,8 +426,8 @@ def processSoilType(fname,ds,vars,dims):
     x_dim = createXDim(ds, soilTypeNPx, soilTypeDPx, dims)
     y_dim = createYDim(ds, soilTypeNPx, soilTypeDPx, dims)
 
-    soilTypeNCVar = createNetcdfVariable(ds, soilTypeR, 'soil_type', 0, 'm', 'b', ('y','x'), False,
-                                         False, fill_value=-127, verbose=False)
+    soilTypeNCVar = createNetcdfVariable(ds, soilTypeR, 'soil_type', 0, 'm', 'b', ('y','x'), False,\
+      fill_value=-127, mask_value=0, verbose=False)
     soilTypeNCVar.long_name = "soil type classification"
 
     return soilTypeNCVar
@@ -447,8 +447,8 @@ def processStreetType(fname,ds,vars,dims):
     x_dim = createXDim(ds, streetTypeNPx, streetTypeDPx, dims)
     y_dim = createYDim(ds, streetTypeNPx, streetTypeDPx, dims)
 
-    streetTypeNCVar = createNetcdfVariable(ds, streetTypeR, 'street_type', 0, 'm', 'b', ('y','x'),
-                                           False, False, fill_value=-127, verbose=False)
+    streetTypeNCVar = createNetcdfVariable(ds, streetTypeR, 'street_type', 0, 'm', 'b', ('y','x'),False,\
+      fill_value=-127, mask_value=0, verbose=False)
     streetTypeNCVar.long_name = "street type classification"
 
     return streetTypeNCVar
@@ -457,86 +457,85 @@ def processStreetType(fname,ds,vars,dims):
 
 
 def processVegetationType(fname,ds,vars,dims):
-  vegetationTypeDict = readNumpyZTile(fname,verbose=False)
-  vegetationTypeR = vegetationTypeDict['R'][::-1,:]
-  vegetationTypeDPx = vegetationTypeDict['dPx']
-  vegetationTypeNPx = np.shape(vegetationTypeR)
+  vegTypeDict = readNumpyZTile(fname,verbose=False)
+  vegTypeR    = vegTypeDict['R'][::-1,:]
+  vegTypeDPx  = vegTypeDict['dPx']
+  vegTypeNPx  = np.shape(vegTypeR)
 
   if('vegetation_type' in vars):
-    ds.variables['vegetation_type'][:]=vegetationTypeR
+    ds.variables['vegetation_type'][:]=vegTypeR
     return ds.variables['vegetation_type']
   else:
-    x_dim = createXDim(ds, vegetationTypeNPx, vegetationTypeDPx, dims)
-    y_dim = createYDim(ds, vegetationTypeNPx, vegetationTypeDPx, dims)
+    x_dim = createXDim(ds, vegTypeNPx, vegTypeDPx, dims)
+    y_dim = createYDim(ds, vegTypeNPx, vegTypeDPx, dims)
 
-    vegetationTypeNCVar = createNetcdfVariable(ds, vegetationTypeR, 'vegetation_type', 0, 'm', 'b',
-                                               ('y','x'), False, False, fill_value=-127,
-                                               verbose=False)
-    vegetationTypeNCVar.long_name = "vegetation type classification"
+    vegTypeNCVar = createNetcdfVariable(ds, vegTypeR, 'vegetation_type', 0, 'm', 'b',('y','x'), False,\
+      fill_value=-127, mask_value=0, verbose=False)
+    vegTypeNCVar.long_name = "vegetation type classification"
 
-    return vegetationTypeNCVar
+    return vegTypeNCVar
 
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def processBuildingType(fname, ds, vars, dims):
-  buildingTypeDict = readNumpyZTile(fname, verbose=False)
-  buildingTypeR = buildingTypeDict['R'][::-1, :]
-  buildingTypeDPx = buildingTypeDict['dPx']
-  buildingTypeNPx = np.shape(buildingTypeR)
+  bTypeDict = readNumpyZTile(fname, verbose=False)
+  bTypeR    = bTypeDict['R'][::-1, :]
+  bTypeDPx  = bTypeDict['dPx']
+  bTypeNPx  = np.shape(bTypeR)
 
   if ('building_type' in vars):
-    ds.variables['building_type'][:] = buildingTypeR
+    ds.variables['building_type'][:] = bTypeR
     return ds.variables['building_type']
   else:
-    x_dim = createXDim(ds, buildingTypeNPx, buildingTypeDPx, dims)
-    y_dim = createYDim(ds, buildingTypeNPx, buildingTypeDPx, dims)
+    x_dim = createXDim(ds, bTypeNPx, bTypeDPx, dims)
+    y_dim = createYDim(ds, bTypeNPx, bTypeDPx, dims)
 
-    buildingTypeNCVar = createNetcdfVariable(ds, buildingTypeR, 'building_type', 0, 'm', 'b',
-                                             ('y', 'x'), False, False, fill_value=-127,
-                                             verbose=False)
-    buildingTypeNCVar.long_name = "building type classification"
+    bTypeNCVar = createNetcdfVariable(ds, bTypeR, 'building_type', 0, 'm', 'b',('y', 'x'), False,\
+      fill_value=-127, mask_value=0, verbose=False)
+    bTypeNCVar.long_name = "building type classification"
 
-    return buildingTypeNCVar
+    return bTypeNCVar
 
 
-# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*#
 
 
 def processSurfaceFraction(fname, ds, vars, dims):
-  surfaceFractionDict = readNumpyZTile(fname, verbose=False)
-  surfaceFractionR = surfaceFractionDict['R'][::-1, :, :]
-  surfaceFractionDPx = surfaceFractionDict['dPx']
-  surfaceFractionNPx = np.shape(surfaceFractionR)
+  sFracDict = readNumpyZTile(fname, verbose=False)
+  sFracR = sFracDict['R'][::-1, :, :]
+  sFracDPx = sFracDict['dPx']
+  sFracNPx = np.shape(sFracR)
 
   # Same here as in buildings_3d, idk why this has to be done for 3D arrays
-  surfaceFractionR = np.swapaxes(surfaceFractionR, 0, 2)
-  surfaceFractionR = np.swapaxes(surfaceFractionR, 2, 1)
+  sFracR = np.swapaxes(sFracR, 0, 2)
+  sFracR = np.swapaxes(sFracR, 2, 1)
 
   if ('surface_fraction' in vars):
-    ds.variables['surface_fraction'][:] = surfaceFractionR
+    ds.variables['surface_fraction'][:] = sFracR
     return ds.variables['surface_fraction']
   else:
-    x_dim = createXDim(ds, surfaceFractionNPx, surfaceFractionDPx, dims)
-    y_dim = createYDim(ds, surfaceFractionNPx, surfaceFractionDPx, dims)
-    znsurface_fraction_dim = createZnsurfaceFractionDim(ds, surfaceFractionNPx, surfaceFractionDPx,
+    x_dim = createXDim(ds, sFracNPx, sFracDPx, dims)
+    y_dim = createYDim(ds, sFracNPx, sFracDPx, dims)
+    znsurface_fraction_dim = createZnsurfaceFractionDim(ds, sFracNPx, sFracDPx,
                                                         dims)
 
-    surfaceFractionNCVar = createNetcdfVariable(ds, surfaceFractionR, 'surface_fraction', 0, 'm',
-                                                'f4', ('nsurface_fraction', 'y', 'x'), False, False,
-                                                fill_value=-9999., verbose=False)
-    surfaceFractionNCVar.long_name = "surface fraction"
+    sFracNCVar = createNetcdfVariable(ds, sFracR, 'surface_fraction', 0, 'm','f4',('nsurface_fraction', 'y', 'x'), False,\
+      fill_value=-9999., mask_value=np.nan, verbose=False)
+    sFracNCVar.long_name = "surface fraction"
 
-    return surfaceFractionNCVar
+    return sFracNCVar
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*#
 
 def processCRS(ds,cConf):
   try:
-    crsVar = createNetcdfVariable(ds, None, 'crs', 0, cConf['units'], 'i4', [], False, False,
-                                  fill_value=None, verbose=False)
+    crsVar = createNetcdfVariable(ds, None, 'crs', 0, cConf['units'], 'i4', [], False,\
+      fill_value=None, mask_value=None, verbose=False)
   except KeyError:
     print("WARNING: units for CRS are not set, using default (m)")
-    crsVar = createNetcdfVariable(ds, None, 'crs', 0, 'm', 'i4', [], False, False,
-                                  fill_value=None, verbose=False)
+    crsVar = createNetcdfVariable(ds, None, 'crs', 0, 'm', 'i4', [], False,\
+      fill_value=-9999, mask_value=None, verbose=False)
 
   crsVar.long_name = 'coordinate reference system'
   
@@ -564,8 +563,6 @@ def processCRS(ds,cConf):
 
   return crsVar
 
-
-
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 #           Both PIDS_CHEM and PIDS_SALSA           #
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
@@ -574,8 +571,8 @@ def createNcatDim(ds, ncat, dims):
   # Creates a new ncat dim unless it already exists
 
   if ('ncat' not in dims):
-    ncat_dim = createNetcdfVariable(ds, ncat, 'ncat', len(ncat), '', 'i4', ('ncat',),
-                                    parameter=True, verbose=False)
+    ncat_dim = createNetcdfVariable(ds, ncat, 'ncat', len(ncat), '', 'i4', ('ncat',), True,\
+      fill_value=None, mask_value=None, verbose=False)
     ncat_dim.long_name = "number of emission categories"
     dims.append('ncat')
     return ncat_dim
@@ -588,8 +585,8 @@ def createStrlenDim(ds, strlen, dims):
   # Creates a new strlen dim unless it already exists
 
   if ('strlen' not in dims):
-    strlen_dim = createNetcdfVariable(ds, strlen, 'strlen', len(strlen), '', 'i4', ('strlen',),
-                                      parameter=True, verbose=False)
+    strlen_dim = createNetcdfVariable(ds, strlen, 'strlen', len(strlen), '', 'i4', ('strlen',), parameter=True,\
+      fill_value=None, mask_value=None, verbose=False)
     dims.append('strlen')
     return strlen_dim
   else:
@@ -601,8 +598,8 @@ def createNhoursyearDim(ds, nhoursyear, dims):
   # Creates a new nhoursyear dim unless it already exists
 
   if ('nhoursyear' not in dims):
-    nhoursyear_dim = createNetcdfVariable(ds, nhoursyear, 'nhoursyear', len(nhoursyear), '', 'i4',
-                                          ('nhoursyear',), parameter=True, verbose=False)
+    nhoursyear_dim = createNetcdfVariable(ds, nhoursyear, 'nhoursyear', len(nhoursyear), '', 'i4',('nhoursyear',),True,\
+      fill_value=None, mask_value=None, verbose=False)
     dims.append('nhoursyear')
     return nhoursyear_dim
   else:
@@ -614,9 +611,8 @@ def createNmonthdayhourDim(ds, nmonthdayhour, dims):
   # Creates a new nmonthdayhour dim unless it already exists
 
   if ('nmonthdayhour' not in dims):
-    nmonthdayhour_dim = createNetcdfVariable(ds, nmonthdayhour, 'nmonthdayhour', len(nmonthdayhour),
-                                             '', 'i4', ('nmonthdayhour',), parameter=True,
-                                             verbose=False)
+    nmonthdayhour_dim = createNetcdfVariable(ds, nmonthdayhour, 'nmonthdayhour', len(nmonthdayhour),'', 'i4',\
+      ('nmonthdayhour',), True, fill_value=None, mask_value=None, verbose=False)
     dims.append('nmonthdayhour')
     return nmonthdayhour_dim
   else:
@@ -629,8 +625,8 @@ def createTimeDim(ds, time, dims):
 
   if ('time' not in dims):
     time = list(map(float, time.split(",")))
-    time_dim = createNetcdfVariable(ds, time, 'time', len(time), 's', 'f4', ('time',),
-                                    parameter=True, verbose=False)
+    time_dim = createNetcdfVariable(ds, time, 'time', len(time), 's', 'f4', ('time',),True,\
+      fill_value=None, mask_value=None, verbose=False)
     time_dim.long_name = "seconds since the beginning of the simulation"
     dims.append('time')
     return time_dim
@@ -688,8 +684,8 @@ def processEmissionCategoryIndices(emiCatInds, ds, vars, dims):
 
   else:
     ncat_dim = createNcatDim(ds, np.arange(1, len(emiCatInds)+1, 1), dims)
-    emiCatIndsVar = createNetcdfVariable(ds, emiCatInds, 'emission_category_index', 0, '', 'i1',
-                                         ('ncat',), parameter=False, verbose=False)
+    emiCatIndsVar = createNetcdfVariable(ds, emiCatInds, 'emission_category_index', 0, '', 'i1',('ncat',),False,\
+      fill_value=None, mask_value=None, verbose=False)
     emiCatIndsVar.long_name = "emission category index"
     emiCatIndsVar.standard_name = 'emission_cat_index'
     return emiCatIndsVar
@@ -715,8 +711,8 @@ def processEmissionCategoryNames(emiCatName, ds, vars, dims):
   else:
     ncat_dim = createNcatDim(ds, np.arange(1, np.shape(emiCatName)[0]+1, 1), dims)
     strlen_dim = createStrlenDim(ds, np.arange(1, maxstrlen+1, 1), dims)
-    emiCatNameVar = createNetcdfVariable(ds, np.array(emiCatName), 'emission_category_name', 0, '',
-                                         'S1', ('ncat','strlen',), parameter=False, verbose=False)
+    emiCatNameVar = createNetcdfVariable(ds, np.array(emiCatName), 'emission_category_name', 0, '','S1',\
+      ('ncat','strlen',), False, fill_value=None, mask_value=None, verbose=False)
     emiCatNameVar.long_name = 'emission category name'
     return emiCatNameVar
 
@@ -763,9 +759,8 @@ def processEmissionTimeFactors(fname, lod, ds, vars, dims):
 
     else:
       nhoursyear_dim = createNhoursyearDim(ds, nhoursyear, dims)
-      emiTimeFactorsVar = createNetcdfVariable(ds, emiTimeFactors, 'emission_time_factors', 0, '',
-                                               'f4', ('ncat','nhoursyear',), parameter=False,
-                                               verbose=False)
+      emiTimeFactorsVar = createNetcdfVariable(ds, emiTimeFactors, 'emission_time_factors', 0, '','f4',\
+        ('ncat','nhoursyear',),False, fill_value=None, mask_value=None, verbose=False)
       emiTimeFactorsVar.long_name = "emission time scaling factors"
       emiTimeFactorsVar.lod = 2
       return emiTimeFactorsVar
@@ -789,9 +784,8 @@ def processEmissionTimeFactors(fname, lod, ds, vars, dims):
 
     else:
       nhoursyear_dim = createNmonthdayhourDim(ds, nmonthdayhour, dims)
-      emiTimeFactorsVar = createNetcdfVariable(ds, emiTimeFactors, 'emission_time_factors', 0, '',
-                                               'f4', ('ncat','nmonthdayhour',), parameter=False,
-                                               verbose=False)
+      emiTimeFactorsVar = createNetcdfVariable(ds, emiTimeFactors, 'emission_time_factors', 0, '','f4',\
+        ('ncat','nmonthdayhour',), False, fill_value=None, mask_value=None, verbose=False)
       emiTimeFactorsVar.long_name = "emission time scaling factors"
       emiTimeFactorsVar.lod = 1
       return emiTimeFactorsVar
@@ -822,7 +816,7 @@ def createNspeciesDim(ds, nspecies, dims):
 
   if ('nspecies' not in dims):
     nspecies_dim = createNetcdfVariable(ds, nspecies, 'nspecies', len(nspecies), '', 'i4',
-                                        ('nspecies',), parameter=True, verbose=False)
+                                        ('nspecies',), True, fill_value=None, mask_value=None, verbose=False)
     nspecies_dim.long_name = "number of emission species"
     dims.append('nspecies')
     return nspecies_dim
@@ -848,7 +842,7 @@ def processEmissionIndices(emiInds, ds, vars, dims):
   else:
     nspecies_dim = createNspeciesDim(ds, np.arange(1, len(emiInds)+1, 1), dims)
     emiIndsVar = createNetcdfVariable(ds, emiInds, 'emission_index', 0, '', 'u2', ('nspecies',),
-                                      parameter=False, verbose=False)
+                                      False, fill_value=None, mask_value=None, verbose=False)
     emiIndsVar.long_name = "emission species index"
     return emiIndsVar
 
@@ -873,7 +867,7 @@ def processEmissionNames(emiName, ds, vars, dims):
   else:
     strlen_dim = createStrlenDim(ds, np.arange(1, maxstrlen+1, 1), dims)
     emiNameVar = createNetcdfVariable(ds, np.array(emiName), 'emission_name', 0, '', 'S1',
-                                         ('nspecies','strlen',), parameter=False, verbose=False)
+                                         ('nspecies','strlen',), False, fill_value=None, mask_value=None, verbose=False)
     emiNameVar.long_name = "emission species name"
     return emiNameVar
 
@@ -916,9 +910,8 @@ def processEmissionValues(emiStr, fnameSource, unit, lod, ds, vars, dims):
       return ds.variables['emission_values']
 
     else:
-      emiValVar = createNetcdfVariable(ds, emission_values, 'emission_values', 0, unit, 'f4',
-                                       ('z','y','x','nspecies','ncat',), False, False,
-                                        fill_value=-9999., verbose=False)
+      emiValVar = createNetcdfVariable(ds, emission_values, 'emission_values', 0, unit, 'f4',\
+        ('z','y','x','nspecies','ncat',), False,fill_value=-9999., mask_value=np.nan, verbose=False)
       emiValVar.long_name= 'emission values'
       emiValVar.lod = 1
       return emiValVar
@@ -955,9 +948,8 @@ def createCompositionIndexDim(ds, composition_index, dims):
   # Creates a new composition_index dim unless it already exists
 
   if ('composition_index' not in dims):
-    composition_index_dim = createNetcdfVariable(ds, composition_index, 'composition_index',
-                                                 len(composition_index), '', 'i4',
-                                                 ('composition_index',), parameter=True, verbose=False)
+    composition_index_dim = createNetcdfVariable(ds, composition_index, 'composition_index',\
+      len(composition_index), '', 'i4',('composition_index',), True, fill_value=None, mask_value=None, verbose=False)
     composition_index_dim.long_name = "aerosol composition index"
     dims.append('composition_index')
     return composition_index_dim
@@ -1045,8 +1037,7 @@ def processAerosolEmissionValues(emiStr, fnameSource, unit, lod, ds, vars, dims)
 
     else:
       emiValVar = createNetcdfVariable(ds, aerosol_emission_values, 'aerosol_emission_values', 0,
-                                       unit, 'f4', ('time','y','x','ncat',), False, False,
-                                       fill_value=-9999., verbose=False)
+        unit, 'f4', ('time','y','x','ncat',), False, fill_value=-9999., mask_value=np.nan, verbose=False)
       emiValVar.long_name= 'aerosol emission values'
       emiValVar.lod = 2
       return emiValVar
@@ -1077,9 +1068,8 @@ def processEmissionMassFracs(emiMassFracsD, ds, vars, dims):
     return ds.variables['emission_mass_fracs']
 
   else:
-    emiMassFracsVar = createNetcdfVariable(ds, emiMassFracs, 'emission_mass_fracs', 0, '', 'f4',
-                                           ('ncat','composition_index',), False, False,
-                                           fill_value=-9999., verbose=False)
+    emiMassFracsVar = createNetcdfVariable(ds, emiMassFracs, 'emission_mass_fracs', 0, '', 'f4',\
+      ('ncat','composition_index',), False, fill_value=-9999., mask_value=np.nan, verbose=False)
     emiMassFracsVar.long_name = "mass fractions of chemical components in aerosol emissions"
     emiMassFracsVar.units = ""
     return emiMassFracsVar
@@ -1095,8 +1085,8 @@ def processEmissionNumberFracs(emiNumberFracsD, emiDmid, ds, vars, dims):
   else:
     try:
       emiDmids = list(map(float, emiDmid.split(",")))
-      dmid_Dim = createNetcdfVariable(ds, emiDmids, 'Dmid', len(emiDmids), 'm', 'f4', ('Dmid',),
-                                      parameter=True, verbose=False)
+      dmid_Dim = createNetcdfVariable(ds, emiDmids, 'Dmid', len(emiDmids), 'm', 'f4', ('Dmid',),True,\
+        fill_value=None, mask_value=None, verbose=False)
       dims.append('Dmid')
     except TypeError:
       print("Error: invalid value for aerosol_emission_dmid in configuration file, expected a " +
@@ -1121,9 +1111,8 @@ def processEmissionNumberFracs(emiNumberFracsD, emiDmid, ds, vars, dims):
     return ds.variables['emission_number_fracs']
 
   else:
-    emiNumberFracsVar = createNetcdfVariable(ds, emiNumberFracs, 'emission_number_fracs', 0, '',
-                                             'f4', ('ncat','Dmid',), False, False,
-                                             fill_value=-9999., verbose=False)
+    emiNumberFracsVar = createNetcdfVariable(ds, emiNumberFracs, 'emission_number_fracs', 0, '','f4',\
+      ('ncat','Dmid',), False, fill_value=-9999., mask_value=np.nan, verbose=False)
     emiNumberFracsVar.long_name = "number fractions of aerosol size bins in aerosol emissions"
     emiNumberFracsVar.units = ""
     return emiNumberFracsVar

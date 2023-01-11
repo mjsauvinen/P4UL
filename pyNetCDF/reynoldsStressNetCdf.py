@@ -114,6 +114,7 @@ for fn in fileNos:
   nvz = (ijk2[2]-ijk1[2])+1; idz = range(ijk1[2],ijk2[2]+1)
   nvy = (ijk2[1]-ijk1[1])+1; idy = range(ijk1[1],ijk2[1]+1)
   nvx = (ijk2[0]-ijk1[0])+1; idx = range(ijk1[0],ijk2[0]+1)
+  
   Cv = np.zeros( ( nt, nvz, nvy, nvx ) )
   d  = np.zeros( (     nvz, nvy, nvx ) )
   zd = np.zeros( (     nvz           ) )

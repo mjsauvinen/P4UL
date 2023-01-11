@@ -39,11 +39,11 @@ args = parser.parse_args()
 vels=dict()
 first = True
 
-for i in args.files:
-    ds, vD, uD = netcdfDataset2(i)
-    for j in ['u', 'v', 'w', 'uu', 'vv', 'ww', 'uv', 'uw', 'vw', 'vu', 'wu', 'wc']:
-        if ( j not in vels and j in vD.keys() ):
-           vels[j] = ds[j][:,:,:,:].data
+for fi in args.files:
+    ds, vD, uD = netcdfDataset2(fi)
+    for vstr in ['u', 'v', 'w', 'uu', 'vv', 'ww', 'uv', 'uw', 'vw', 'vu', 'wu', 'wc']:
+        if ( vstr not in vels and vstr in vD.keys() ):
+           vels[vstr] = ds[vstr][:,:,:,:].data
            if first:
                x = ds['x'][:].data
                udx = uD['x']
@@ -73,12 +73,12 @@ zv = createNetcdfVariable(
 
 print(' Calculating the Reynolds stress tensor.')
 
-for i in ['u', 'v', 'w']:
-    for j in ['u', 'v', 'w']:
-        if i in vels and j in vels and i+j in vels and 'R'+i+j not in vels:
-            vels['R'+i+j] = vels[i+j]-vels[i]*vels[j]
+for vi in ['u', 'v', 'w']:
+    for vj in ['u', 'v', 'w']:
+        if vi in vels and vj in vels and vi+vj in vels and 'R'+vi+vj not in vels:
+            vels['R'+vi+vj] = vels[vi+vj]-vels[vi]*vels[vj]
             createNetcdfVariable(
-                dso, vels['R'+i+j] , 'R'+i+j, None , 'm2/s2', 'f4',
+                dso, vels['R'+vi+vj] , 'R'+vi+vj, None , 'm2/s2', 'f4',
                 ('time', 'z', 'y', 'x', ), False )
 
 if args.invert:
@@ -95,14 +95,14 @@ if args.invert:
         symmetric = True
 
     # Fill missing elements
-    for i in ['u', 'v', 'w']:
-        for j in ['u', 'v', 'w']:
-            if 'R'+i+j not in vels:
-                if 'R'+j+i in vels:
-                    vels['R'+i+j] = vels['R'+j+i]
+    for vi in ['u', 'v', 'w']:
+        for vj in ['u', 'v', 'w']:
+            if 'R'+vi+vj not in vels:
+                if 'R'+vj+vi in vels:
+                    vels['R'+vi+vj] = vels['R'+vj+vi]
                 else:
-                    vels['R'+i+j] = 0.0
-                    print(' *** Warning: Using R'+i+j+'=0 in the calculation '
+                    vels['R'+vi+vj] = 0.0
+                    print(' *** Warning: Using R'+vi+vj+'=0 in the calculation '
                           'of the inverse Reynolds stress tensor.')
 
                 
@@ -129,11 +129,11 @@ if args.invert:
     vels['Lvw'] = ( vels['Rvu']*vels['Ruw'] - vels['Ruu']*vels['Rvw'] )/det        
     vels['Lww'] = ( vels['Ruu']*vels['Rvv'] - vels['Rvu']*vels['Ruv'] )/det
 
-    for i in ['u', 'v', 'w']:
-        for j in ['u', 'v', 'w']:
-            if 'L'+i+j in vels:
+    for vi in ['u', 'v', 'w']:
+        for vj in ['u', 'v', 'w']:
+            if 'L'+vi+vj in vels:
                 createNetcdfVariable(
-                    dso, vels['L'+i+j] , 'L'+i+j, None , 's2/m2', 'f4',
+                    dso, vels['L'+vi+vj] , 'L'+vi+vj, None , 's2/m2', 'f4',
                     ('time', 'z', 'y', 'x', ), False )
 
 netcdfWriteAndClose( dso )

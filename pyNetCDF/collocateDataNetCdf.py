@@ -13,13 +13,27 @@ Author: Mikko Auvinen
 '''
 #==========================================================#
 def replaceValues( q, qa, qb ):
-  if( qa[0] != 1e9 ):
-    idr = (q > qa[0])
-    q[idr] = qa[1]
-  if( qb[0] != -1e9 ):
-    idr = (q < qb[0])
-    q[idr] = qb[1]
-    
+  
+  
+  if( type(q) is not np.ma.MaskedArray ):
+    if( qa[0] != 1e9 ):
+      idr = (q > qa[0])
+      q[idr] = qa[1]
+    if( qb[0] != -1e9 ):
+      idr = (q < qb[0])
+      q[idr] = qb[1]
+  else:
+    #print(' replaceValues ')
+    if( qa[0] != 1e9 ):
+      idr = (q.data > qa[0])
+      idr *= ~q.mask
+      #print('nn = {}'.format(np.count_nonzero(idr)))
+      q[idr] = qa[1]
+    if( qb[0] != -1e9 ):
+      idr = (q.data < qb[0])
+      idr *= ~q.mask
+      q[idr] = qb[1]
+  
   return q
 
 #==========================================================#
@@ -143,7 +157,7 @@ zv = createNetcdfVariable( dso, z  , zn , len(z)   , zunit, 'f4', (zn,), paramet
 # Include additional (derived) coordinates into the output file.
 if( dn ):
   for di in dn:
-    dc = ds.variables[di][:]
+    dc = ds.variables[di][:]  # This operation maintains the dataType
     dc_dims = np.shape( dc )
     if(   len( dc_dims ) == 1 ): 
       dc = dc[:-1]
@@ -169,12 +183,14 @@ Example PALM netCDF4 format:
 
 # - - - - First, u-component - - - - - - - - - -
 u0, u0_dims = read3DVariableFromDataset( vn[0], ds, ntskip, 0, 0, cl ) # All values.
+dataType = type(u0)
 u0 = replaceValues(u0, va, vb)
 
 ''' 
 New, cell-center dimension lengths: 
 Number of times remains the same, but coord. lengths 
 are reduced by one due to interpolation.
+
 '''
 cc_dims  = np.array( u0_dims )  # Change to numpy array for manipulation
 if( kcopy ): cc_dims[2:] -= 1   # Reduce the x, y coord. dimensions by one. Note: time=cc_dims[0].
@@ -182,7 +198,11 @@ else:        cc_dims[1:] -= 1   # Reduce all coord. dimensions by one.
 print(' u0_dims = {}, cc_dims = {} '.format(u0_dims,cc_dims))
 
 
-uc = np.zeros( cc_dims )
+if( dataType is np.ma.MaskedArray ):
+  uc = np.ma.zeros( cc_dims )
+else:
+  uc = np.zeros( cc_dims )
+
 uc, um = interpolatePalmVectors( u0, cc_dims, 'i' , decompOn ); u0 = None
 
 if( not args.decompOnly ):
@@ -207,7 +227,11 @@ if( decompOn ):
 w0, w0_dims = read3DVariableFromDataset( vn[2], ds, ntskip, 0, 0, cl ) # All values.
 w0 = replaceValues(w0, va, vb)
 
-wc = np.zeros( cc_dims )
+if( dataType is np.ma.MaskedArray ):
+  wc = np.ma.zeros( cc_dims )
+else:
+  wc = np.zeros( cc_dims )
+
 if( kcopy ):
   wc, wm = interpolatePalmVectors( w0, cc_dims, 'kc' , decompOn ); w0 = None
 else:
@@ -232,7 +256,11 @@ if( decompOn ):
 v0, v0_dims = read3DVariableFromDataset( vn[1], ds, ntskip, 0, 0, cl ) # All values.
 v0 = replaceValues(v0, va, vb)
 
-vc = np.zeros( cc_dims )
+if( dataType is np.ma.MaskedArray ):
+  vc = np.ma.zeros( cc_dims )
+else:
+  vc = np.zeros( cc_dims )
+
 vc, vm = interpolatePalmVectors( v0, cc_dims, 'j' , decompOn ); v0 = None
 
 if( not args.decompOnly ):
@@ -263,8 +291,13 @@ if( sn ):
     sc_dims  = np.array( s0_dims )  # Change to numpy array for manipulation
     if( kcopy ): sc_dims[2:] -= 1   # Reduce the x, y dimensions by one. Note: time = sc_dims[0].
     else:        sc_dims[1:] -= 1   # Reduce all coord. dimensions by one.
-    sc = np.zeros( sc_dims )
-    #sc, sm = interpolatePalmVectors( s0, s0_dims, 'i' , decompOn ); s0 = None
+
+    if( np.ma.is_masked(s0) ):
+      sc = np.ma.zeros( sc_dims )
+    else:
+      sc = np.zeros( sc_dims )
+
+
     sc = s0[:,1:,:-1,:-1].copy(); s0 = None
     
     if( not args.decompOnly ):

@@ -249,52 +249,90 @@ def interpolatePalmVectors(v0, vc_dims, cmpStr, meanOn=False):
   else:
     print('Invalid component string: {}. Exiting ...'.format(cmpStr))
     sys.exit(1)
-
-  vc = np.zeros(vc_dims)
+    
+  vMasked = False
   
-  if(meanOn):
-    vm = np.zeros(vc_dims[1:])
+  if( np.ma.is_masked(v0) ):
+    vMasked = True
+    vc = np.ma.zeros( vc_dims )
+    mc = np.zeros( vc_dims[1:], bool ) # Skip time axis 
   else:
-    vm = np.array([])  # Empty array.
+    vc = np.zeros(vc_dims)
+  
+  if( meanOn ):
+    if( vMasked ): vm = np.ma.zeros(vc_dims[1:])
+    else:          vm = np.zeros(vc_dims[1:])
+  else:
+    vm = np.array([])
 
   # Create index arrays for interpolation.
   jl = np.arange(0, vc_dims[icmp]); jr = jl + 1  # x,y,z: left < right
 
-  nTo,   nzo, nyo, nxo = np.shape(v0)
-  nTimes, nz,  ny, nx  = vc_dims
+  nTo,    nzo, nyo, nxo = np.shape(v0)
+  nTimes, nz,  ny,  nx  = vc_dims
   
   if( nz == nzo ): k1 = 0
   else:            k1 = 1
   
   for i in range(nTimes):
-    tmp0 = v0[i, :, :, :].copy()
+    if( vMasked ): tmp0 = v0[i, :, :, :].data.view()
+    else:          tmp0 = v0[i, :, :, :].view()
 
     if(iOn):
-      tmp1 = (tmp0[:, :, jl] + tmp0[:, :, jr]) * 0.5; tmp0 = None
-      tmp2 = tmp1[k1:, 0:-1, :]
+      tmp1 = (tmp0[:, :, jl] + tmp0[:, :, jr]) * 0.5
+      tmp2 = tmp1[k1:, 0:-1, :].view()
     if(jOn):
-      tmp1 = (tmp0[:, jl, :] + tmp0[:, jr, :]) * 0.5; tmp0 = None
-      tmp2 = tmp1[k1:, :, 0:-1]
+      tmp1 = (tmp0[:, jl, :] + tmp0[:, jr, :]) * 0.5
+      tmp2 = tmp1[k1:, :, 0:-1].view()
     if(kOn):
-      tmp1 = (tmp0[jl, :, :] + tmp0[jr, :, :]) * 0.5; tmp0 = None
-      tmp2 = tmp1[:, 0:-1, 0:-1]
+      tmp1 = (tmp0[jl, :, :] + tmp0[jr, :, :]) * 0.5
+      tmp2 = tmp1[:, 0:-1, 0:-1].view()
     if( kCopy ):
-      tmp1 = tmp0[jl, :, :]; tmp0 = None
-      tmp2 = tmp1[:, 0:-1, 0:-1]
-    tmp1 = None
+      tmp1 = tmp0[jl, :, :].view()
+      tmp2 = tmp1[:, 0:-1, 0:-1].view()
 
     vc[i, :, :, :] = tmp2
 
     if(meanOn):
-      vm += tmp2.copy()
+      vm += tmp2
 
   # Clear memory.
-  tmp0 = None
-  tmp1 = None
-  tmp2 = None
+  tmp0 = None; tmp1 = None; tmp2 = None
+
+  if( vMasked ):
+    tmp0 = v0[nTo//2,:,:,:].mask.view()
+    
+    if( iOn ):
+      tmp1 = (tmp0[:, :, jl] * tmp0[:, :, jr])
+      tmp2 = tmp1[k1:,0:-1, :].view()
+    if(jOn):
+      tmp1 = (tmp0[:, jl, :] * tmp0[:, jr, :])
+      tmp2 = tmp1[k1:, :, 0:-1].view()
+    if(kOn):
+      tmp1 = (tmp0[jl, :, :] * tmp0[jr, :, :])
+      tmp2 = tmp1[:, 0:-1, 0:-1].view()
+    if( kCopy ):
+      tmp1 = tmp0[jl, :, :].view()
+      tmp2 = tmp1[:, 0:-1, 0:-1].view()
+    
+    mc[:,:,:] = tmp2
+    
+    # Clear memory again
+    tmp0 = None; tmp1 = None; tmp2 = None
+    
+    mc = np.reshape( mc, (1, nz, ny, nx))
+    if( np.abs( v0.fill_value ) > 1e3 ): 
+      mc += ( np.abs(vc[-1,:,:,:]) > 0.4*np.abs(v0.fill_value) )
+    
+    vc.mask = np.repeat( mc, nTimes, axis=0 ) # Seems wasteful but appears to be mandatory
+    np.ma.set_fill_value( vc , v0.fill_value )
+    mc = None  # Clear 
+
 
   if(meanOn):
-    vm /= float(nTimes)
+    vm *= float(nTimes)**(-1)
+    if( vMasked ):
+      vm.mask = vc.mask[0,:,:,:]
 
   print(' Interpolation along the {}^th direction completed.'.format(cmpStr))
 
@@ -304,7 +342,7 @@ def interpolatePalmVectors(v0, vc_dims, cmpStr, meanOn=False):
 
 def vectorPrimeComponent(vc, vm):
   vc_dims = np.shape(vc)
-  vp = np.zeros(np.shape(vc))
+  vp = np.zeros_like( vc )
 
   nTimes = vc_dims[0]
   print(' Computing primes for {} times ... '.format(nTimes))
@@ -316,11 +354,12 @@ def vectorPrimeComponent(vc, vm):
 
   return vp
 
-
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+# NOTE below: variables after *args are interpreted as keyword arguments with default values.
 
-def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, zlib=False, fill_value=None, verbose=True):
-
+def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, *args,\
+  zlib=False, fill_value=-9999., verbose=True, mask_value=-9999.):
+  
   if(parameter):
     dso.createDimension(vName, vLen)
   
@@ -328,18 +367,22 @@ def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, 
   var = dso.createVariable(vName, vType, vTuple, zlib=zlib, fill_value=fill_value)
   var.units = vUnits
 
-  if ( v is not None ):
-    # Convert variable into masked array. Use nans for the mask. 
+  if(not np.ma.is_masked(v)):
+    # Convert variable into masked array. Use [mask_value] to define the mask. 
     # This ensures the fill_values are inserted correctly in netcdf4 function createVariable().
     v = v.view( np.ma.MaskedArray )
-    v.mask = np.isnan(v)
-    var[:] = v
-    v = None
+    if( (mask_value is not np.nan)  and (mask_value is not None)): 
+      v.mask = (v==mask_value)
+    elif( mask_value is np.nan ):
+      v.mask = np.isnan(v)
+    else:
+      v.mask = False
+  
+  var[:] = v
+  v = None
 
-  if(parameter):
-    pStr = 'parameter'
-  else:
-    pStr = 'variable'
+  if(parameter): pStr = 'parameter'
+  else:          pStr = 'variable'
 
   if(verbose):
     print(' NetCDF {} {} successfully created. '.format(pStr, vName))
