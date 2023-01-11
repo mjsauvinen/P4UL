@@ -321,12 +321,12 @@ def interpolatePalmVectors(v0, vc_dims, cmpStr, meanOn=False):
     tmp0 = None; tmp1 = None; tmp2 = None
     
     mc = np.reshape( mc, (1, nz, ny, nx))
-    mc += (vc[-1,:,:,:] > 1e9)
-    mc += (vc[-1,:,:,:] < -1e9)
+    if( np.abs( v0.fill_value ) > 1e3 ): 
+      mc += ( np.abs(vc[-1,:,:,:]) > 0.4*np.abs(v0.fill_value) )
+    
     vc.mask = np.repeat( mc, nTimes, axis=0 ) # Seems wasteful but appears to be mandatory
     np.ma.set_fill_value( vc , v0.fill_value )
     mc = None  # Clear 
-
 
 
   if(meanOn):

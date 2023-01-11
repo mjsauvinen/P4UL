@@ -4,7 +4,7 @@ import sys
 import argparse
 import numpy as np
 ''' 
-Description:
+Description: This script has depricated. It has been replaced by pyNetCDF/collocateDataNetCdf.py
 
 
 Author: Mikko Auvinen

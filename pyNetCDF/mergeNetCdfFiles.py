@@ -12,12 +12,12 @@ Merges given NetCDF files together.
 
 #==========================================================#
 parser = argparse.ArgumentParser(prog='mergeNetCdfFiles.py')
-parser.add_argument("-f", "--files", metavar='FILES', type=str, nargs='+', default=None,
-                    help="List of netCDF files to be merged to output file.")
-parser.add_argument("-fo", "--fileout", type=str,
-                    help="Name of the output netCDF file. The script append to the file if it already exists.")
-parser.add_argument("-c", "--compress", help="Compress netCDF variables with zlib.",
-                    action="store_true", default=False)
+parser.add_argument("-f", "--files", metavar='FILES', type=str, nargs='+', default=None, \
+  help="List of netCDF files to be merged to output file.")
+parser.add_argument("-fo", "--fileout", type=str,\
+  help="Name of the output netCDF file. The script append to the file if it already exists.")
+parser.add_argument("-c", "--compress", action="store_true", default=False,\
+  help="Compress netCDF variables with zlib.")
 args = parser.parse_args()
 #==========================================================#
 
@@ -39,7 +39,7 @@ matchGrid = ['x', 'y']
 for pstr in paramList:
   pv = ds.variables[pstr]
   paramLengths[pstr] = len(pv)
-  pv = createNetcdfVariable( \
+  pv = createNetcdfVariable(\
     dso, pv[:], pstr, len(pv), pv.units, pv.dtype, pv.dimensions, parameter, zlib=args.compress )
   pv = None
 ds.close()
@@ -60,16 +60,16 @@ for filename in args.files:
   # varList contains also the parameters
   varList = [x for x in varList if x not in paramList]
   for v_name in varList:
-      if v_name in savedVars:
-          sys.exit(' Error: Variable \'{}\' already saved.'.format(v_name))
-      savedVars.append(v_name)
-      vartype = variable
-      v_arr = ds.variables[v_name]
-      vv = createNetcdfVariable(dso, v_arr[:], v_name, len(
-          v_arr), v_arr.units, v_arr.dtype, v_arr.dimensions, vartype, zlib=args.compress)
-      if (v_name=='buildings_0'):
-          vv.lod=2
-          print("vv.lod")
-      v_arr = None
+    if v_name in savedVars:
+      sys.exit(' Error: Variable \'{}\' already saved.'.format(v_name))
+    savedVars.append(v_name)
+    vartype = variable
+    v_arr = ds.variables[v_name]
+    vv = createNetcdfVariable(dso, v_arr[:], v_name, len(v_arr), v_arr.units, v_arr.dtype, \
+      v_arr.dimensions, vartype, zlib=args.compress)
+    if (v_name=='buildings_0'):
+      vv.lod=2
+      print("vv.lod")
+    v_arr = None
   ds.close()
 netcdfWriteAndClose(dso)
