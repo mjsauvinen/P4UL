@@ -88,23 +88,25 @@ def read1DVariableFromDataset( dimStr, varStr, ds, iLOff=0, iROff=0, cl=1):
     dimList = vs.dimensions   # return a list of variable dimensions ('time', 'x', 'y', etc.)
     print(' dimList = {} '.format( dimList ))
     vdim = partialMatchFromList( dimStr, dimList )
-    
-    try:
-      print(' Reading variable {} ... '.format(vdim))
-      if(iROff == 0 or (iROff is None) ):
-        var = ds.variables[vdim][(0 + iLOff):]
-      else:
-        var = ds.variables[vdim][(0 + iLOff):-abs(iROff)]
-      print(' ... done.')
-    except:
+    print(' Reading variable {} ... '.format(vdim))
+    try:     
+      var = ds.variables[vdim][:]
+    except:  
       print(' Cannot read the array of variable: {}.'.format(varStr))
       sys.exit(1)
-
+    
+    if(iROff == 0 or (iROff is None) ):
+      var = var[(0 + iLOff):]
+    else:
+      var = var[(0 + iLOff):-abs(iROff)]
+    
+    if( cl > 1 ): var = var[::cl]
+    
   else:
     print(' Variable {} not in list {}.'.format(varStr, ds.variables.keys()))
     sys.exit(1)
 
-  return var[::cl], np.shape(var[::cl])
+  return var, np.shape(var)
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
@@ -113,29 +115,19 @@ def readVariableFromDataset(varStr, ds, cl=1 ):
   if( varStr in ds.variables.keys() ):
 
     vdims = asciiEncode(ds.variables[varStr].dimensions, ' Variable dimensions ')
+    var   = ds.variables[varStr][:]
 
-    if( len(vdims) == 4 ):
-      var = ds.variables[varStr][:,::cl,::cl,::cl]
-    elif( len(vdims) == 3 and 'time' not in vdims ):
-      var = ds.variables[varStr][::cl,::cl,::cl]
-    elif( len(vdims) == 3 and 'time' in vdims ):
-      var = ds.variables[varStr][:,::cl,::cl]
-    elif( len(vdims) == 2 and 'time' not in vdims ):
-      var = ds.variables[varStr][::cl,::cl]
-    elif( len(vdims) == 2 and 'time' in vdims ):
-      print(' {} {} '.format(varStr, ds.variables[varStr][:].shape ))
-      var = ds.variables[varStr][:,::cl]
-    elif( len(vdims) == 1 and 'time' in vdims ):
-      var = ds.variables[varStr]
-    else:
-      var = ds.variables[varStr][::cl]
+    if( cl>1 ):
+      var = coarsenVariable( var, vdims, cl )
 
     # Load the independent variables and wrap them into a dict
     dDict = dict()
     for dname in vdims:
       dData = ds.variables[dname][:]
-      if( 'time' in dname ): dDict[dname] = dData
-      else:                  dDict[dname] = dData[::cl]
+      if( ('time' in dname) or ('t+' in dname) ): 
+        dDict[dname] = dData
+      else:
+        dDict[dname] = dData[::cl]
       dData = None
 
   else:
@@ -145,6 +137,34 @@ def readVariableFromDataset(varStr, ds, cl=1 ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def coarsenVariable( var, vardims, cl ):
+  
+  if( cl == 1 ): return var
+
+  nd = len(vardims)
+
+  tL = ['time', 't+', 'time+']; timefound = False
+  for ts in tL:
+    if( ts in vardims ): timefound = True
+
+  if( nd==4 ):
+    var = var[:,::cl,::cl,::cl]
+  elif(nd==3 and not timefound ):
+    var = var[::cl,::cl,::cl]
+  elif(nd==3 and timefound     ):
+    var = var[:,::cl,::cl]
+  elif(nd==2 and not timefound ):
+    var = var[::cl,::cl]
+  elif(nd==2 and timefound     ):
+    var = var[:,::cl]
+  elif(nd==1 and not timefound ):
+    var = var[::cl]
+  else:
+    pass
+  
+  return var 
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def read3DVariableFromDataset(varStr, ds, iTOff=0, iLOff=0, iROff=0, cl=1, meanOn=False):
   
