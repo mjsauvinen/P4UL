@@ -6,6 +6,7 @@ import numpy as np
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def writeLog( parser , args, skip=False ):
+  skip=True
   try:
     if( not skip ):
       import time
