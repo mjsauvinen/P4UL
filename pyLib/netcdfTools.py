@@ -387,7 +387,7 @@ def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, 
   var = dso.createVariable(vName, vType, vTuple, zlib=zlib, fill_value=fill_value)
   var.units = vUnits
 
-  if(not np.ma.is_masked(v)):
+  if(not np.ma.is_masked(v) and v is not None):
     # Convert variable into masked array. Use [mask_value] to define the mask. 
     # This ensures the fill_values are inserted correctly in netcdf4 function createVariable().
     v = v.view( np.ma.MaskedArray )
@@ -397,9 +397,10 @@ def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, 
       v.mask = np.isnan(v)
     else:
       v.mask = False
-  
-  var[:] = v
-  v = None
+
+  if v is not None:
+    var[:] = v
+    v = None
 
   if(parameter): pStr = 'parameter'
   else:          pStr = 'variable'
