@@ -41,9 +41,9 @@ first = True
 
 for fi in args.files:
     ds, vD, uD = netcdfDataset2(fi)
-    for vstr in ['u', 'v', 'w', 'uu', 'vv', 'ww', 'uv', 'uw', 'vw', 'vu', 'wu', 'wc']:
-        if ( vstr not in vels and vstr in vD.keys() ):
-           vels[vstr] = ds[vstr][:,:,:,:].data
+    for vstr in ['u', 'v', 'w', 'uu', 'vv', 'ww', 'uv', 'uw', 'vw', 'vu', 'wu', 'wv']:
+        if ( vstr not in vels and vstr in vD.keys() ):            
+           vels[vstr] = ds[vstr][:,:,:,:]
            if first:
                x = ds['x'][:].data
                udx = uD['x']
