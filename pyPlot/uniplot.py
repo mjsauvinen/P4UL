@@ -20,7 +20,6 @@ Author: Mikko Auvinen
 plt.rcParams["legend.labelspacing"] = 1.2
 plt.rcParams["legend.framealpha"]   = 1.
 plt.rcParams["legend.edgecolor"]    = 'k'
-plt.rcParams["legend.fontsize"] = 18
 plt.rcParams["legend.handleheight"]   = 1.0  # default: 0.7
 plt.rcParams["legend.handlelength"]   = 3.0  # default: 2.0
 
@@ -44,7 +43,9 @@ parser.add_argument("-yl", "--ylims", type=float, nargs=2, default=[None,None],\
   help="Bounds (limits) for the y axes")
 parser.add_argument("-xl", "--xlims", type=float, nargs=2, default=[None,None],\
   help="Bounds (limits) for the x axes")
-parser.add_argument("-lm", "--linemode", type=int, choices=[1,2], default=1,\
+parser.add_argument("-fs", "--fontsize", type=int, default=24,\
+  help="Primary fontsize for labels. Default=24")
+parser.add_argument("-lm", "--linemode", type=int, choices=[1,2,3], default=1,\
   help="Mode for displaying the color and type of lines. See the source code. Default=1")
 parser.add_argument("-lw", "--linewidth", type=float, default=2.6,\
   help="Line width. Default=2.6")
@@ -62,11 +63,17 @@ logOn    = args.log
 llogOn   = args.loglog
 labelsOn = args.labels
 saveFig  = args.save
+fs       = args.fontsize
 legendOn = not args.nolegend
+
+# Fontsizes:
+plt.rc('xtick', labelsize=fs)
+plt.rc('ytick', labelsize=fs)
+plt.rcParams["legend.fontsize"] = np.round( 0.75*fs , decimals=1 ).astype(int)
 
 strKey = inputIfNone( strKey , " Enter search string: " )
 
-styleStr = 'seaborn-white' # 'ggplot'  # 'seaborn-paper'
+#styleStr = 'seaborn-white' # 'ggplot'  # 'seaborn-paper'
 #plt.style.use(styleStr)
 
 
