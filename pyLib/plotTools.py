@@ -26,15 +26,7 @@ gxI = -1     # Global x-index for csv animations
 gyLst = []   # Global y-value list for csv animations
 
 # The available color maps:
-cmaps = {  1:'rainbow',  2:'jet',          3:'hot',      4:'gist_earth', 5:'nipy_spectral',\
-           6:'coolwarm', 7:'gist_rainbow', 8:'Spectral', 9:'CMRmap',    10:'cubehelix',\
-          11:'seismic', 12:'bwr',         13:'terrain', 14:'gist_ncar', 15:'gnuplot2', \
-          16:'BuPu',    17:'GnBu',        18:'RdPu',    19:'YlGnBu',    20:'YlOrRd',\
-          21:'Oranges', 22:'Reds',        23:'Purples', 24:'Blues'}
-# NOTE! Some good ones: 2, 5, 12, 14
-
-# The available color maps in the new version of matplotlib:
-cmaps_new = { 1:'viridis', 2:'inferno', 3:'plasma',  4:'magma',     5:'Blues', 
+cmaps = { 1:'viridis', 2:'inferno', 3:'plasma',  4:'magma',     5:'Blues', 
           6:'BuGn',    7:'BuPu',    8:'GnBu',    9:'Greens',   10:'Greys', 
          11:'Oranges', 12:'OrRd',  13:'PuBu',   14:'PuBuGn',   15:'PuRd', 
          16:'Purples', 17:'RdPu',  18:'afmhot', 19:'autumn', 
@@ -48,7 +40,8 @@ cmaps_new = { 1:'viridis', 2:'inferno', 3:'plasma',  4:'magma',     5:'Blues',
          55:'Set3',    56:'gist_earth',57:'terrain', 58:'ocean',  59:'gist_stern',
          60:'brg',     61:'CMRmap',    62:'cubehelix', 63:'gnuplot', 64:'gnuplot2', 
          65:'gist_ncar',66:'nipy_spectral', 67:'jet',  68:'rainbow', 69:'gist_rainbow', 
-         70:'hsv',      71:'flag',          72:'prism'}
+         70:'hsv',      71:'flag',          72:'prism', 73:'cividis', 74:'Wistia',
+         75:'turbo'}
 
 
 # =*=*=*=* FUNCTION DEFINITIONS *=*=*=*=*=*=*=*=*=*=*=*
@@ -83,11 +76,11 @@ def setColormap( img ):
   global cmaps
   # Select the desired colormap
   try:
-    printDict( cmaps_new, 3 )
+    printDict( cmaps, 3 )
     icmap = int(input(' Enter integer key for the colormap = '))
     try:    nc = int(input(' Number of discrete colors in colormap = '))
     except: nc = None
-    cm = plt.get_cmap( cmaps_new[icmap], nc )
+    cm = plt.get_cmap( cmaps[icmap], nc )
     img.set_cmap(cm)
   except:
     print(' Using default colormap.')
@@ -164,8 +157,12 @@ def linestyle_stack(lm=1, il=None):
   
   if( lm == 1 ):
     lstyleList = ['-','--','-.',':']
-  else:
+  elif( lm == 2 ):
     lstyleList = ['-','--'] # ['x','+'] # ['-','--'] #
+  elif( lm == 3 ):
+    lstyleList = ['o','x','D','s'] # ['x','+']
+  else:
+    lstyleList = ['-','--','-.',':']
 
   nlinestyles = len(lstyleList)
   
