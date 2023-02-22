@@ -46,24 +46,25 @@ ds, varList, paramList = netcdfDataset(filename)
 '''
 Read cell center coordinates and time.
 Create the output independent variables right away and empty memory.
+
 '''
+uStr = partialMatchFromList( 'u', varList )
 if( meanOn ):
   time = np.array([0,]); time_dims = np.shape(time)
 else:
-  time, time_dims = read1DVariableFromDataset('time', ds, paramList, 0, 0, 1 )
+  time, time_dims = read1DVariableFromDataset('time', uStr, ds, 0, 0, 1 )
 
-uStr = partialMatchFromList( 'u', varList )
-x, x_dims = read1DVariableFromDataset( 'x', uStr, ds, paramList, 0, 0, cl ) 
-y, y_dims = read1DVariableFromDataset( 'y', uStr, ds, paramList, 0, 0, cl ) 
-z, z_dims = read1DVariableFromDataset( 'z', uStr, ds, paramList, 0, 0, cl )
+x, x_dims = read1DVariableFromDataset( 'x', uStr, ds, 0, 0, cl ) 
+y, y_dims = read1DVariableFromDataset( 'y', uStr, ds, 0, 0, cl ) 
+z, z_dims = read1DVariableFromDataset( 'z', uStr, ds, 0, 0, cl )
 
 # - - - - velocity components - - - - - - - - - - - -
 sa = ''
 if( meanOn ): sa = 'm'
   
-u, u_dims = read3DVariableFromDataset( 'u', ds, varList, 0, 0, cl, meanOn )
-v, v_dims = read3DVariableFromDataset( 'v', ds, varList, 0, 0, cl, meanOn )
-w, w_dims = read3DVariableFromDataset( 'w', ds, varList, 0, 0, cl, meanOn )
+u, u_dims = read3DVariableFromDataset( 'u', ds, 0, 0, 0, cl, meanOn )
+v, v_dims = read3DVariableFromDataset( 'v', ds, 0, 0, 0, cl, meanOn )
+w, w_dims = read3DVariableFromDataset( 'w', ds, 0, 0, 0, cl, meanOn )
 
 infoStr = '''
   time_dims = {}
