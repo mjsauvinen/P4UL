@@ -227,26 +227,32 @@ def plotBar(fig, xb, yb, labelStr, plotStr=["","",""], wb=0.6, errb=0):
   
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def addImagePlot( fig, R, titleStr, gridOn=False, limsOn=False, plotNests=False):
-  global cmaps
+def addNests(fig, clr):
+  
   ax = addFigAxes( fig )
-  im = ax.imshow(np.real(R), aspect='auto')       
-
-  while (plotNests):
+  while(1):
     try:
       nestParams=list( map(float, input(' Please enter nest location (top left x, top left y, width, height).\n' 
-                                          ' Leave empty to continue plotting.\n').split(',')) )
+                                        ' Leave empty to continue plotting.\n').split(',')) )
       annotation=str(input(' Please enter annotation for nest.\n'))
     except:
       break
-    try: 
-      nesti = patches.Rectangle((nestParams[0],nestParams[1]),nestParams[2],nestParams[3], linewidth=1, edgecolor='r', 
-                                  facecolor='none')
+    try:
+      Xtl, Ytl, W, H = nestParams
+      nesti = patches.Rectangle((Xtl,Ytl), W, H, linewidth=2, edgecolor=clr, facecolor='none')
       ax.add_patch(nesti)
-      ax.annotate(annotation,(nestParams[0],nestParams[1]),textcoords='offset pixels',xytext=(4,-18),color='r',size='medium')
+      ax.annotate(annotation,(Xtl,Ytl),textcoords='offset points',xytext=(4,-12),color=clr, fontsize=14)
     except:
       print(' Nest drawing failed.')
 
+  return fig
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def addImagePlot( fig, R, titleStr, gridOn=False, limsOn=False):
+  global cmaps
+  ax = addFigAxes( fig )
+  im = ax.imshow(np.real(R), aspect='auto')
   ax.set_title(titleStr)
   ax.grid(gridOn)
   

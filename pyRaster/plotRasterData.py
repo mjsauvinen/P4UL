@@ -5,7 +5,7 @@ import numpy as np
 from mapTools import readNumpyZTile, initRdict
 from footprintTools import readNumpyZFootprint
 from utilities import filesFromList
-from plotTools import addImagePlot, userLabels
+from plotTools import addImagePlot, userLabels, addNests
 import matplotlib.pyplot as plt
 ''' 
 Description:
@@ -38,6 +38,8 @@ parser.add_argument("--footprint", action="store_true", default=False,\
   help="Plot footprint data.")
 parser.add_argument("-n","--drawNests", action="store_true", default=False,\
   help="Draw nests (rectangles) on top of the raster.")
+parser.add_argument("-lc","--nestlinecolor", type=str, choices=['w','r','k','c','g','m'], default='k',\
+  help="Nests line color. Only effective together with --drawNests. Default='k' i.e. black ")
 parser.add_argument("-i","--infoOnly", action="store_true", default=False,\
   help="Print only info to the screen.")
 parser.add_argument("--save", metavar="FORMAT" ,type=str, default='', \
@@ -58,6 +60,7 @@ gridOn      = args.grid
 infoOnly    = args.infoOnly
 labels      = args.labels
 drawNests   = args.drawNests
+nlcolor     = args.nestlinecolor
 footprintOn = args.footprint
 save        = args.save
 
@@ -118,7 +121,8 @@ if( imod or jmod ):
 if( not infoOnly ):
   figDims = size*(Rdims[::-1].astype(float)/np.max(Rdims))
   fig = plt.figure(num=1, figsize=figDims)
-  fig = addImagePlot( fig, R , rasterfile, gridOn, limsOn, drawNests)
+  if( drawNests): fig = addNests(fig, nlcolor)
+  fig = addImagePlot( fig, R , rasterfile, gridOn, limsOn)
   R = None
 
   if(labels):
