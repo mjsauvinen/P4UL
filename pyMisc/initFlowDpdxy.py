@@ -102,8 +102,8 @@ z_output = 'uv_heights = {}'.format(zstr)
 dp_output = 'dpdxy =  {:.8f}, {:.8f},'.format( pdx, pdy )
 
 if args.outputPARIN is not None:
-    parinin  = open('PARIN_testi','r').readlines()
-    parinout = open('PARIN_testi','w')
+    parinin  = open(args.outputPARIN,'r').readlines()
+    parinout = open(args.outputPARIN,'w')
     wdoutlist = ['!- wd', 'dpdxy', 'u_profile', 'v_profile', 'uv_heights', 'wd -!']
 
     for j in parinin:
