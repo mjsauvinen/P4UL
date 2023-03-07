@@ -87,7 +87,7 @@ for vi in ['u', 'v', 'w']:
 
 if args.invert:
     print(' Inverting the Reynolds stress tensor.')
-    print('  Tolerance for non-invertible tensors.')
+    print('  Tolerance for non-invertible tensors: '+str(args.tolerance))
     
     # Check if Reynolds stress tensor input is symmetrical
     if 'Ruv' in vels and 'Rvu' in vels:        
