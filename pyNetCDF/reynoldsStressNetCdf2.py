@@ -32,6 +32,10 @@ parser.add_argument('-i', '--invert',action="store_true", default=False,
                     help='Output also the inverse of the Reynolds stress '
                     'tensor. If partial input data is given, symmetry of the '
                     'Reynolds stress tensor is assumed.')
+parser.add_argument('-t', '--tolerance',type=float, help='If inverting the '
+                    'Reynolds stress tensor, the tolerance will be used to '
+                    'determine if it can be inverted.', default = 1e-8)
+
 args = parser.parse_args()
 
 #=inputs######================================================================#
@@ -83,6 +87,7 @@ for vi in ['u', 'v', 'w']:
 
 if args.invert:
     print(' Inverting the Reynolds stress tensor.')
+    print('  Tolerance for non-invertible tensors.')
     
     # Check if Reynolds stress tensor input is symmetrical
     if 'Ruv' in vels and 'Rvu' in vels:        
@@ -116,7 +121,7 @@ if args.invert:
             + vels['Rwu']*vels['Luw'] )
 
     # Set non-invertible tensors to nan.
-    det[np.isclose(det,0.0)] = np.nan       
+    det[np.isclose(det,0.0,atol=args.tolerance)] = np.nan       
     vels['Luu'] /= det
     vels['Luv'] /= det
     vels['Luw'] /= det
