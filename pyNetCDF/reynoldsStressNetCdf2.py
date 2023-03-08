@@ -33,9 +33,14 @@ parser.add_argument('-i', '--invert',action="store_true", default=False,
                     'tensor. If partial input data is given, symmetry of the '
                     'Reynolds stress tensor is assumed.')
 parser.add_argument('-t', '--tolerance',type=float, help='If inverting the '
-                    'Reynolds stress tensor, the tolerance will be used to '
-                    'determine if it can be inverted.', default = 1e-8)
-
+                    'Reynolds stress tensor, the tolerance will be used on '
+                    'the determinant to determine if it can be inverted.',
+                    default = 1e-8)
+parser.add_argument('-r', '--regularisation',choices=['nan','mean'],type=str,
+                    help='If inverting the Reynolds stress tensor, specify '
+                    'non-invertible tensors are regularised. nan: Set to NaN.'
+                    ' mean: Discard non-invertible tensors and create a new '
+                    'one as a mean of up to 26 nearest neighbours.')
 args = parser.parse_args()
 
 #=inputs######================================================================#
@@ -120,8 +125,48 @@ if args.invert:
             + vels['Rvu']*vels['Luv']
             + vels['Rwu']*vels['Luw'] )
 
-    # Set non-invertible tensors to nan.
-    det[np.isclose(det,0.0,atol=args.tolerance)] = np.nan       
+    # Regularisation
+    if args.regularisation == 'mean':
+        # Find elements that need regularisation
+        Ri = np.isclose(det,0.0,atol=args.tolerance)
+        for vi in ['u', 'v', 'w']:
+            for vj in ['u', 'v', 'w']:
+                # Set these to zero
+                vels['R'+vi+vj][Ri] = 0.0
+                # Additional array for averaging
+                Ra = vels['R'+vi+vj].data
+                Ra[vels['R'+vi+vj].mask] = np.nan 
+                Ra = np.pad(Ra , ((0, 0), (1,1), (1,1), (1,1)) , 'constant', constant_values=np.nan)
+                # Counter for averaging
+                Rl = np.zeros(vels['R'+vi+vj][Ri].shape)
+                # Averaging loops. Averages are calculated using only those
+                # cells that are not masked.        
+                for i in [-1,0,1]:
+                    ia = 1+i
+                    iy = 1+Ri.shape[3]+i
+                    for j in [-1,0,1]:
+                        ja = 1+j
+                        jy = 1+Ri.shape[2]+j
+                        for k in [-1,0,1]:
+                            ka = 1+k
+                            ky = 1+Ri.shape[1]+k
+                            Rt = Ra[:,ka:ky,ja:jy,ia:iy]
+                            vels['R'+vi+vj].data[Ri] += np.where( np.isnan(Rt[Ri]), 0.0, Rt[Ri])
+                            Rl += np.where( np.isnan(Rt[Ri]), 0, 1)
+                            
+                vels['R'+vi+vj].data[Ri] /= Rl
+
+        # Recalculate earlier inverses.
+        vels['Luu'] = vels['Rvv']*vels['Rww']-vels['Rwv']*vels['Rvw']
+        vels['Luv'] = vels['Rwv']*vels['Ruw']-vels['Ruv']*vels['Rww']
+        vels['Luw'] = vels['Ruv']*vels['Rvw']-vels['Rvv']*vels['Ruw']
+        det = ( vels['Ruu']*vels['Luu']
+                + vels['Rvu']*vels['Luv']
+                + vels['Rwu']*vels['Luw'] )                                
+    else:
+        # Set non-invertible tensors to nan.
+        det[np.isclose(det,0.0,atol=args.tolerance)] = np.nan       
+    
     vels['Luu'] /= det
     vels['Luv'] /= det
     vels['Luw'] /= det
