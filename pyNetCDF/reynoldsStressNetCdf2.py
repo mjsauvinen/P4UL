@@ -40,7 +40,7 @@ parser.add_argument('-r', '--regularisation',choices=['nan','mean'],type=str,
                     help='If inverting the Reynolds stress tensor, specify '
                     'non-invertible tensors are regularised. nan: Set to NaN.'
                     ' mean: Discard non-invertible tensors and create a new '
-                    'one as a mean of up to 26 nearest neighbours.')
+                    'one as a mean of self and up to 26 nearest neighbours.')
 args = parser.parse_args()
 
 #=inputs######================================================================#
@@ -86,9 +86,6 @@ for vi in ['u', 'v', 'w']:
     for vj in ['u', 'v', 'w']:
         if vi in vels and vj in vels and vi+vj in vels and 'R'+vi+vj not in vels:
             vels['R'+vi+vj] = vels[vi+vj]-vels[vi]*vels[vj]
-            createNetcdfVariable(
-                dso, vels['R'+vi+vj] , 'R'+vi+vj, None , 'm2/s2', 'f4',
-                ('time', 'z', 'y', 'x', ), False )
 
 if args.invert:
     print(' Inverting the Reynolds stress tensor.')
@@ -127,34 +124,18 @@ if args.invert:
 
     # Regularisation
     if args.regularisation == 'mean':
+        print('  Regularising Reynolds stresses using mean filter.')
         # Find elements that need regularisation
         Ri = np.isclose(det,0.0,atol=args.tolerance)
         for vi in ['u', 'v', 'w']:
             for vj in ['u', 'v', 'w']:
-                # Set these to zero
-                vels['R'+vi+vj][Ri] = 0.0
-                # Additional array for averaging
                 Ra = vels['R'+vi+vj].data
                 Ra[vels['R'+vi+vj].mask] = np.nan 
                 Ra = np.pad(Ra , ((0, 0), (1,1), (1,1), (1,1)) , 'constant', constant_values=np.nan)
-                # Counter for averaging
-                Rl = np.zeros(vels['R'+vi+vj][Ri].shape)
-                # Averaging loops. Averages are calculated using only those
-                # cells that are not masked.        
-                for i in [-1,0,1]:
-                    ia = 1+i
-                    iy = 1+Ri.shape[3]+i
-                    for j in [-1,0,1]:
-                        ja = 1+j
-                        jy = 1+Ri.shape[2]+j
-                        for k in [-1,0,1]:
-                            ka = 1+k
-                            ky = 1+Ri.shape[1]+k
-                            Rt = Ra[:,ka:ky,ja:jy,ia:iy]
-                            vels['R'+vi+vj].data[Ri] += np.where( np.isnan(Rt[Ri]), 0.0, Rt[Ri])
-                            Rl += np.where( np.isnan(Rt[Ri]), 0, 1)
-                            
-                vels['R'+vi+vj].data[Ri] /= Rl
+                for dk in np.argwhere(Ri):
+                    vels['R'+vi+vj][dk[0],dk[1],dk[2],dk[3]] = np.nanmean(
+                        Ra[dk[0],(dk[1]-1+1):(dk[1]+2+1),(dk[2]-1+1):(dk[2]+2+1),(dk[3]-1+1):(dk[3]+2+1)])
+                del Ra
 
         # Recalculate earlier inverses.
         vels['Luu'] = vels['Rvv']*vels['Rww']-vels['Rwv']*vels['Rvw']
@@ -165,19 +146,32 @@ if args.invert:
                 + vels['Rwu']*vels['Luw'] )                                
     else:
         # Set non-invertible tensors to nan.
-        det[np.isclose(det,0.0,atol=args.tolerance)] = np.nan       
-    
+        print('  Non-invertible Reynolds stress tensors are set to nan.')
+        Ri = np.isclose(det,0.0,atol=args.tolerance)
+        det[Ri] = np.nan       
+        for vi in ['u', 'v', 'w']:
+            for vj in ['u', 'v', 'w']:
+                vels['R'+vi+vj][Ri] = np.nan
+
     vels['Luu'] /= det
     vels['Luv'] /= det
     vels['Luw'] /= det
-    if not symmetric:
-        vels['Lvu'] = ( vels['Rwu']*vels['Rvw'] - vels['Rvu']*vels['Rww'] )/det
-        vels['Lwu'] = ( vels['Rvu']*vels['Rwv'] - vels['Rwu']*vels['Rvv'] )/det
-        vels['Lwv'] = ( vels['Rwu']*vels['Ruv'] - vels['Ruu']*vels['Rwv'] )/det
 
     vels['Lvv'] = ( vels['Ruu']*vels['Rww'] - vels['Rwu']*vels['Ruw'] )/det
     vels['Lvw'] = ( vels['Rvu']*vels['Ruw'] - vels['Ruu']*vels['Rvw'] )/det        
     vels['Lww'] = ( vels['Ruu']*vels['Rvv'] - vels['Rvu']*vels['Ruv'] )/det
+    
+    if not symmetric:
+        vels['Lvu'] = ( vels['Rwu']*vels['Rvw'] - vels['Rvu']*vels['Rww'] )/det
+        vels['Lwu'] = ( vels['Rvu']*vels['Rwv'] - vels['Rwu']*vels['Rvv'] )/det
+        vels['Lwv'] = ( vels['Rwu']*vels['Ruv'] - vels['Ruu']*vels['Rwv'] )/det
+    elif symmetric:
+        for i in ['vu', 'wu', 'wv']:
+            if 'R'+i in vels:
+                del vels['R'+i]
+    else:
+        sys.exit(' Something went wrong with the symmetries. Exiting.')
+
 
     for vi in ['u', 'v', 'w']:
         for vj in ['u', 'v', 'w']:
@@ -185,7 +179,17 @@ if args.invert:
                 createNetcdfVariable(
                     dso, vels['L'+vi+vj] , 'L'+vi+vj, None , 's2/m2', 'f4',
                     ('time', 'z', 'y', 'x', ), False )
+    
 
+for vi in ['u', 'v', 'w']:
+    for vj in ['u', 'v', 'w']:
+        if 'R'+vi+vj in vels:
+            createNetcdfVariable(
+                dso, vels['R'+vi+vj] , 'R'+vi+vj, None , 'm2/s2', 'f4',
+                ('time', 'z', 'y', 'x', ), False )
+
+
+                
 netcdfWriteAndClose( dso )
 
 
