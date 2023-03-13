@@ -10,7 +10,7 @@ Calculate the Reynolds stresses from time averaged velocity fields.
 Author:
 Jukka-Pekka Keskinen
 Finnish Meteorological Insitute
-11/2022
+11/2022, 3/2023
 
 '''
 
@@ -36,11 +36,17 @@ parser.add_argument('-t', '--tolerance',type=float, help='If inverting the '
                     'Reynolds stress tensor, the tolerance will be used on '
                     'the determinant to determine if it can be inverted.',
                     default = 1e-8)
-parser.add_argument('-r', '--regularisation',choices=['nan','mean'],type=str,
-                    help='If inverting the Reynolds stress tensor, specify '
+parser.add_argument('-r', '--regularisation',choices=['mean'],type=str,
+                    help='If inverting the Reynolds stress tensor, specify how'
                     'non-invertible tensors are regularised. nan: Set to NaN.'
                     ' mean: Discard non-invertible tensors and create a new '
-                    'one as a mean of self and up to 26 nearest neighbours.')
+                    'one as a mean of self and a number of  nearest neighbours.')
+parser.add_argument('-n', '--nan',action="store_true", default=False,
+                    help='Set non invertible cells to NaN.')
+parser.add_argument('-w','--width',type=int, help='Size of regularisation '
+                    'filter in cells.', default=1)
+parser.add_argument('-m','--maxIter',type=int, help='Maximum number of '
+                    'iterations in regularisation.', default = 3)
 args = parser.parse_args()
 
 #=inputs######================================================================#
@@ -127,26 +133,33 @@ if args.invert:
         print('  Regularising Reynolds stresses using mean filter.')
         # Find elements that need regularisation
         Ri = np.isclose(det,0.0,atol=args.tolerance)
-        for vi in ['u', 'v', 'w']:
-            for vj in ['u', 'v', 'w']:
-                Ra = vels['R'+vi+vj].data
-                Ra[vels['R'+vi+vj].mask] = np.nan 
-                Ra = np.pad(Ra , ((0, 0), (1,1), (1,1), (1,1)) , 'constant', constant_values=np.nan)
-                for dk in np.argwhere(Ri):
-                    vels['R'+vi+vj][dk[0],dk[1],dk[2],dk[3]] = np.nanmean(
-                        Ra[dk[0],(dk[1]-1+1):(dk[1]+2+1),(dk[2]-1+1):(dk[2]+2+1),(dk[3]-1+1):(dk[3]+2+1)])
-                del Ra
+        rri = args.width
+        itc = 0
+        while (np.count_nonzero(Ri) > 0) and (itc < args.maxIter):
+            print('   Near-singular cells: '+str(np.count_nonzero(Ri)))
+            for vi in ['u', 'v', 'w']:
+                for vj in ['u', 'v', 'w']:
+                    Ra = vels['R'+vi+vj].data
+                    Ra[vels['R'+vi+vj].mask] = np.nan 
+                    Ra = np.pad(Ra , ((0, 0), (rri,rri), (rri,rri), (rri,rri)) , 'constant', constant_values=np.nan)
+                    for dk in np.argwhere(Ri):
+                        vels['R'+vi+vj][dk[0],dk[1],dk[2],dk[3]] = np.nanmean(
+                            Ra[dk[0],dk[1]:(dk[1]+rri+2),dk[2]:(dk[2]+rri+2),dk[3]:(dk[3]+rri+2)])
+                    del Ra
 
-        # Recalculate earlier inverses.
-        vels['Luu'] = vels['Rvv']*vels['Rww']-vels['Rwv']*vels['Rvw']
-        vels['Luv'] = vels['Rwv']*vels['Ruw']-vels['Ruv']*vels['Rww']
-        vels['Luw'] = vels['Ruv']*vels['Rvw']-vels['Rvv']*vels['Ruw']
-        det = ( vels['Ruu']*vels['Luu']
-                + vels['Rvu']*vels['Luv']
-                + vels['Rwu']*vels['Luw'] )                                
-    else:
+            # Recalculate earlier inverses.
+            vels['Luu'] = vels['Rvv']*vels['Rww']-vels['Rwv']*vels['Rvw']
+            vels['Luv'] = vels['Rwv']*vels['Ruw']-vels['Ruv']*vels['Rww']
+            vels['Luw'] = vels['Ruv']*vels['Rvw']-vels['Rvv']*vels['Ruw']
+            det = ( vels['Ruu']*vels['Luu']
+                    + vels['Rvu']*vels['Luv']
+                    + vels['Rwu']*vels['Luw'] )
+            Ri = np.isclose(det,0.0,atol=args.tolerance)
+            itc += 1
+            
+    if args.nan:
         # Set non-invertible tensors to nan.
-        print('  Non-invertible Reynolds stress tensors are set to nan.')
+        print('  Near-singular Reynolds stress tensors are set to nan.')
         Ri = np.isclose(det,0.0,atol=args.tolerance)
         det[Ri] = np.nan       
         for vi in ['u', 'v', 'w']:
