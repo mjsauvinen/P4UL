@@ -36,11 +36,11 @@ parser.add_argument('-t', '--tolerance',type=float, help='If inverting the '
                     'Reynolds stress tensor, the tolerance will be used on '
                     'the determinant to determine if it can be inverted.',
                     default = 1e-8)
-parser.add_argument('-r', '--regularisation',choices=['mean'],type=str,
+parser.add_argument('-r', '--regularisation',choices=['mean','eig'],type=str,
                     help='If inverting the Reynolds stress tensor, specify how'
-                    'non-invertible tensors are regularised. nan: Set to NaN.'
-                    ' mean: Discard non-invertible tensors and create a new '
-                    'one as a mean of self and a number of  nearest neighbours.')
+                    'non-invertible tensors are regularised. eig: Smallest eigenvalue '
+                    'is made big enough to get determinant above tolerance. mean: mean'
+                    ' of self and a number of  nearest neighbours.')
 parser.add_argument('-n', '--nan',action="store_true", default=False,
                     help='Set non invertible cells to NaN.')
 parser.add_argument('-w','--width',type=int, help='Size of regularisation '
@@ -129,24 +129,73 @@ if args.invert:
             + vels['Rwu']*vels['Luw'] )
 
     # Regularisation
-    if args.regularisation == 'mean':
-        print('  Regularising Reynolds stresses using mean filter.')
+    if args.regularisation in ['mean', 'eig']:
+        print('  Regularising Reynolds stresses using the '+args.regularisation+' approach')
         # Find elements that need regularisation
         Ri = np.isclose(det,0.0,atol=args.tolerance)
-        rri = args.width
-        itc = 0
-        while (np.count_nonzero(Ri) > 0) and (itc < args.maxIter):
-            print('   Near-singular cells: '+str(np.count_nonzero(Ri)))
-            for vi in ['u', 'v', 'w']:
-                for vj in ['u', 'v', 'w']:
-                    Ra = vels['R'+vi+vj].data
-                    Ra[vels['R'+vi+vj].mask] = np.nan 
-                    Ra = np.pad(Ra , ((0, 0), (rri,rri), (rri,rri), (rri,rri)) , 'constant', constant_values=np.nan)
-                    for dk in np.argwhere(Ri):
-                        vels['R'+vi+vj][dk[0],dk[1],dk[2],dk[3]] = np.nanmean(
-                            Ra[dk[0],dk[1]:(dk[1]+rri+2),dk[2]:(dk[2]+rri+2),dk[3]:(dk[3]+rri+2)])
-                    del Ra
+        print('   Number of nearly singular cells: '+str(np.count_nonzero(Ri)))
+        if args.regularisation == 'mean':
+            rri = args.width
+            itc = 0
+            las=0
+            while (np.count_nonzero(Ri) > 0) and (itc < args.maxIter):                
+                for vi in ['u', 'v', 'w']:
+                    for vj in ['u', 'v', 'w']:
+                        Ra = vels['R'+vi+vj].data
+                        Ra[vels['R'+vi+vj].mask] = np.nan 
+                        Ra = np.pad(
+                            Ra , ((0, 0), (rri,rri), (rri,rri), (rri,rri)) ,
+                            'constant', constant_values=np.nan)
+                        for dk in np.argwhere(Ri):
+                            vels['R'+vi+vj][dk[0],dk[1],dk[2],dk[3]] = np.nanmean(
+                                Ra[dk[0],dk[1]:(dk[1]+rri+2),
+                                   dk[2]:(dk[2]+rri+2),
+                                   dk[3]:(dk[3]+rri+2)])
+                        del Ra
 
+
+                # Recalculate earlier inverses.
+                vels['Luu'] = vels['Rvv']*vels['Rww']-vels['Rwv']*vels['Rvw']
+                vels['Luv'] = vels['Rwv']*vels['Ruw']-vels['Ruv']*vels['Rww']
+                vels['Luw'] = vels['Ruv']*vels['Rvw']-vels['Rvv']*vels['Ruw']
+                det = ( vels['Ruu']*vels['Luu']
+                        + vels['Rvu']*vels['Luv']
+                        + vels['Rwu']*vels['Luw'] )
+                Ri = np.isclose(det,0.0,atol=args.tolerance)
+                print('   Number nearly singular cells: '+str(np.count_nonzero(Ri)))
+                itc += 1
+                        
+        elif args.regularisation == 'eig':
+            print('   Working on eigenvalues: |',end='',flush=True)
+            las = 1
+            pit = np.count_nonzero(Ri)
+            for dk in np.argwhere(Ri):
+                Ra = np.array([[vels['Ruu'][dk[0],dk[1],dk[2],dk[3]],
+                                vels['Ruv'][dk[0],dk[1],dk[2],dk[3]],
+                                vels['Ruw'][dk[0],dk[1],dk[2],dk[3]]],
+                               [vels['Rvu'][dk[0],dk[1],dk[2],dk[3]],
+                                vels['Rvv'][dk[0],dk[1],dk[2],dk[3]],
+                                vels['Rvw'][dk[0],dk[1],dk[2],dk[3]]],
+                               [vels['Rwu'][dk[0],dk[1],dk[2],dk[3]],
+                                vels['Rwv'][dk[0],dk[1],dk[2],dk[3]],
+                                vels['Rww'][dk[0],dk[1],dk[2],dk[3]]]])
+                l,Q = np.linalg.eig(Ra)
+                l[np.min(l)==l] = 1.1*args.tolerance/np.prod(l[np.min(l)!=l])
+                Rr = np.matmul(np.matmul(Q,np.diag(l)),Q.T)
+                vels['Ruu'][dk[0],dk[1],dk[2],dk[3]] = Rr[0,0]
+                vels['Ruv'][dk[0],dk[1],dk[2],dk[3]] = Rr[0,1]
+                vels['Ruw'][dk[0],dk[1],dk[2],dk[3]] = Rr[0,2]
+                vels['Rvu'][dk[0],dk[1],dk[2],dk[3]] = Rr[1,0]
+                vels['Rvv'][dk[0],dk[1],dk[2],dk[3]] = Rr[1,1]
+                vels['Rvw'][dk[0],dk[1],dk[2],dk[3]] = Rr[1,2]
+                vels['Rwu'][dk[0],dk[1],dk[2],dk[3]] = Rr[2,0]
+                vels['Rwv'][dk[0],dk[1],dk[2],dk[3]] = Rr[2,1]
+                vels['Rww'][dk[0],dk[1],dk[2],dk[3]] = Rr[2,2]                    
+
+                if (las % int(pit/10)) == 0:
+                    print(' λ ',end='',flush=True) 
+
+                las += 1
             # Recalculate earlier inverses.
             vels['Luu'] = vels['Rvv']*vels['Rww']-vels['Rwv']*vels['Rvw']
             vels['Luv'] = vels['Rwv']*vels['Ruw']-vels['Ruv']*vels['Rww']
@@ -154,13 +203,13 @@ if args.invert:
             det = ( vels['Ruu']*vels['Luu']
                     + vels['Rvu']*vels['Luv']
                     + vels['Rwu']*vels['Luw'] )
-            Ri = np.isclose(det,0.0,atol=args.tolerance)
-            itc += 1
-            
+
+            print( '| Done!')
     if args.nan:
         # Set non-invertible tensors to nan.
         print('  Near-singular Reynolds stress tensors are set to nan.')
         Ri = np.isclose(det,0.0,atol=args.tolerance)
+        print('   Number nearly singular cells: '+str(np.count_nonzero(Ri)))                
         det[Ri] = np.nan       
         for vi in ['u', 'v', 'w']:
             for vj in ['u', 'v', 'w']:
