@@ -183,8 +183,10 @@ if args.invert:
                 l[np.min(l)==l] = 1.1*args.tolerance/np.prod(l[np.min(l)!=l])
                 if symmetric:
                     Rr = np.matmul(np.matmul(Q,np.diag(l)),Q.T)
+                    Lr = np.matmul(np.matmul(Q,np.diag(1/l)),Q.T)
                 else:
                     Rr = np.matmul(np.matmul(Q,np.diag(l)),np.linalg.inv(Q))
+                    Lr = np.matmul(np.matmul(Q,np.diag(1/l)),np.linalg.inv(Q))
                 vels['Ruu'][dk[0],dk[1],dk[2],dk[3]] = Rr[0,0]
                 vels['Ruv'][dk[0],dk[1],dk[2],dk[3]] = Rr[0,1]
                 vels['Ruw'][dk[0],dk[1],dk[2],dk[3]] = Rr[0,2]
@@ -194,18 +196,15 @@ if args.invert:
                 vels['Rwu'][dk[0],dk[1],dk[2],dk[3]] = Rr[2,0]
                 vels['Rwv'][dk[0],dk[1],dk[2],dk[3]] = Rr[2,1]
                 vels['Rww'][dk[0],dk[1],dk[2],dk[3]] = Rr[2,2]                    
-
+                vels['Luu'][dk[0],dk[1],dk[2],dk[3]] = Lr[0,0]
+                vels['Luv'][dk[0],dk[1],dk[2],dk[3]] = Lr[0,1]
+                vels['Luw'][dk[0],dk[1],dk[2],dk[3]] = Lr[0,2]
+                det[dk[0],dk[1],dk[2],dk[3]] = np.prod(l)
+                
                 if (las % int(pit/10)) == 0:
                     print(' λ ',end='',flush=True) 
 
                 las += 1
-            # Recalculate earlier inverses.
-            vels['Luu'] = vels['Rvv']*vels['Rww']-vels['Rwv']*vels['Rvw']
-            vels['Luv'] = vels['Rwv']*vels['Ruw']-vels['Ruv']*vels['Rww']
-            vels['Luw'] = vels['Ruv']*vels['Rvw']-vels['Rvv']*vels['Ruw']
-            det = ( vels['Ruu']*vels['Luu']
-                    + vels['Rvu']*vels['Luv']
-                    + vels['Rwu']*vels['Luw'] )
 
             print( ' | Done!')
     if args.nan:
