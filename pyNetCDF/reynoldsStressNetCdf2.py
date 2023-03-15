@@ -181,7 +181,10 @@ if args.invert:
                                 vels['Rww'][dk[0],dk[1],dk[2],dk[3]]]])
                 l,Q = np.linalg.eig(Ra)
                 l[np.min(l)==l] = 1.1*args.tolerance/np.prod(l[np.min(l)!=l])
-                Rr = np.matmul(np.matmul(Q,np.diag(l)),Q.T)
+                if symmetric:
+                    Rr = np.matmul(np.matmul(Q,np.diag(l)),Q.T)
+                else:
+                    Rr = np.matmul(np.matmul(Q,np.diag(l)),np.linalg.inv(Q))
                 vels['Ruu'][dk[0],dk[1],dk[2],dk[3]] = Rr[0,0]
                 vels['Ruv'][dk[0],dk[1],dk[2],dk[3]] = Rr[0,1]
                 vels['Ruw'][dk[0],dk[1],dk[2],dk[3]] = Rr[0,2]
@@ -204,7 +207,7 @@ if args.invert:
                     + vels['Rvu']*vels['Luv']
                     + vels['Rwu']*vels['Luw'] )
 
-            print( '| Done!')
+            print( ' | Done!')
     if args.nan:
         # Set non-invertible tensors to nan.
         print('  Near-singular Reynolds stress tensors are set to nan.')
@@ -232,7 +235,7 @@ if args.invert:
             if 'R'+i in vels:
                 del vels['R'+i]
     else:
-        sys.exit(' Something went wrong with the symmetries. Exiting.')
+        sys.exit(' Something is wrong with the symmetries. Exiting.')
 
 
     for vi in ['u', 'v', 'w']:
