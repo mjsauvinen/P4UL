@@ -19,9 +19,8 @@ parser.add_argument("-f", "--filename",type=str,
                     help="Name of the input netCDF file.")
 parser.add_argument("-o", "--fileout",type=str,
                     help="Name of the output netCDF file.")
-parser.add_argument("-v", "--variables", type=str, nargs='*',
-                    default=['u','v','w'],
-                    help="Names variables to collocate. Default = u v w")
+parser.add_argument("-v", "--variables", type=str, nargs='*',                    
+                    help="Names variables to collocate. Default: all.")
 
 #=================================================================================#
 
@@ -32,7 +31,11 @@ with xr.open_dataset(args.filename) as F:
         if i not in F.coords:
             sys.exit('*** Collocated coordinates not available in input file. '
                      'Terminating.')
-    for i in args.variables:
+    if args.variables == None:
+        varis = F.data_vars
+    else:
+        varis = args.variables
+    for i in varis:
         if i in F.data_vars:
             print(' Collocating '+i)
             # Assuming here that only one of the cooordinates needs to be
