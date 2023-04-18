@@ -11,20 +11,33 @@ import time
 # Finnish Meteorological Insitute
 # 2023
 
-#=================================================================================#
+#==========================================================================================#
 start = time.time()
 
-parser = argparse.ArgumentParser(prog='collocateDataNetCdfX.py')
-parser.add_argument("-f", "--filename",type=str,
-                    help="Name of the input netCDF file.")
-parser.add_argument("-o", "--fileout",type=str,
-                    help="Name of the output netCDF file.")
-parser.add_argument("-v", "--variables", type=str, nargs='*',                    
-                    help="Names variables to collocate. Default: all.")
+parser = argparse.ArgumentParser(prog='collocateDataNetCdfX.py', description='Collocates '
+                                 'staggered variables to collocated coordinates.'
+                                 'Coordinate locations are preserved.')
+parser.add_argument('-f', '--filename',type=str,
+                    help='Name of the input netCDF file.')
+parser.add_argument('-o', '--fileout',type=str,
+                    help='Name of the output netCDF file.')
+parser.add_argument('-v', '--variables', type=str, nargs='*',                    
+                    help='Names variables to collocate. Default: all.')
+parser.add_argument('-i', '--interpolation',type=str, help='Interpolation method. Supports'
+                    ' those supported by scipy, e.g. linear, nearest, zero, slinear, '
+                    'quadratic, cubic, etc. Default: linear.', default='linear')
+parser.add_argument('-e', '--noExtrapolation',help='Do not extrapolate. Grid points that'
+                    ' can not be interpolated will be set to Nan', default=False,
+                    action='store_true')
 
-#=================================================================================#
+#==========================================================================================#
 
 args = parser.parse_args()
+
+if args.noExtrapolation:
+    extrapolation = np.nan
+else:
+    extrapolation = 'extrapolate'
 
 with xr.open_dataset(args.filename) as F:
     for i in ['x', 'y', 'zu_3d']:
@@ -41,11 +54,14 @@ with xr.open_dataset(args.filename) as F:
             # Assuming here that only one of the cooordinates needs to be
             # changed.
             if 'zw_3d' in F[i].coords:
-                F[i] = F[i].interp(zw_3d=F['zu_3d'], kwargs={"fill_value": "extrapolate"})
+                F[i] = F[i].interp(zw_3d=F['zu_3d'], method=args.interpolation,
+                                   kwargs={'fill_value': extrapolation})
             elif 'xu' in F[i].coords:
-                F[i] = F[i].interp(xu=F['x'], kwargs={"fill_value": "extrapolate"})
+                F[i] = F[i].interp(xu=F['x'], method=args.interpolation,
+                                   kwargs={'fill_value': extrapolation})
             elif 'yv' in F[i].coords:
-                F[i] = F[i].interp(yv=F['y'], kwargs={"fill_value": "extrapolate"})
+                F[i] = F[i].interp(yv=F['y'], method=args.interpolation,
+                                   kwargs={'fill_value': extrapolation})
         else:
             print(' Variable '+i+' not in input file. Skipping.')
 
@@ -53,6 +69,6 @@ with xr.open_dataset(args.filename) as F:
             
 print(' Script finished after '+str(int((time.time()-start)/60))+' min.')
 
-#                                     |_|/                                        #
-#===================================|_|_|\========================================#
-#                                     |                                           #  
+#                                         |_|/                                             #
+#=======================================|_|_|\=============================================#
+#                                         |                                                #
