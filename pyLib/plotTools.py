@@ -329,6 +329,85 @@ def addToPlot(fig, x,y,labelStr, plotStr=["","",""], logOn=False):
   return fig
   
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+def plotDX( fig, pDict, ax=None ):
+  global iCg, iMg, iLg
+  fileStr = dataFromDict('filename', pDict, allowNone=False)
+  logOn   = dataFromDict('logOn',    pDict, allowNone=False)
+  llogOn  = dataFromDict('llogOn',   pDict, allowNone=False)
+  Cx      = dataFromDict('Cx',       pDict, allowNone=False)
+  Cy      = dataFromDict('Cy',       pDict, allowNone=False)
+  revAxes = dataFromDict('revAxes',  pDict, allowNone=False)
+  linemode = dataFromDict('lm',      pDict, allowNone=False)
+  linewidth= dataFromDict('lw',      pDict, allowNone=False)
+  ylims   = dataFromDict('ylims',    pDict, allowNone=True)
+  xlims   = dataFromDict('xlims',    pDict, allowNone=True)
+  reset   = dataFromDict('reset',    pDict, allowNone=True)
+  
+  try:    x = np.loadtxt(fileStr)
+  except: x = np.loadtxt(fileStr,delimiter=',')
+  
+  if( ax is None ):
+    ax = addFigAxes( fig )
+  
+  # Reset global integer for color, marker and linestyle.
+  if( reset ):
+    iCg = 0; iMg = 0; iLg = 0
+  
+  labelStr = labelString( fileStr )
+  
+  # Print each column separately
+  amax = 0.
+  Ny = x.shape[1] - 3
+  if( Ny < 1 ): 
+    sys.exit(' The number of columns in file should be more than 3. Exiting ...' )
+  
+  # Compute distance from x, y, z coords.
+  r = np.zeros( len(x[:,0]), float )
+  for j in range(3):
+    x0 = x[0,j]
+    r += (x[:,j]-x0)**2
+  
+  d = np.sqrt(r); r = None
+  
+  for i in range(Ny):
+    iy = i+3
+    
+    if( Ny == 1 ): labelXX = labelStr
+    else:          labelXX = labelStr+'['+str(i)+']'
+    
+    if( revAxes ): yp = Cy*d;  xp = Cx*x[:,iy]; dp = xp
+    else:          xp = Cx*d;  yp = Cy*x[:,iy]; dp = yp
+    
+    if( logOn or llogOn ):
+      if( revAxes ): 
+        xp = np.abs( xp )
+        plotf = ax.semilogx 
+      else:
+        yp = np.abs( yp )
+        plotf = ax.semilogy
+        
+      if( llogOn ):
+        plotf = ax.loglog
+        
+    else:
+      plotf = ax.plot
+    
+    lines = plotf( xp, yp, \
+      linestyle_stack(lm=linemode), linewidth=linewidth, \
+        label=labelXX, color=color_stack(lm=linemode))
+    
+    lmax = np.abs(np.max(dp))  # Local maximum
+    if( lmax > amax ): amax = lmax
+  
+  ax.set_ybound(lower=ylims[0], upper=ylims[1] )
+  ax.set_xbound(lower=xlims[0], upper=xlims[1] )
+  
+  ax.set_xlabel(" ")
+  ax.set_ylabel(" ")
+  return fig
+      
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def plotXX( fig, pDict, ax=None ):
   global iCg, iMg, iLg
@@ -637,38 +716,6 @@ def plotCiDiffXY( fig, pDict ):
   ax.set_xbound(lower=xlims[0], upper=xlims[1] )
   ax.set_xlabel(xlb)
   ax.set_ylabel(ylb)
-
-  return fig
-
-# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-def plotDY( fig, fileStr, dim=3,  revAxes=False ):
-  dim = min( dim, 3 ); dim=max(dim , 1)
-  x = np.loadtxt(fileStr)
-  r = np.zeros( len(x[:,0]), float )
-  for i in range(dim):
-    x0 = np.min( x[:,i] )
-    r += (x[:,i]-x0)**2 
-    
-  d = np.sqrt(r)
-  
-  ax = addFigAxes( fig )
-  
-
-  labelStr = labelString( fileStr )
-
-  # Print each column separately
-  for i in range((x.shape[1]-dim)):
-    if( revAxes ):
-      lines=ax.plot(x[:,i+dim],d[:],marker=marker_stack(),
-                    color=color_stack(), fillstyle='none', ls='None' , label=labelStr+'['+str(i)+']' )
-    else:
-      lines=ax.plot(d[:],x[:,i+dim],marker=marker_stack(), mew=1.7,
-                    color=color_stack(), fillstyle='none', ls='None', label=labelStr+'['+str(i)+']')
-
-  if( revAxes ):
-    ax.set_ylabel(" D(X,Y,Z) "); ax.set_xlabel(" F(D) ")
-  else:
-    ax.set_xlabel(" D(X,Y,Z) "); ax.set_ylabel(" F(D) ")
 
   return fig
 

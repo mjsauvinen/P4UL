@@ -25,6 +25,8 @@ parser.add_argument('-ea', '--euler', type=float, nargs=3, default=[None,None,No
   help=EulerHelp)
 parser.add_argument("-lf", "--localFilter", type=int, default=None,\
   help='Apply local filter with a given integer width to all columns.')
+parser.add_argument("-sr", "--skipRows", type=int, default=0,\
+  help='Skip given number of rows when reading the file. Default=0')
 parser.add_argument('-rl', '--ratioLimits', type=float, nargs=2, default=[None,None],\
   help=' Start and stop as ratios (0-1) for selective extraction of data series.')
 
@@ -40,6 +42,7 @@ scale  = np.array(args.scale)  # Should be numpy array.
 euler  = args.euler
 fltN   = args.localFilter      # Local filter width 
 rl     = args.ratioLimits
+sr     = args.skipRows
 
 if( fltN is None ):
   filterOn = False
@@ -82,8 +85,8 @@ fileNos, fileList = filesFromList( strKey+"*" )
 # Process the files:
 for fn in fileNos:
   
-  try:    dat = np.loadtxt( fileList[fn] )
-  except: dat = np.loadtxt( fileList[fn], delimiter=',')
+  try:    dat = np.loadtxt( fileList[fn], skiprows=sr )
+  except: dat = np.loadtxt( fileList[fn], skiprows=sr, delimiter=',')
   
   for j in Icols:
     if( j > dat.shape[1]-1 ):

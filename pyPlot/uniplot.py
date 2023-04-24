@@ -5,16 +5,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 from utilities import filesFromList, inputIfNone
-from plotTools import userLabels, plotXX
+from plotTools import userLabels, plotXX, plotDX
 ''' 
-Description: A script to plot multiple files with data in [x, y1, y2, ..., yn] format.
+Description: A script to plot multiple files with data in [x, y1, y2, ..., yn] format 
+or alternatively with -xyz option [x, y, z, y1, y2, ..., yn] format.
 Run the script in the directory where you have the data files:
 $ uniplot.py <search string> [options]
 
 
 Author: Mikko Auvinen
-        mikko.auvinen@helsinki.fi 
-        University of Helsinki &
+        mikko.auvinen@fmi.fi 
         Finnish Meteorological Institute
 '''
 
@@ -40,6 +40,8 @@ parser.add_argument("-fx", "--factorX", type=float, default=1.0,\
   help="Multiplication factor for x-values: fx*x")
 parser.add_argument("-fy", "--factorY", type=float, default=1.0,\
   help="Multiplication factor for y-values: fy*y")
+parser.add_argument("-xyz","--xyz", action="store_true", default=False,\
+  help="File contains data in [x, y, z, y1, y2, ..., yn] format. ")
 parser.add_argument("-yl", "--ylims", type=float, nargs=2, default=[None,None],\
   help="Bounds (limits) for the y axes")
 parser.add_argument("-xl", "--xlims", type=float, nargs=2, default=[None,None],\
@@ -66,6 +68,7 @@ labelsOn = args.labels
 saveFig  = args.save
 fs       = args.fontsize
 legendOn = not args.nolegend
+xyzOn    = args.xyz
 
 # Fontsizes:
 plt.rc('xtick', labelsize=fs)
@@ -96,7 +99,8 @@ pfig = plt.figure(num=1, figsize=(12.,9.5));
 
 for fn in fileNos:
   pD['filename'] = fileList[fn] 
-  pfig = plotXX( pfig, pD )
+  if( not xyzOn ): pfig = plotXX( pfig, pD )
+  else:            pfig = plotDX( pfig, pD )
 
 if( labelsOn ):
   print(' userLabels ')
