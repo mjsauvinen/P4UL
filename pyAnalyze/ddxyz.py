@@ -10,7 +10,7 @@ Calculates derivatives for a given field.
 Author:
 Jukka-Pekka Keskinen
 Finnish Meteorological Insitute
-12/2022
+2022–2023
 
 '''
 
@@ -302,13 +302,14 @@ for i in args.variable:
                               'constant', constant_values=-9999.0)
 
                 dz = z[2]-z[1]
-                if np.any(~np.isclose(dz,z[1:]-z[0:-1])):
+                if np.any(~np.isclose(dz,z[2:]-z[1:-1])):
                     print('** Warning: Non-uniform mesh in z direction. '
                           'Accuracy will be degraded next ')
                     print('   to boundaries at following levels:')
-                    for j in range(z.size):
-                        if ~np.isclose(dz,z[j]):
-                            print('   '+str(j))
+                    for j in range(2,z.size):
+                        print('   ',end='',flush=True)
+                        if ~np.isclose(dz,z[j]-z[j-1]):
+                            print(str(j-1)+', ',end='',flush=True)
                 
                 outddx['d'+i+'dz'] = one_sided_ddxy(outddx['d'+i+'dz'],
                                                     Mpad[:,:-4,:,:],
