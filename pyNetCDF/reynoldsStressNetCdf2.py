@@ -10,7 +10,7 @@ Calculate the Reynolds stresses from time averaged velocity fields.
 Author:
 Jukka-Pekka Keskinen
 Finnish Meteorological Insitute
-11/2022, 3/2023
+2022–2023
 
 '''
 
@@ -38,9 +38,10 @@ parser.add_argument('-t', '--tolerance',type=float, help='If inverting the '
                     default = 1e-8)
 parser.add_argument('-r', '--regularisation',choices=['mean','eig'],type=str,
                     help='If inverting the Reynolds stress tensor, specify how'
-                    'non-invertible tensors are regularised. eig: Smallest eigenvalue '
-                    'is made big enough to get determinant above tolerance. mean: mean'
-                    ' of self and a number of  nearest neighbours.')
+                    'non-invertible and non-realisable tensors are regularised. '
+                    'eig: Smallest eigenvalue is made big enough to get '
+                    'determinant above tolerance. mean: mean of self and a '
+                    'number of  nearest neighbours.')
 parser.add_argument('-n', '--nan',action="store_true", default=False,
                     help='Set non invertible cells to NaN.')
 parser.add_argument('-w','--width',type=int, help='Size of regularisation '
@@ -95,7 +96,7 @@ for vi in ['u', 'v', 'w']:
 
 if args.invert:
     print(' Inverting the Reynolds stress tensor.')
-    print('  Tolerance for non-invertible tensors: '+str(args.tolerance))
+    print('  Tolerance for non-invertible and non-realisable tensors: '+str(args.tolerance))
     
     # Check if Reynolds stress tensor input is symmetrical
     if 'Ruv' in vels and 'Rvu' in vels:        
@@ -132,8 +133,8 @@ if args.invert:
     if args.regularisation in ['mean', 'eig']:
         print('  Regularising Reynolds stresses using the '+args.regularisation+' approach')
         # Find elements that need regularisation
-        Ri = np.isclose(det,0.0,atol=args.tolerance)
-        print('   Number of nearly singular cells: '+str(np.count_nonzero(Ri)))
+        Ri = det < args.tolerance 
+        print('   Number of near-singular or non-realisable cells: '+str(np.count_nonzero(Ri)))
         if args.regularisation == 'mean':
             rri = args.width
             itc = 0
@@ -162,7 +163,7 @@ if args.invert:
                         + vels['Rvu']*vels['Luv']
                         + vels['Rwu']*vels['Luw'] )
                 Ri = np.isclose(det,0.0,atol=args.tolerance)
-                print('   Number nearly singular cells: '+str(np.count_nonzero(Ri)))
+                print('   Number near-singular or non-realisable cells: '+str(np.count_nonzero(Ri)))
                 itc += 1
                         
         elif args.regularisation == 'eig':
@@ -180,7 +181,12 @@ if args.invert:
                                 vels['Rwv'][dk[0],dk[1],dk[2],dk[3]],
                                 vels['Rww'][dk[0],dk[1],dk[2],dk[3]]]])
                 l,Q = np.linalg.eig(Ra)
-                l[np.min(l)==l] = 1.1*args.tolerance/np.prod(l[np.min(l)!=l])
+                if np.count_nonzero(l==0.0)>0:
+                    l[(np.min(l)==l) | (l==0.0)] = (1.1*np.power(
+                        args.tolerance,1/np.count_nonzero((np.min(l)==l) | (l==0.0)))
+                                                    / np.prod(l[(np.min(l)!=l) & (l!=0.0)]))
+                else:
+                    l[np.min(l)==l] = 1.1*args.tolerance/np.prod(l[np.min(l)!=l])
                 if symmetric:
                     Rr = np.matmul(np.matmul(Q,np.diag(l)),Q.T)
                     Lr = np.matmul(np.matmul(Q,np.diag(1/l)),Q.T)
@@ -207,6 +213,7 @@ if args.invert:
                 las += 1
 
             print( ' | Done!')
+
     if args.nan:
         # Set non-invertible tensors to nan.
         print('  Near-singular Reynolds stress tensors are set to nan.')
