@@ -16,15 +16,18 @@ Author: Mikko Auvinen
 #==========================================================#
 
 def decomp3( q ):
+  '''
   idn = (q[-1,:,:,:]==0.) # take the zeros from last time step
   nt = np.shape(q)[0]
   for i in range(nt):
     q[i,idn] = np.nan 
   idn = None
+  '''
   
-  qtilde  = np.nanmean( q , axis=0 ) # mean at the moment
+  
+  qtilde  = np.ma.mean( q , axis=0 ) # mean at the moment
   qp      = q - qtilde
-  qda     = np.nanmean( qtilde )     # double average
+  qda     = np.ma.mean( qtilde )     # double average
   qtilde -= qda
   
   return np.array([qda]), qtilde, qp
@@ -34,22 +37,22 @@ def decomp3( q ):
 def normReynodsStressTensor(up,vp,wp):
   
   print(' Computing Reynolds stresses and their norm ...')
-  R11 = np.nanmean(up*up, axis=0)
-  R22 = np.nanmean(vp*vp, axis=0)
-  R33 = np.nanmean(wp*wp, axis=0)
+  R11 = np.ma.mean(up*up, axis=0)
+  R22 = np.ma.mean(vp*vp, axis=0)
+  R33 = np.ma.mean(wp*wp, axis=0)
   
   tr = (1./3.)*( R11 + R22 + R33 )
   norm  = R11**2; R11 -= tr; devnorm  = R11**2; R11 = None
   norm += R22**2; R22 -= tr; devnorm += R22**2; R22 = None
   norm += R33**2; R33 -= tr; devnorm += R33**2; R33 = None
   
-  R12p = 2.*np.nanmean(up*vp, axis=0)**2
+  R12p = 2.*np.ma.mean(up*vp, axis=0)**2
   norm += R12p; devnorm += R12p; R12p = None
   
-  R13p = 2.*np.nanmean(up*wp, axis=0)**2
+  R13p = 2.*np.ma.mean(up*wp, axis=0)**2
   norm += R13p; devnorm += R13p; R13p = None
   
-  R23p = 2.*np.nanmean(vp*wp, axis=0)**2
+  R23p = 2.*np.ma.mean(vp*wp, axis=0)**2
   norm += R23p; devnorm += R23p; R23p = None
   
   norm    **=(0.5)
@@ -171,7 +174,7 @@ z = None
 uda, utilde, up = decomp3( u )
 u = None
 
-utilde = cleanValues(utilde, 'utilde')
+#utilde = cleanValues(utilde, 'utilde')
 udo = createNetcdfVariable(dso, uda   , 'uda'   , 1 , units, ft,('uda',) , parameter )
 uto = createNetcdfVariable(dso, utilde, 'utilde', 1 , units, ft,('z','y','x',) , variable )
 
@@ -187,7 +190,7 @@ utilde = None
 vda, vtilde, vp = decomp3( v )
 v = None
 
-vtilde = cleanValues(vtilde, 'vtilde')
+#vtilde = cleanValues(vtilde, 'vtilde')
 vdo = createNetcdfVariable(dso, vda   , 'vda'   , 1 , units, ft,('vda',) , parameter )
 vto = createNetcdfVariable(dso, vtilde, 'vtilde', 1 , units, ft,('z','y','x',) , variable )
 
@@ -204,7 +207,7 @@ vtilde = None
 wda, wtilde, wp = decomp3( w )
 w = None
 
-wtilde = cleanValues(wtilde, 'wtilde')
+#wtilde = cleanValues(wtilde, 'wtilde')
 wdo = createNetcdfVariable(dso, wda   , 'wda'   , 1 , units, ft,('wda',) , parameter )
 wto = createNetcdfVariable(dso, wtilde, 'wtilde', 1 , units, ft,('z','y','x',) , variable )
 
@@ -215,9 +218,9 @@ if( magsOn ):
   Utildemag += wtilde**2 
 
   Udamag **=(0.5); Upmag **=(0.5); Utildemag **=(0.5)
-  Upmag = cleanValues( Upmag, '|Up|' ); Utildemag = cleanValues( Utildemag, '|Utilde|')
+  #Upmag = cleanValues( Upmag, '|Up|' ); Utildemag = cleanValues( Utildemag, '|Utilde|')
 
-  Udamag = np.concatenate( (Udamag, np.array([np.nanmean(Utildemag), np.nanmean(Upmag) ])) )
+  Udamag = np.concatenate( (Udamag, np.array([np.ma.mean(Utildemag), np.ma.mean(Upmag) ])) )
 
   Udo = createNetcdfVariable(dso, Udamag   , 'Uda'   , 3 , units, ft,('Uda',) , parameter )
   Uto = createNetcdfVariable(dso, Utildemag, 'Utilde', 1 , units, ft,('z','y','x',) , variable )
@@ -227,13 +230,13 @@ if( magsOn ):
 if( rsOn ):
   normRS, normDevRS, TKE = normReynodsStressTensor( up, vp, wp )
   
-  normRS    = cleanValues( normRS   , 'normRS' )
-  normDevRS = cleanValues( normDevRS, 'normDevRS' )
-  TKE       = cleanValues( TKE      , 'TKE' )
+  #normRS    = cleanValues( normRS   , 'normRS' )
+  #normDevRS = cleanValues( normDevRS, 'normDevRS' )
+  #TKE       = cleanValues( TKE      , 'TKE' )
   
-  mNRS  = np.nanmean( normRS )
-  mNdRS = np.nanmean( normDevRS )
-  mTKE  = np.nanmean( TKE )
+  mNRS  = np.ma.mean( normRS )
+  mNdRS = np.ma.mean( normDevRS )
+  mTKE  = np.ma.mean( TKE )
   
   mNRS = np.array([mNRS, mNdRS, mTKE])
   
@@ -243,7 +246,7 @@ if( rsOn ):
   TKo = createNetcdfVariable(dso, TKE      , 'TKE'   , 1,'m^2 s^-2', ft,('z','y','x',) , variable )
 
 
-up = cleanValues( up, 'up' ); vp = cleanValues( vp, 'vp' ); wp = cleanValues( wp, 'wp' )
+#up = cleanValues( up, 'up' ); vp = cleanValues( vp, 'vp' ); wp = cleanValues( wp, 'wp' )
 upo = createNetcdfVariable(dso, up    , 'up'    , Nt, units, ft,('time','z','y','x',) , variable ); up = None
 vpo = createNetcdfVariable(dso, vp    , 'vp'    , Nt, units, ft,('time','z','y','x',) , variable ); vp = None
 wpo = createNetcdfVariable(dso, wp    , 'wp'    , Nt, units, ft,('time','z','y','x',) , variable ); wp = None
