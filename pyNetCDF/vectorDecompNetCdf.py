@@ -16,15 +16,7 @@ Author: Mikko Auvinen
 #==========================================================#
 
 def decomp3( q ):
-  '''
-  idn = (q[-1,:,:,:]==0.) # take the zeros from last time step
-  nt = np.shape(q)[0]
-  for i in range(nt):
-    q[i,idn] = np.nan 
-  idn = None
-  '''
-  
-  
+
   qtilde  = np.ma.mean( q , axis=0 ) # mean at the moment
   qp      = q - qtilde
   qda     = np.ma.mean( qtilde )     # double average
@@ -139,10 +131,8 @@ parameter = True;  variable = False
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
 # Read in data.
-dataDict = read3dDataFromNetCDF( filename , vnames , cl )
+dataDict = read3dDataFromNetCDF( filename , vnames[0] , cl )
 u = dataDict.pop(vnames[0])
-v = dataDict.pop(vnames[1])
-w = dataDict.pop(vnames[2])
 
 # Coords and time:
 x  = dataDict.pop('x'); y = dataDict.pop('y'); z = dataDict.pop('z')
@@ -187,6 +177,10 @@ if( magsOn ):
 utilde = None
 
 ## v components  ##
+dataDict = read3dDataFromNetCDF( filename , vnames[1] , cl )
+v = dataDict.pop(vnames[1])
+dataDict = None
+
 vda, vtilde, vp = decomp3( v )
 v = None
 
@@ -204,6 +198,10 @@ vtilde = None
 
 
 ## w components  ##
+dataDict = read3dDataFromNetCDF( filename , vnames[2] , cl )
+w = dataDict.pop(vnames[2])
+dataDict = None
+
 wda, wtilde, wp = decomp3( w )
 w = None
 
@@ -226,6 +224,8 @@ if( magsOn ):
   Uto = createNetcdfVariable(dso, Utildemag, 'Utilde', 1 , units, ft,('z','y','x',) , variable )
   Upo = createNetcdfVariable(dso, Upmag    , 'Up'    , Nt, units, ft,('time','z','y','x',) , variable )
   Udamag = Upmag = Utildemag = None
+
+wtilde = None
 
 if( rsOn ):
   normRS, normDevRS, TKE = normReynodsStressTensor( up, vp, wp )
