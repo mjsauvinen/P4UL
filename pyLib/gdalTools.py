@@ -1,5 +1,5 @@
 from osgeo import gdal
-from gdalconst import *
+from osgeo.gdalconst import *
 import operator
 import scipy.ndimage as sn 
 import numpy as np
