@@ -65,9 +65,9 @@ print('  Calculating Q.')
 
 u = ds['u'][:,:,:,:].data
 if args.missToNan:
-    u[np.isclose(u,-9999.0)]=np.nan
+    u[:,np.isclose(u[0,:,:,:],-9999.0)]=np.nan
 else:
-    u[np.isclose(u,-9999.0)]=0.0
+    u[:,np.isclose(u[0,:,:,:],-9999.0)]=0.0
 
 dudx = ((u[:,1:-1,1:-1,2:] - u[:,1:-1,1:-1,:-2])
         / np.broadcast_to(x[2:] - x[:-2], muoto))
@@ -87,9 +87,9 @@ u = None
 
 v = ds['v'][:,:,:,:].data
 if args.missToNan:
-    v[np.isclose(v,-9999.0)]=np.nan
+    v[:,np.isclose(v[0,:,:,:],-9999.0)]=np.nan
 else:
-    v[np.isclose(v,-9999.0)]=0.0
+    v[:,np.isclose(v[0,:,:,:],-9999.0)]=0.0
 
 dvdx = ((v[:,1:-1,1:-1,2:] - v[:,1:-1,1:-1,:-2]) 
         / np.broadcast_to(x[2:] - x[:-2], muoto))
@@ -116,9 +116,9 @@ w = ds['w'][:,:,:,:].data
 netcdfWriteAndClose( ds )
 
 if args.missToNan:
-    w[np.isclose(w,-9999.0)]=np.nan
+    w[:,np.isclose(w[0,:,:,:],-9999.0)]=np.nan
 else:
-    w[np.isclose(w,-9999.0)]=0.0
+    w[:,np.isclose(w[0,:,:,:],-9999.0)]=0.0
 
 dwdx = ((w[:,1:-1,1:-1,2:] - w[:,1:-1,1:-1,:-2]) 
         / np.broadcast_to(x[2:] - x[:-2], muoto))
