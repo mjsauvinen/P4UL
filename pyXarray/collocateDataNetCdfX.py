@@ -35,7 +35,7 @@ parser.add_argument('-z', '--zeroBoundaries',help='Interpolate using 0.0 at obst
 parser.add_argument('-m', '--maskVariable',help='Use topography mask from a specific '
                     'variable. It makes sense to use a scalar variable here. Very useful '
                     'with --zeroBoundaries.', type=str)
-parser.add_argument('-r', '--rename',help='Do not rename zu_3d axis to z.',
+parser.add_argument('-r', '--rename',help='Rename zu_3d axis to z.',
                     default=False, action='store_true')
 
 
@@ -85,7 +85,7 @@ with xr.open_dataset(args.filename) as F:
         else:
             print(' Skipping '+i+'.')
 
-    if not args.rename:
+    if args.rename:
         # Conform with P4UL convention.
         F= F.rename({'zu_3d':'z'})
 
