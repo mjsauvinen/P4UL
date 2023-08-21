@@ -71,8 +71,8 @@ for fi in args.files:
                t = ds['time'][:].data
                udt = uD['time']
                first = False
-    if ( 'ee' not in globals() and 'ee' in vD.keys() ):            
-        ee = ds['ee'][:].data
+    if ( 'tke' not in globals() and 'e' in vD.keys() ):            
+        tke = ds['e'][:].data
 
 
                
@@ -239,12 +239,12 @@ if args.invert:
             Ri = det < args.tolerance 
             print('   Number of near-singular or non-realisable cells after '
                   'isotropicalisation: '+str(np.count_nonzero(Ri)))
-            if ee in globals():
+            if 'tke' in globals():
                 print('   Adding TKE.')
                 for dk in np.argwhere(Ri):
-                    vels['Ruu'][dk[0],dk[1],dk[2],dk[3]] = 2.0*ee[dk[0],dk[1],dk[2],dk[3]]/3.0
-                    vels['Rvv'][dk[0],dk[1],dk[2],dk[3]] = 2.0*ee[dk[0],dk[1],dk[2],dk[3]]/3.0
-                    vels['Rww'][dk[0],dk[1],dk[2],dk[3]] = 2.0*ee[dk[0],dk[1],dk[2],dk[3]]/3.0
+                    vels['Ruu'][dk[0],dk[1],dk[2],dk[3]] = 2.0*tke[dk[0],dk[1],dk[2],dk[3]]/3.0
+                    vels['Rvv'][dk[0],dk[1],dk[2],dk[3]] = 2.0*tke[dk[0],dk[1],dk[2],dk[3]]/3.0
+                    vels['Rww'][dk[0],dk[1],dk[2],dk[3]] = 2.0*tke[dk[0],dk[1],dk[2],dk[3]]/3.0
                     vels['Luu'][dk[0],dk[1],dk[2],dk[3]] = (
                         vels['Rvv'][dk[0],dk[1],dk[2],dk[3]]
                         * vels['Rww'][dk[0],dk[1],dk[2],dk[3]])
@@ -253,17 +253,17 @@ if args.invert:
                         * vels['Rvv'][dk[0],dk[1],dk[2],dk[3]]
                         * vels['Rww'][dk[0],dk[1],dk[2],dk[3]])
 
+    Ri = np.isclose(det,0.0,atol=args.tolerance)
+    print('   Number near-singular or non-realisable cells remaining: '+str(np.count_nonzero(Ri)))                
                 
     if args.nan:
         # Set non-invertible tensors to nan.
         print('  Near-singular Reynolds stress tensors are set to nan.')
-        Ri = np.isclose(det,0.0,atol=args.tolerance)
-        print('   Number nearly singular cells: '+str(np.count_nonzero(Ri)))                
         det[Ri] = np.nan       
         for vi in ['u', 'v', 'w']:
             for vj in ['u', 'v', 'w']:
                 vels['R'+vi+vj][Ri] = np.nan
-
+                
     vels['Luu'] /= det
     vels['Luv'] /= det
     vels['Luw'] /= det
