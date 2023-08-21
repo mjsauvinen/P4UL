@@ -36,12 +36,13 @@ parser.add_argument('-t', '--tolerance',type=float, help='If inverting the '
                     'Reynolds stress tensor, the tolerance will be used on '
                     'the determinant to determine if it can be inverted.',
                     default = 1e-8)
-parser.add_argument('-r', '--regularisation',choices=['mean','eig'],type=str,
-                    help='If inverting the Reynolds stress tensor, specify how'
-                    'non-invertible and non-realisable tensors are regularised. '
-                    'eig: Smallest eigenvalue is made big enough to get '
-                    'determinant above tolerance. mean: mean of self and a '
-                    'number of  nearest neighbours.')
+parser.add_argument('-r', '--regularisation',choices=['mean','eig','isotr']
+                    ,type=str, help='If inverting the Reynolds stress tensor, '
+                    'specify how non-invertible and non-realisable tensors are '
+                    'regularised eig: Smallest eigenvalue is made big enough '
+                    'to get determinant above tolerance. mean: mean of self '
+                    'and a number of  nearest neighbours. isotr: the Reynolds'
+                    ' stress tensor is made isotropic if tolarance is met.')
 parser.add_argument('-n', '--nan',action="store_true", default=False,
                     help='Set non invertible cells to NaN.')
 parser.add_argument('-w','--width',type=int, help='Size of regularisation '
@@ -70,6 +71,10 @@ for fi in args.files:
                t = ds['time'][:].data
                udt = uD['time']
                first = False
+    if ( 'ee' not in globals() and 'ee' in vD.keys() ):            
+        ee = ds['ee'][:].data
+
+
                
 #=calculations and output======================================================#
 
@@ -130,7 +135,7 @@ if args.invert:
             + vels['Rwu']*vels['Luw'] )
 
     # Regularisation
-    if args.regularisation in ['mean', 'eig']:
+    if args.regularisation in ['mean', 'eig','isotr']:
         print('  Regularising Reynolds stresses using the '+args.regularisation+' approach')
         # Find elements that need regularisation
         Ri = det < args.tolerance 
@@ -213,7 +218,42 @@ if args.invert:
                 las += 1
 
             print( ' | Done!')
+        elif args.regularisation == 'isotr':
+            for dk in np.argwhere(Ri):
+                vels['Ruv'][dk[0],dk[1],dk[2],dk[3]] = 0.0
+                vels['Ruw'][dk[0],dk[1],dk[2],dk[3]] = 0.0
+                vels['Rvu'][dk[0],dk[1],dk[2],dk[3]] = 0.0
+                vels['Rvw'][dk[0],dk[1],dk[2],dk[3]] = 0.0
+                vels['Rwu'][dk[0],dk[1],dk[2],dk[3]] = 0.0
+                vels['Rwv'][dk[0],dk[1],dk[2],dk[3]] = 0.0
+                vels['Luu'][dk[0],dk[1],dk[2],dk[3]] = (
+                    vels['Rvv'][dk[0],dk[1],dk[2],dk[3]]
+                    * vels['Rww'][dk[0],dk[1],dk[2],dk[3]])
+                vels['Luv'][dk[0],dk[1],dk[2],dk[3]] = 0.0
+                vels['Luw'][dk[0],dk[1],dk[2],dk[3]] = 0.0
+                det[dk[0],dk[1],dk[2],dk[3]] = (
+                    vels['Ruu'][dk[0],dk[1],dk[2],dk[3]]
+                    * vels['Rvv'][dk[0],dk[1],dk[2],dk[3]]
+                    * vels['Rww'][dk[0],dk[1],dk[2],dk[3]])
 
+            Ri = det < args.tolerance 
+            print('   Number of near-singular or non-realisable cells after '
+                  'isotropicalisation: '+str(np.count_nonzero(Ri)))
+            if ee in globals():
+                print('   Adding TKE.')
+                for dk in np.argwhere(Ri):
+                    vels['Ruu'][dk[0],dk[1],dk[2],dk[3]] = 2.0*ee[dk[0],dk[1],dk[2],dk[3]]/3.0
+                    vels['Rvv'][dk[0],dk[1],dk[2],dk[3]] = 2.0*ee[dk[0],dk[1],dk[2],dk[3]]/3.0
+                    vels['Rww'][dk[0],dk[1],dk[2],dk[3]] = 2.0*ee[dk[0],dk[1],dk[2],dk[3]]/3.0
+                    vels['Luu'][dk[0],dk[1],dk[2],dk[3]] = (
+                        vels['Rvv'][dk[0],dk[1],dk[2],dk[3]]
+                        * vels['Rww'][dk[0],dk[1],dk[2],dk[3]])
+                    det[dk[0],dk[1],dk[2],dk[3]] = (
+                        vels['Ruu'][dk[0],dk[1],dk[2],dk[3]]
+                        * vels['Rvv'][dk[0],dk[1],dk[2],dk[3]]
+                        * vels['Rww'][dk[0],dk[1],dk[2],dk[3]])
+
+                
     if args.nan:
         # Set non-invertible tensors to nan.
         print('  Near-singular Reynolds stress tensors are set to nan.')
