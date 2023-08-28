@@ -226,15 +226,16 @@ if args.invert:
                 vels['Rvw'][dk[0],dk[1],dk[2],dk[3]] = 0.0
                 vels['Rwu'][dk[0],dk[1],dk[2],dk[3]] = 0.0
                 vels['Rwv'][dk[0],dk[1],dk[2],dk[3]] = 0.0
-                vels['Luu'][dk[0],dk[1],dk[2],dk[3]] = (
-                    vels['Rvv'][dk[0],dk[1],dk[2],dk[3]]
-                    * vels['Rww'][dk[0],dk[1],dk[2],dk[3]])
+                Risot = (vels['Ruu'][dk[0],dk[1],dk[2],dk[3]]
+                         + vels['Rvv'][dk[0],dk[1],dk[2],dk[3]]
+                         + vels['Rww'][dk[0],dk[1],dk[2],dk[3]])/3.0
+                vels['Ruu'][dk[0],dk[1],dk[2],dk[3]] = Risot
+                vels['Rvv'][dk[0],dk[1],dk[2],dk[3]] = Risot
+                vels['Rww'][dk[0],dk[1],dk[2],dk[3]] = Risot
+                vels['Luu'][dk[0],dk[1],dk[2],dk[3]] = (Risot**2)
                 vels['Luv'][dk[0],dk[1],dk[2],dk[3]] = 0.0
                 vels['Luw'][dk[0],dk[1],dk[2],dk[3]] = 0.0
-                det[dk[0],dk[1],dk[2],dk[3]] = (
-                    vels['Ruu'][dk[0],dk[1],dk[2],dk[3]]
-                    * vels['Rvv'][dk[0],dk[1],dk[2],dk[3]]
-                    * vels['Rww'][dk[0],dk[1],dk[2],dk[3]])
+                det[dk[0],dk[1],dk[2],dk[3]] = ( Risot**3 )
 
             Ri = det < args.tolerance 
             print('   Number of near-singular or non-realisable cells after '
