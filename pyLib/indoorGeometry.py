@@ -249,7 +249,6 @@ class Domain:
     #print(' Number of non-zeros {}'.format( np.count_nonzero( self.S[kw1:kw2,j1:j2,i1:i2] ) ))
   
   #= = = = = = = = = = = = = = = = = = = = = # 
-  
   def addSolidBlock( self, Bx ):
     dx = self.dx; dy = self.dy; dz = self.dz
     k1 = ibound( Bx.zb[0] , dz , self.Nz )
@@ -260,7 +259,19 @@ class Domain:
     i2 = ibound( Bx.xb[1] , dx , self.Nx )
     
     self.S[j1:j2,i1:i2,k1:k2] = 1 # fill in the whole box 
+
+  #= = = = = = = = = = = = = = = = = = = = = #
+  def addEmptyBlock( self, Bx ):
+    dx = self.dx; dy = self.dy; dz = self.dz
+    k1 = ibound( Bx.zb[0] , dz , self.Nz )
+    k2 = ibound( Bx.zb[1] , dz , self.Nz )
+    j1 = ibound( Bx.yb[0] , dy , self.Ny )
+    j2 = ibound( Bx.yb[1] , dy , self.Ny )
+    i1 = ibound( Bx.xb[0] , dx , self.Nx )
+    i2 = ibound( Bx.xb[1] , dx , self.Nx )
     
+    self.S[j1:j2,i1:i2,k1:k2] = 0 # fill in the whole box  
+
   #= = = = = = = = = = = = = = = = = = = = = # 
   
   def makeHoleWithPlate( self, Hx, nb=0 ):
