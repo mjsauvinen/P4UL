@@ -78,7 +78,7 @@ for fi in args.files:
                udt = uD['time']
                first = False
     if 'tke' not in globals():
-        if 'e' in vD.keys() ):            
+        if 'e' in vD.keys():            
             tke = ds['e'][:].data
         else:
             if args.tke:
