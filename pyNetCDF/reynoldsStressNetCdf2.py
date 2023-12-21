@@ -139,9 +139,9 @@ if args.invert:
     if args.tke:
         if 'tke' in globals():
             print('   Adding TKE.')
-            vels['Ruu'] = 2.0*tke/3.0
-            vels['Rvv'] = 2.0*tke/3.0
-            vels['Rww'] = 2.0*tke/3.0
+            vels['Ruu'] += 2.0*tke/3.0
+            vels['Rvv'] += 2.0*tke/3.0
+            vels['Rww'] += 2.0*tke/3.0
                     
                 
     # Analytical inverse from Wikipedia:
@@ -259,12 +259,12 @@ if args.invert:
             Ri = det < args.tolerance 
             print('   Number of near-singular or non-realisable cells after '
                   'isotropicalisation: '+str(np.count_nonzero(Ri)))
-            if 'tke' in globals():
+            if ('tke' in globals() and agrs.tke):
                 print('   Adding TKE.')
                 for dk in np.argwhere(Ri):
-                    vels['Ruu'][dk[0],dk[1],dk[2],dk[3]] = 2.0*tke[dk[0],dk[1],dk[2],dk[3]]/3.0
-                    vels['Rvv'][dk[0],dk[1],dk[2],dk[3]] = 2.0*tke[dk[0],dk[1],dk[2],dk[3]]/3.0
-                    vels['Rww'][dk[0],dk[1],dk[2],dk[3]] = 2.0*tke[dk[0],dk[1],dk[2],dk[3]]/3.0
+                    vels['Ruu'][dk[0],dk[1],dk[2],dk[3]] += 2.0*tke[dk[0],dk[1],dk[2],dk[3]]/3.0
+                    vels['Rvv'][dk[0],dk[1],dk[2],dk[3]] += 2.0*tke[dk[0],dk[1],dk[2],dk[3]]/3.0
+                    vels['Rww'][dk[0],dk[1],dk[2],dk[3]] += 2.0*tke[dk[0],dk[1],dk[2],dk[3]]/3.0
                     vels['Luu'][dk[0],dk[1],dk[2],dk[3]] = (
                         vels['Rvv'][dk[0],dk[1],dk[2],dk[3]]
                         * vels['Rww'][dk[0],dk[1],dk[2],dk[3]])
