@@ -42,13 +42,19 @@ parser.add_argument('-r', '--regularisation',choices=['mean','eig','isotr']
                     'regularised eig: Smallest eigenvalue is made big enough '
                     'to get determinant above tolerance. mean: mean of self '
                     'and a number of  nearest neighbours. isotr: the Reynolds'
-                    ' stress tensor is made isotropic if tolarance is met.')
+                    ' stress tensor is made isotropic if tolarance is met. '
+                    'If isotr is used together with --tke, SGS TKE is added to'
+                    ' the diagonal of the stress tensor after regularisation.')
 parser.add_argument('-n', '--nan',action="store_true", default=False,
                     help='Set non invertible cells to NaN.')
 parser.add_argument('-w','--width',type=int, help='Size of regularisation '
                     'filter in cells.', default=1)
 parser.add_argument('-m','--maxIter',type=int, help='Maximum number of '
                     'iterations in regularisation.', default = 3)
+parser.add_argument('-e', '--tke',action="store_true", default=False,
+                    help='Add SGS TKE to the diagonal of the stress tensor. '
+                    'The addition is done before inversion if the isotropic'
+                    ' regularisation is not used.')
 args = parser.parse_args()
 
 #=inputs######================================================================#
@@ -71,9 +77,15 @@ for fi in args.files:
                t = ds['time'][:].data
                udt = uD['time']
                first = False
-    if ( 'tke' not in globals() and 'e' in vD.keys() ):            
-        tke = ds['e'][:].data
-
+    if 'tke' not in globals():
+        if 'e' in vD.keys() ):            
+            tke = ds['e'][:].data
+        else:
+            if args.tke:
+                print('* Warning: Addition of SGS TKE on the diagonal of the '
+                      'stress tensor was requested but it is not available in '
+                      'the input files. No SGS TKE will not be added to the '
+                      'diagonal.')
 
                
 #=calculations and output======================================================#
@@ -121,9 +133,16 @@ if args.invert:
                     vels['R'+vi+vj] = vels['R'+vj+vi]
                 else:
                     vels['R'+vi+vj] = 0.0
-                    print(' *** Warning: Using R'+vi+vj+'=0 in the calculation '
+                    print('* Warning: Using R'+vi+vj+'=0 in the calculation '
                           'of the inverse Reynolds stress tensor.')
-
+                    
+    if args.tke:
+        if 'tke' in globals():
+            print('   Adding TKE.')
+            vels['Ruu'] = 2.0*tke/3.0
+            vels['Rvv'] = 2.0*tke/3.0
+            vels['Rww'] = 2.0*tke/3.0
+                    
                 
     # Analytical inverse from Wikipedia:
     # https://en.wikipedia.org/wiki/Invertible_matrix#Inversion_of_3_%C3%97_3_matrices
