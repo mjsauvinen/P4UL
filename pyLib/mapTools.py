@@ -790,9 +790,9 @@ def slowCoarsen(R1,R2dims,s,n1,n2,e1,e2,Rtype):
       #  sys.exit("ERROR: Incorrect index in RT or R array. Exiting. (slowCoarsen)")
       i[n2[k], e2[l]] += 1
   print(' Computing mode ... ')
-  RTT,_ = stats.mode(RT,axis=2)
+  RTT,_ = stats.mode(RT,axis=2,keepdims=False)
   print(' ... done!')
-  return RTT[:,:,0]
+  return RTT
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
