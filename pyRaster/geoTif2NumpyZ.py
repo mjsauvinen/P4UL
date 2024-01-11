@@ -8,7 +8,7 @@ from utilities import filesFromList, writeLog
 from plotTools import addImagePlot
 import matplotlib.pyplot as plt
 '''
-Description:
+Description: Convert geoTiff to npz file.
 
 
 Author: Mikko Auvinen
@@ -41,6 +41,10 @@ ndecimals  = args.ndecimals
 dataset = openGeoTiff( filename )
 nBands = numberOfRasterBands( dataset, True) # PrintOn = True/False
 ROrig, dPx = getGeoTransform( dataset ) # Both 2d arrays. XOrig is Top Left!
+
+if( any( dPx == 0 ) ):
+  ds = input(' Resolution information is not provided.\n Please provide pixel size: <dN> <dE> =')
+  dPx[0],dPx[1] = list( map(float, ds.split()) )
 
 # Ask for the band ID if the user so wants (given that it makes sense)
 ib = selectBand( nBands, bandSelect , 1 ) # last argument is for default

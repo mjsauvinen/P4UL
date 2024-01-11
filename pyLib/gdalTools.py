@@ -60,8 +60,8 @@ def getGeoTransform(ds):
   '''
   try:
     gt = ds.GetGeoTransform()
-    XO_TL = np.array([gt[3], gt[0]],int) # [N,E] top left origin
-    dPxl  = np.array([gt[5], gt[1]],int) # [N,E]/[row/col] pixel size.
+    XO_TL = np.array([gt[3], gt[0]]) # [N,E] top left origin
+    dPxl  = np.array([gt[5], gt[1]]) # [N,E]/[row/col] pixel size.
   except:
     print('Could not obtain geo transformation info.')
     XO_TL = None; dPxl = None 
