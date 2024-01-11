@@ -37,6 +37,9 @@ parser.add_argument('-m', '--maskVariable',help='Use topography mask from a spec
                     'with --zeroBoundaries.', type=str)
 parser.add_argument('-r', '--rename',help='Rename zu_3d axis to z.',
                     default=False, action='store_true')
+parser.add_argument('-s', '--removeSides',help='Remove the furthest layers from x and y '
+                    'directions. These will be subject to extrapolation.', default=False,
+                    action='store_true')
 
 
 #==========================================================================================#
@@ -89,6 +92,13 @@ with xr.open_dataset(args.filename) as F:
         # Conform with P4UL convention.
         F= F.rename({'zu_3d':'z'})
 
+    if args.removeSides:
+        # The last layers in both x and y directions will be extrapolated. This
+        # causes problems, such as negative variances, some times. To avoid
+        # problematic values, the extrapolated regions can be removed.
+        F = F.isel(x=slice(0,-1),y=slice(0,-1))
+
+        
     F.to_netcdf(args.fileout)
             
 print(' Script finished after '+str(int((time.time()-start)/60))+' min.')
