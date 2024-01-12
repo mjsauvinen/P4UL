@@ -103,25 +103,31 @@ parser.add_argument("-vn", "--vnames",type=str, nargs=3, default=['u','v','w'],\
   help="Names of the vector components in (x,y,z)-order. Default = ['u','v','w'].")
 parser.add_argument('-rs',"--reynoldsStresses", action="store_true", default=False,\
   help="Compute and write magnitude of Reynolds stresses.")
+parser.add_argument('-ts',"--tildeStresses", action="store_true", default=False,\
+  help="Compute and write magnitude of tilde stresses.")
 parser.add_argument("-nt", "--ntimeskip", type=int, default=0,\
   help="Skip <nt> number of time steps. Default = 0.")
 parser.add_argument('-m',"--mags", action="store_true", default=False,\
   help="Compute and write magnitudes of each decomposition component.")
 parser.add_argument("-c", "--coarse", type=int, default=1,\
   help="Coarsening level. Int > 1. Default = 1.")
+parser.add_argument('-o4',"--output4Ddata", action="store_true", default=False,\
+  help="Store also time-dependent 3-D arrays (4-D). Default = False.")
 args = parser.parse_args()
 writeLog( parser, args )
 
 #==========================================================#
 # Initial renaming operations and variable declarations. 
 
-filename   = args.filename
-fileout    = args.fileout
-vnames     = args.vnames
-nt         = args.ntimeskip
-magsOn     = args.mags
-rsOn       = args.reynoldsStresses
-cl         = abs(int(args.coarse))
+filename     = args.filename
+fileout      = args.fileout
+vnames       = args.vnames
+nt           = args.ntimeskip
+magsOn       = args.mags
+rsOn         = args.reynoldsStresses
+tildeOn      = args.tildeStresses
+output4Ddata = args.output4Ddata
+cl           = abs(int(args.coarse))
 
 '''
 Establish two boolean variables which indicate whether the created variable is an
@@ -174,7 +180,7 @@ if( magsOn ):
   Upmag     = up**2     
   Utildemag = utilde**2
 
-utilde = None
+#utilde = None
 
 ## v components  ##
 dataDict = read3dDataFromNetCDF( filename , vnames[1] , cl )
@@ -194,8 +200,7 @@ if( magsOn ):
   Upmag     += vp**2     
   Utildemag += vtilde**2
 
-vtilde = None
-
+#vtilde = None
 
 ## w components  ##
 dataDict = read3dDataFromNetCDF( filename , vnames[2] , cl )
@@ -214,7 +219,7 @@ if( magsOn ):
   Udamag    += wda**2
   Upmag     += wp**2
   Utildemag += wtilde**2 
-
+  
   Udamag **=(0.5); Upmag **=(0.5); Utildemag **=(0.5)
   #Upmag = cleanValues( Upmag, '|Up|' ); Utildemag = cleanValues( Utildemag, '|Utilde|')
 
@@ -222,10 +227,11 @@ if( magsOn ):
 
   Udo = createNetcdfVariable(dso, Udamag   , 'Uda'   , 3 , units, ft,('Uda',) , parameter )
   Uto = createNetcdfVariable(dso, Utildemag, 'Utilde', 1 , units, ft,('z','y','x',) , variable )
-  Upo = createNetcdfVariable(dso, Upmag    , 'Up'    , Nt, units, ft,('time','z','y','x',) , variable )
-  Udamag = Upmag = Utildemag = None
+  if (output4Ddata):
+    Upo = createNetcdfVariable(dso, Upmag    , 'Up'    , Nt, units, ft,('time','z','y','x',) , variable )
+#  Udamag = Upmag = Utildemag = None
 
-wtilde = None
+#wtilde = None
 
 if( rsOn ):
   normRS, normDevRS, TKE = normReynodsStressTensor( up, vp, wp )
@@ -237,7 +243,7 @@ if( rsOn ):
   mNRS  = np.ma.mean( normRS )
   mNdRS = np.ma.mean( normDevRS )
   mTKE  = np.ma.mean( TKE )
-  
+
   mNRS = np.array([mNRS, mNdRS, mTKE])
   
   Nro = createNetcdfVariable(dso, mNRS     , 'mNRS'  , 3 ,'m^2 s^-2', ft,('mNRS',) , parameter )
@@ -245,11 +251,28 @@ if( rsOn ):
   dRSo= createNetcdfVariable(dso, normDevRS, 'nDevRS', 1,'m^2 s^-2', ft,('z','y','x',) , variable )
   TKo = createNetcdfVariable(dso, TKE      , 'TKE'   , 1,'m^2 s^-2', ft,('z','y','x',) , variable )
 
+if( tildeOn ):
+  normTildeS, normDevTildeS, TildeKE = normReynodsStressTensor( utilde, vtilde, wtilde )
+  
+  mNTildeS  = np.ma.mean( normTildeS )
+  mNdTildeS = np.ma.mean( normDevTildeS )
+  mTildeKE  = np.ma.mean( TildeKE )
 
+# Temporary E3 mixing-study specific output  
+  print( 'mNTildeS = ',"{:.8f}".format(mNTildeS),',',"{:.8f}".format(mNdTildeS),',',"{:.8f}".format(mTildeKE) )
+  
+  mNTildeS = np.array([mNTildeS, mNdTildeS, mTildeKE])
+  
+  Nto = createNetcdfVariable(dso, mNTildeS     , 'mNTildeS'  , 3 ,'m^2 s^-2', ft,('mNTildeS',) , parameter )
+  TSo = createNetcdfVariable(dso, normTildeS   , 'nTildeS'   , 1,'m^2 s^-2', ft,('z','y','x',) , variable, zlib=False, fill_value=0. )
+  dTSo= createNetcdfVariable(dso, normDevTildeS, 'nDevTildeS', 1,'m^2 s^-2', ft,('z','y','x',) , variable )
+  TTo = createNetcdfVariable(dso, TildeKE      , 'TildeKE'   , 1,'m^2 s^-2', ft,('z','y','x',) , variable )
+  
 #up = cleanValues( up, 'up' ); vp = cleanValues( vp, 'vp' ); wp = cleanValues( wp, 'wp' )
-upo = createNetcdfVariable(dso, up    , 'up'    , Nt, units, ft,('time','z','y','x',) , variable ); up = None
-vpo = createNetcdfVariable(dso, vp    , 'vp'    , Nt, units, ft,('time','z','y','x',) , variable ); vp = None
-wpo = createNetcdfVariable(dso, wp    , 'wp'    , Nt, units, ft,('time','z','y','x',) , variable ); wp = None
+if (output4Ddata):
+  upo = createNetcdfVariable(dso, up    , 'up'    , Nt, units, ft,('time','z','y','x',) , variable ); up = None
+  vpo = createNetcdfVariable(dso, vp    , 'vp'    , Nt, units, ft,('time','z','y','x',) , variable ); vp = None
+  wpo = createNetcdfVariable(dso, wp    , 'wp'    , Nt, units, ft,('time','z','y','x',) , variable ); wp = None
 
 
 # - - - - Done , finalize the output - - - - - - - - - -
