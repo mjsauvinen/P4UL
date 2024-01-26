@@ -930,6 +930,8 @@ def addContourf( X, Y, Q, CfDict=None ):
   vx   = None
   vn   = None
   levels = None
+  xlb  = None
+  ylb  = None
   N = 12
   
   if( CfDict is not None ):
@@ -940,6 +942,8 @@ def addContourf( X, Y, Q, CfDict=None ):
     vn       = dataFromDict('vmin',   CfDict, allowNone=True )
     vx       = dataFromDict('vmax',   CfDict, allowNone=True )
     levels   = dataFromDict('levels', CfDict, allowNone=True )
+    xlb      = dataFromDict('xlabel', CfDict, allowNone=True )
+    ylb      = dataFromDict('ylabel', CfDict, allowNone=True )  
     if( N is None ): N = 12
   
   #print(' vmax = {}, vmin = {} '.format(vx,vn))
@@ -949,7 +953,9 @@ def addContourf( X, Y, Q, CfDict=None ):
   if( levels is not None ): CO = ax.contourf(X,Y,Q, levels, cmap=cm, vmin=vn, vmax=vx )
   else:                     CO = ax.contourf(X,Y,Q, N     , cmap=cm, vmin=vn, vmax=vx )
   
-  ax.set_title( titleStr )
+  ax.set_title( titleStr, fontsize=20 )
+  if(xlb is not None): ax.set_xlabel(xlb, fontsize=20)
+  if(ylb is not None): ax.set_ylabel(ylb, fontsize=20)
   
   cbar = fig.colorbar(CO)
   if( vx is not None ): cbar.vmax = vx
