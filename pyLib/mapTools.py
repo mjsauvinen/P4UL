@@ -317,8 +317,8 @@ def readGeotiffTile( filename, verbose=True):
     print(' Read filename {} '.format(filename))
 
   Rdict = dict()
-  with rxr.open_rasterio(filename) as A:
-    Rdict['R'] = A.data
+  with rxr.open_rasterio(filename,band_as_variable=True) as A:
+    Rdict['R'] = A['band_1'].data
     Rdict['dPx'] = np.abs(np.array(A.rio.resolution()))
     Rdict['GlobOrig'] = np.array((A.rio.bounds()[-1],A.rio.bounds()[0]))
     Rdict['GlobOrigBL'] = np.array((A.rio.bounds()[1],A.rio.bounds()[0]))
