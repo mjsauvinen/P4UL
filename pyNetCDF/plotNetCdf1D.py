@@ -81,7 +81,7 @@ while 1:
       xStr = 'time'
       labelStr = ' {}({}) '.format(varList[iy],'time')
       plotTxt   = [labelStr, xStr, varList[iy]]
-      fig = addToPlot(fig, xdict[xStr], y, labelStr, plotTxt, logOn)
+      fig = addToPlot(fig, xdict[xStr], y[:], labelStr, plotTxt, logOn)
       if( writeAscii ):
         print(' (1) Writing data to ascii file: {}.dat'.format(varList[iy])) 
         np.savetxt(varList[iy]+'_ts.dat', np.c_[xdict[xStr],y] )   # x,y,z equal sized 1D arrays
