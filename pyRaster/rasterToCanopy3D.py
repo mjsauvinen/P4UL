@@ -109,6 +109,14 @@ k1        = int( np.round(zref[0]/float(dPc[2])) )  # starting k index
 
 print(' Rry shape = {} '.format(R.shape))
 
+if method=='file':
+  ladf = np.loadtxt(args.LAD_file)
+  if ladf.shape[0] != ladf.size:
+    sys.exit('Only single column LAD profile files are currently supported. Sorry!')
+  # Scale given profile based on zref values and interpolate.
+  rz = np.linspace(zref[0],zref[1],ladf.size)
+
+
 # Calculate leaf area density profiles for each horizontal grid tile and fill array vertically
 for j in range(nPc[1]):
   for i in range(nPc[0]):
@@ -134,13 +142,7 @@ for j in range(nPc[1]):
       if profileLAD:
         canopy[i,j,k1:k2] = lad_const
       elif method=='file':
-        ladf = np.loadtxt(args.LAD_file)
-        if ladf.shape[0] != ladf.size:
-          sys.exit('Only single column LAD profile files are currently supported. Sorry!')
-        # Scale given profile based on zref values and interpolate.
-        rz = np.linspace(zref[0],zref[1],ladf.size)
-        Pz = np.arange(k1,k2)*dPx3D[2]
-        canopy[i,j,k1:k2] = np.interp(Pz, rz, ladf)
+        canopy[i,j,k1:k2] = np.interp(np.arange(k1,k2)*dPx3D[2], rz, ladf)
       
 
 print(" ... done.\n")
