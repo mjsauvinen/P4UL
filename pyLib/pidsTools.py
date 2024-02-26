@@ -173,7 +173,7 @@ def createZDim(ds, nPx, dPx, dims, offset=0.0):
 def createZLADDim(ds, nPx, dPx, dims):
   # Creates a new zlad-axis unless it already exists
   if('zlad' not in dims):
-    zlad_dim = createCoordinateAxis(ds, nPx, dPx, 2, 'zlad', 'f4', 'm', True, False, verbose=False)
+    zlad_dim = createCoordinateAxis(ds, nPx, dPx, 2, 'zlad', 'f4', 'm', True, False, verbose=False, offset=-1/2)
     zlad_dim.long_name = "height above origin"
     dims.append('zlad')
     return zlad_dim
