@@ -6,7 +6,7 @@ import configparser
 from itertools import islice, chain, repeat
 
 from netcdfTools import *
-from mapTools import readNumpyZTile
+from mapTools import readNumpyZTile, readGeotiffTile
 
 
 '''
@@ -199,7 +199,10 @@ def createZnsurfaceFractionDim(ds, nPx, dPx, dims):
 
 def processOrography(fname,ds,vars,dims):
   # Write orography data to given ds
-  oroDict = readNumpyZTile(fname,verbose=False)
+  if fname.endswith('.tiff') or fme.endswith('.tif'):
+    oroDict = readGeotiffTile(fname,verbose=False)
+  else:
+    oroDict = readNumpyZTile(fname,verbose=False)
   oroR = oroDict['R'][::-1,:]
   oroDPx = oroDict['dPx']
   oroNPx = np.shape(oroR)
@@ -221,7 +224,10 @@ def processOrography(fname,ds,vars,dims):
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def processLAD(fname,ds,vars,dims):
-  ladDict = readNumpyZTile(fname,verbose=False)
+  if fname.endswith('.tiff') or fname.endswith('.tif'):
+    ladDict = readGeotiffTile(fname,verbose=False)
+  else:
+    ladDict = readNumpyZTile(fname,verbose=False)
   if( 'R' in ladDict ):
     ladR = ladDict['R'][::-1,:]
   elif('S' in ladDict ):
@@ -252,7 +258,10 @@ def processLAD(fname,ds,vars,dims):
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def processBuildings(fname,ds,vars,dims):
-  buildDict = readNumpyZTile(fname,verbose=False)
+  if fname.endswith('.tiff') or fname.endswith('.tif'):
+    buildDict = readGeotiffTile(fname,verbose=False)
+  else:
+    buildDict = readNumpyZTile(fname,verbose=False)
   if ('R' in buildDict):
     buildR = buildDict['R'][::-1,:]
   elif ('S' in buildDict):
@@ -301,7 +310,10 @@ def processBuildings(fname,ds,vars,dims):
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def processSurfaceTemperature(fname,ds,vars,dims):
-  stDict = readNumpyZTile(fname,verbose=False)
+  if fname.endswith('.tiff') or fname.endswith('.tif'):
+    stDict = readGeotiffTile(fname,verbose=False)
+  else:
+    stDict = readNumpyZTile(fname,verbose=False)
   if ('R' in stDict):
     Rst = stDict['R'][::-1,:]
   elif ('S' in stDict):
@@ -351,7 +363,10 @@ def processSurfaceTemperature(fname,ds,vars,dims):
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def processBuildingIDs(fname,ds,vars,dims):
-  buildIDDict = readNumpyZTile(fname,verbose=False)
+  if fname.endswith('.tiff') or fname.endswith('.tif'):
+    buildIDDict = readGeotiffTile(fname,verbose=False)
+  else:
+    buildIDDict = readNumpyZTile(fname,verbose=False)
   buildIDR = buildIDDict['R'][::-1,:]
   buildIDDPx = buildIDDict['dPx']
   buildIDNPx = np.shape(buildIDR)
@@ -372,7 +387,10 @@ def processBuildingIDs(fname,ds,vars,dims):
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def processPavementType(fname,ds,vars,dims):
-  pavementTypeDict = readNumpyZTile(fname,verbose=False)
+  if fname.endswith('.tiff') or fname.endswith('.tif'):
+    pavementTypeDict = readGeotiffTile(fname,verbose=False)
+  else:
+    pavementTypeDict = readNumpyZTile(fname,verbose=False)    
   pavementTypeR = pavementTypeDict['R'][::-1,:]
   pavementTypeDPx = pavementTypeDict['dPx']
   pavementTypeNPx = np.shape(pavementTypeR)
@@ -393,7 +411,10 @@ def processPavementType(fname,ds,vars,dims):
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def processWaterType(fname,ds,vars,dims):
-  waterTypeDict = readNumpyZTile(fname,verbose=False)
+  if fname.endswith('.tiff') or fname.endswith('.tif'):
+    waterTypeDict = readGeotiffTile(fname,verbose=False)
+  else:
+    waterTypeDict = readNumpyZTile(fname,verbose=False)
   waterTypeR = waterTypeDict['R'][::-1,:]
   waterTypeDPx = waterTypeDict['dPx']
   waterTypeNPx = np.shape(waterTypeR)
@@ -414,7 +435,10 @@ def processWaterType(fname,ds,vars,dims):
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def processSoilType(fname,ds,vars,dims):
-  soilTypeDict = readNumpyZTile(fname,verbose=False)
+  if fname.endswith('.tiff') or fname.endswith('.tif'):
+    soilTypeDict = readGeotiffTile(fname,verbose=False)
+  else:
+    soilTypeDict = readNumpyZTile(fname,verbose=False)
   soilTypeR = soilTypeDict['R'][::-1,:]
   soilTypeDPx = soilTypeDict['dPx']
   soilTypeNPx = np.shape(soilTypeR)
@@ -435,7 +459,10 @@ def processSoilType(fname,ds,vars,dims):
 #=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def processStreetType(fname,ds,vars,dims):
-  streetTypeDict = readNumpyZTile(fname,verbose=False)
+  if fname.endswith('.tiff') or fname.endswith('.tif'):
+    streetTypeDict = readGeotiffTile(fname,verbose=False)
+  else:
+    streetTypeDict = readNumpyZTile(fname,verbose=False)
   streetTypeR = streetTypeDict['R'][::-1,:]
   streetTypeDPx = streetTypeDict['dPx']
   streetTypeNPx = np.shape(streetTypeR)
@@ -457,7 +484,10 @@ def processStreetType(fname,ds,vars,dims):
 
 
 def processVegetationType(fname,ds,vars,dims):
-  vegTypeDict = readNumpyZTile(fname,verbose=False)
+  if fname.endswith('.tiff') or fname.endswith('.tif'):
+    vegTypeDict = readGeotiffTile(fname,verbose=False)
+  else:
+    vegTypeDict = readNumpyZTile(fname,verbose=False)
   vegTypeR    = vegTypeDict['R'][::-1,:]
   vegTypeDPx  = vegTypeDict['dPx']
   vegTypeNPx  = np.shape(vegTypeR)
@@ -479,7 +509,10 @@ def processVegetationType(fname,ds,vars,dims):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def processBuildingType(fname, ds, vars, dims):
-  bTypeDict = readNumpyZTile(fname, verbose=False)
+  if fname.endswith('.tiff') or fname.endswith('.tif'):
+    bTypeDict = readGeotiffTile(fname, verbose=False)
+  else:
+    bTypeDict = readNumpyZTile(fname, verbose=False)
   bTypeR    = bTypeDict['R'][::-1, :]
   bTypeDPx  = bTypeDict['dPx']
   bTypeNPx  = np.shape(bTypeR)
@@ -502,7 +535,10 @@ def processBuildingType(fname, ds, vars, dims):
 
 
 def processSurfaceFraction(fname, ds, vars, dims):
-  sFracDict = readNumpyZTile(fname, verbose=False)
+  if fname.endswith('.tiff') or fname.endswith('.tif'):
+    sFracDict = readGeotiffTile(fname, verbose=False)
+  else:
+    sFracDict = readNumpyZTile(fname, verbose=False)
   sFracR = sFracDict['R'][::-1, :, :]
   sFracDPx = sFracDict['dPx']
   sFracNPx = np.shape(sFracR)
