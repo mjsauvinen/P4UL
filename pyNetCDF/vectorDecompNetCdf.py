@@ -154,16 +154,16 @@ units = 'm s^(-1)'
 
 
 # Create the output independent variables right away and empty memory.
-tv = createNetcdfVariable( dso, time,'time', Nt,'s',ft,('time',), parameter )
+tv = createNetcdfVariable( dso, time,'time', Nt,'seconds',ft,('time',), parameter )
 time = None  
 
-xv = createNetcdfVariable( dso, x , 'x' , len(x) , 'm', ft, ('x',) , parameter )
+xv = createNetcdfVariable( dso, x , 'x' , len(x) , 'meters', ft, ('x',) , parameter )
 x = None
 
-yv = createNetcdfVariable( dso, y , 'y' , len(y) , 'm', ft, ('y',) , parameter )
+yv = createNetcdfVariable( dso, y , 'y' , len(y) , 'meters', ft, ('y',) , parameter )
 y = None
 
-zv = createNetcdfVariable( dso, z , 'z' , len(z) , 'm', ft, ('z',) , parameter )
+zv = createNetcdfVariable( dso, z , 'z' , len(z) , 'meters', ft, ('z',) , parameter )
 z = None
 
 ## u components  ##
