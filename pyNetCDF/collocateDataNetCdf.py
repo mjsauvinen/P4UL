@@ -12,7 +12,7 @@ Author: Mikko Auvinen
         Finnish Meteorological Institute
 '''
 #==========================================================#
-def replaceValues( q, qa, qb ):
+def replaceValues( q, qa, qb, owmask=False ):
   
   
   if( type(q) is not np.ma.MaskedArray ):
@@ -23,15 +23,15 @@ def replaceValues( q, qa, qb ):
       idr = (q < qb[0])
       q[idr] = qb[1]
   else:
-    #print(' replaceValues ')
     if( qa[0] != 1e9 ):
       idr = (q.data > qa[0])
-      idr *= ~q.mask
-      #print('nn = {}'.format(np.count_nonzero(idr)))
+      if( owmask ): idr *= q.mask
+      else:         idr *= ~q.mask
       q[idr] = qa[1]
     if( qb[0] != -1e9 ):
       idr = (q.data < qb[0])
-      idr *= ~q.mask
+      if( owmask ): idr *= q.mask
+      else:         idr *= ~q.mask
       q[idr] = qb[1]
   
   return q
@@ -52,6 +52,10 @@ parser.add_argument("-va", "--replValuesAbove", nargs=2, type=float, default=[1.
   help="Entry <Max> <val> := replace values above given threshold <Max> by <val>. Default= 1.e9 0.0")
 parser.add_argument("-vb", "--replValuesBelow", nargs=2, type=float, default=[-1.e9,0.0],\
   help="Entry <Min> <val> := replace values below given threshold <Min> by <val>. Default= -1.e9 0.0")
+parser.add_argument("-ow", "--overwriteMask", action="store_true", default=False,\
+  help="When replacing values with -vb/-va, overwrite VECTOR MaskedArray fill_values. Default=False")
+parser.add_argument("-ows", "--overwriteScalarMask", action="store_true", default=False,\
+  help="When replacing values with -vb/-va, overwrite SCALAR MaskedArray fill_values. Default=False")
 parser.add_argument("-d", "--decomp", action="store_true", default=False,\
   help="Decomposed into mean (V_m) and fluctuating (V^prime) components.")
 parser.add_argument("-sx", "--suffix",type=str, default='',\
@@ -84,6 +88,8 @@ va         = args.replValuesAbove
 vb         = args.replValuesBelow
 k2z        = args.k2z
 suffix     = args.suffix
+owMask     = args.overwriteMask
+owsMask    = args.overwriteScalarMask
 
 # Boolean switch for the decomposition option.
 decompOn = args.decomp or args.decompOnly
@@ -184,7 +190,7 @@ Example PALM netCDF4 format:
 # - - - - First, u-component - - - - - - - - - -
 u0, u0_dims = read3DVariableFromDataset( vn[0], ds, ntskip, 0, 0, cl ) # All values.
 dataType = type(u0)
-u0 = replaceValues(u0, va, vb)
+u0 = replaceValues(u0, va, vb, owMask)
 
 ''' 
 New, cell-center dimension lengths: 
@@ -225,7 +231,7 @@ if( decompOn ):
 # - - - - Third, w-component - - - - - - - - - -
 
 w0, w0_dims = read3DVariableFromDataset( vn[2], ds, ntskip, 0, 0, cl ) # All values.
-w0 = replaceValues(w0, va, vb)
+w0 = replaceValues(w0, va, vb, owMask)
 
 if( dataType is np.ma.MaskedArray ):
   wc = np.ma.zeros( cc_dims )
@@ -254,7 +260,7 @@ if( decompOn ):
 
 # - - - - Second, v-component - - - - - - - - - -
 v0, v0_dims = read3DVariableFromDataset( vn[1], ds, ntskip, 0, 0, cl ) # All values.
-v0 = replaceValues(v0, va, vb)
+v0 = replaceValues(v0, va, vb, owMask)
 
 if( dataType is np.ma.MaskedArray ):
   vc = np.ma.zeros( cc_dims )
@@ -286,7 +292,7 @@ if( sn ):
     sunit = uD[si]
 
     s0, s0_dims = read3DVariableFromDataset( si, ds, ntskip, 0, 0, cl ) # All values.
-    s0 = replaceValues(s0, va, vb)
+    s0 = replaceValues(s0, va, vb, owsMask)
     
     sc_dims  = np.array( s0_dims )  # Change to numpy array for manipulation
     if( kcopy ): sc_dims[2:] -= 1   # Reduce the x, y dimensions by one. Note: time = sc_dims[0].
