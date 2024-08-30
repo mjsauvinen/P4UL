@@ -26,7 +26,7 @@ def readCoords_nc(ds, tskip, sStr):
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
 
-def write1dProfile( st, zt, time, Np, fn, maskOn=False):
+def write1dProfile( st, zt, time, Np, fn, excl0=False):
   dt = (len(time)//Np)-1
   tlist = time[::dt]
     
@@ -35,8 +35,11 @@ def write1dProfile( st, zt, time, Np, fn, maskOn=False):
   for n in range(1,ntimes):
     saz = np.zeros( len(zt) )
     for k in range(len(zt)):
-      ids = (st[-1,k,:,:]>0.)
-      saz[k] = np.mean( st[n*dt,k,ids] )  # compute all, and correct afterwards
+      if( excl0 ):
+        ids = (st[-1,k,:,:]>0.)
+        saz[k] = np.mean( st[n*dt,k,ids] )
+      else:
+        saz[k] = np.mean( st[n*dt,k,:,:] )
       
     #print(' saz.shape = {}, saz = {} '.format(np.shape(saz), saz))
     hStr = ' z-coord (m), < s >_xy '
@@ -47,12 +50,16 @@ def write1dProfile( st, zt, time, Np, fn, maskOn=False):
 
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
 
-def writeTimeSeries( st, time, fn, maskOn=False ):
+def writeTimeSeries( st, time, fn, excl0=False ):
   ntimes = len(time)
   savg = np.zeros( ntimes )
-  ids = (st[-1,:,:,:] > 0.) # Take the permanent zeros from the last time step.
-  for i in range(ntimes):
-    savg[i] = np.mean( st[i,ids] )
+  if( excl0 ): 
+    ids = (st[-1,:,:,:] > 0.) # Take the permanent zeros from the last time step.
+    for i in range(ntimes):
+      savg[i] = np.mean( st[i,ids] )
+  else:
+    for i in range(ntimes):
+      savg[i] = np.mean( st[i,:,:,:] )
     
   hStr = ' time (s), < s >_xyz '
   np.savetxt( fn , np.c_[ time.ravel() , savg.ravel() ], fmt='%3.6e', header=hStr)
@@ -68,12 +75,14 @@ parser.add_argument("-s", "--scalar",type=str, required=True,\
   help="Name of the NETCDF scalar in the file. e.g. e or p, pt")
 parser.add_argument("-c", "--coeff",type=float, default=1.0,\
   help="Multiplication coefficient for the chosen scalar. Default=1.0")
-parser.add_argument("-nt", "--ntimeskip", type=int, help="Skip <nt> number of time steps.",\
-  default=0)
+parser.add_argument("-nt", "--ntimeskip", type=int, default=0, \
+  help="Skip <nt> number of time steps.")
 parser.add_argument("-ts", "--timeSeries", action="store_true", default=False,\
   help="Compute time series of spatial mean values.")
 parser.add_argument("-zp", "--zprofile", action="store_true", default=False,\
   help="Compute vertical profile of final accumulation.")
+parser.add_argument("-xz", "--exclZeros", action="store_true", default=False,\
+  help="Exclude permanent zeros from computations. Default=False")
 args = parser.parse_args() 
 #==========================================================#
 # Initial renaming operations and variable declarations
@@ -84,8 +93,11 @@ zprofile    = args.zprofile
 timeSeries  = args.timeSeries
 coeff       = args.coeff
 cl          = 1
+xz          = args.exclZeros
 useMask     = False
 #useMask    = args.useMask
+
+if( xz ): print(' NOTE: Permanent zeros will be excluded.')
 
 # - - - - Scalar components - - - - - - - - - -
 strKey = inputIfNone( strKey , " Enter search string: " )
@@ -110,10 +122,10 @@ for fn in fileNos:
   if( timeSeries ):
     tsFileName = 's_ts_mean_'+fileList[fn].split('/')[-1]
     tsFileName = tsFileName.strip('.nc')+'.dat'
-    writeTimeSeries(s, time, tsFileName, useMask )
+    writeTimeSeries(s, time, tsFileName, xz )
 
   if( zprofile ):
     zFileName = 's_xy-mean_'+fileList[fn].split('/')[-1]
-    write1dProfile( s, z, time, 4, zFileName, useMask )
+    write1dProfile( s, z, time, 4, zFileName, xz )
     
 print('Done!')
