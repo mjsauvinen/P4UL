@@ -56,7 +56,11 @@ if( profileLAD ):
   if( (alpha is None) or (beta is None) ):
     sys.exit(' Error: alpha and/or beta is None. Exiting ...')
 
-Rdict = readNumpyZTile( filename )
+if filename.endswith('.tiff') or filename.endswith('.tif'):
+  Rdict = readGeotiffTile( filename )
+else:
+  Rdict = readNumpyZTile( filename )
+
 R = Rdict['R']
 nPx = np.shape(R)
 dPx = np.abs( Rdict['dPx'] )  #  <--- The deltas should be all positive here.
