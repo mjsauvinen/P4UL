@@ -234,11 +234,9 @@ def processLAD(fname,ds,vars,dims):
   ladR = np.rollaxis(ladR, 2, 0) # i.e. take axis=2 and position it _before_ axis=0
 
   if('lad' in vars):
-    print(' lad is in vars ')
     ds.variables['lad'][:]=ladR
     return ds.variables['lad']
   else:
-    print(' lad is NOT in vars ')
     x_dim = createXDim(ds, ladNPx, ladDPx, dims)
     y_dim = createYDim(ds, ladNPx, ladDPx, dims)
     zlad_dim = createZLADDim(ds, ladNPx, ladDPx, dims)
