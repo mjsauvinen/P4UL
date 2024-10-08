@@ -46,6 +46,7 @@ fileKey   = args.fileKey
 jcolV     = args.icolv
 jcolT     = args.icolt
 normalize = args.normalize
+varname   = args.varname
 samplingFreqUser  = args.samplingFreq
 mode      = args.mode
 Nbins     = args.nbins

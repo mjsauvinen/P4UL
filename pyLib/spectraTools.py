@@ -13,8 +13,8 @@ def readColsFromFile( filename , cols ):
   csvOn = 'csv' in filename 
   
   try:    
-    if( csvOn ): dat = np.loadtxt( filename , usecols=cols, delimiter = ',', skiprows=1 )
-    else       : dat = np.loadtxt( filename , usecols=cols )
+    try:    dat = np.loadtxt( filename , usecols=cols, delimiter = ',', skiprows=1 )
+    except: dat = np.loadtxt( filename , usecols=cols, skiprows=1 )
   except: 
     sys.exit(' Error! Cannot read cols={} from {}. Exiting ...'.format(cols, filename))
   
@@ -107,7 +107,7 @@ def evalSpectra( v, sfreq, normalizeOn=False ):
   NOTE: Smallest frequency is 2*[sampling frequency].
   '''
   nv  = len(v)
-  ids = np.arange(1,(nv/2)+1); ids[0]=2 
+  ids = np.arange(1,(nv/2)+1).astype(int); ids[0]=2 
   df = sfreq/float(nv)  # Frequency interval
   freqs = df * ids # Actual frequencies, min(freqs)=2*df, max(freqs)=sfreq/2
   
@@ -178,7 +178,7 @@ def spectraAnalysis(fig, v , time, vName, Nbins, mode, normalize=False ):
     Pbin, fbin = frequencyBins( P , freqs, Nbins )
     Vbin = Pbin
 
-  Refbin = 1.E-1 * fbin[Nbins/2:]**(-5./3.)
+  Refbin = 1.E-1 * fbin[Nbins//2:]**(-5./3.)
 
   if( mode == 'S' ):
     if( normalize ):
@@ -197,7 +197,7 @@ def spectraAnalysis(fig, v , time, vName, Nbins, mode, normalize=False ):
     
   if( fig is None ):
     fig = plt.figure(num=1, figsize=(12.,10.))
-    fig = addToPlot(fig,fbin[Nbins/2:],np.nanmean(Vbin)*Refbin,"Model -5/3 curve",plotStr,logOn=True)
+    fig = addToPlot(fig,fbin[Nbins//2:],np.nanmean(Vbin)*Refbin,"Model -5/3 curve",plotStr,logOn=True)
   fig = addToPlot(fig, fbin, Vbin, labelStr, plotStr, logOn=True)
   
   
@@ -205,9 +205,6 @@ def spectraAnalysis(fig, v , time, vName, Nbins, mode, normalize=False ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-
-
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
