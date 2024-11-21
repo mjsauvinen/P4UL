@@ -309,6 +309,25 @@ def readNumpyZTile( filename, dataOnly=False, verbose=True):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def readGeotiffTile( filename, verbose=True):
+  """Reads geotiffs in the same manner as readNumpyZTile reads npz."""
+  import rioxarray as rxr
+
+  if (verbose):
+    print(' Read filename {} '.format(filename))
+
+  Rdict = dict()
+  with rxr.open_rasterio(filename,band_as_variable=True) as A:
+    Rdict['R'] = A['band_1'].data
+    Rdict['dPx'] = np.abs(np.array(A.rio.resolution()))
+    Rdict['GlobOrig'] = np.array((A.rio.bounds()[-1],A.rio.bounds()[0]))
+    Rdict['GlobOrigBL'] = np.array((A.rio.bounds()[1],A.rio.bounds()[0]))
+    Rdict['gridRot'] = np.array(float(A.spatial_ref.GeoTransform.split()[2]))
+
+  return Rdict
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
 def readNumpyZTileForMesh( filename ):
   Rdict = readNumpyZTile( filename )
   Rx = Rdict['R']
