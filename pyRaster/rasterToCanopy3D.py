@@ -14,27 +14,49 @@ Generates a 3D LAD array from tree height data based on given tree profile.
 '''
 
 #==========================================================#
-parser = argparse.ArgumentParser(prog='rasterToCanopy3D.py', description='''Writes PLANT_CANOPY_DATA_3D for PALM from input raster data.''')
-parser.add_argument("-f","--filename", type=str, \
-  help="Name of the input raster data file.")
-parser.add_argument("-fo", "--fileout", type=str, \
-  help="Name of the output 3D data file. ")
-parser.add_argument("-dz", "--dz", type=float, default=None, \
+parser = argparse.ArgumentParser(prog='rasterToCanopy3D.py',
+                                 description="Writes PLANT_CANOPY_DATA_3D for PALM from "
+                                 "input raster data.")
+parser.add_argument("-f","--filename", type=str, 
+                    help="Name of the input raster data file.")
+parser.add_argument("-fo", "--fileout", type=str, 
+                    help="Name of the output 3D data file. ")
+parser.add_argument("-dz", "--dz", type=float, default=None, 
   help="Resolution of the z axis. Defaults to resolution of N axis.")
-parser.add_argument("-m", "--method", type=str, default='const', choices=['prof', 'const'],\
-  help="Method for LAD distribution. Opt 'prof': Alfa-beta profile in z-direction. Opt 'const': Constant value per cell.")
-parser.add_argument("-a", "--alpha", type=float, default=None, \
-  help="Method 'prof': Dimensionless coefficient required for constructing the leaf area density (LAD) profile, using beta probability density function (Markkanen et al., 2003, BLM 106, 437-459).")
-parser.add_argument("-b", "--beta", type=float, default=None, \
-  help="Method 'prof': Dimensionless coefficient required for constructing the leaf area density (LAD) profile, using beta probability density function.")
-parser.add_argument("-l", "--lai", type=float, default=6.,\
-  help="Reference leaf area index (LAI) value. Method 'prof': Reference LAI is the vertical integral over the reference tree's LAD profile. Method 'const': Reference LAI, which will be used to evaluate constant <LAD>_z = LAI_ref/(zref[1]-zref[0]), where zref[0] and zref[1] refer to the values given also as input. Default=6.")
-parser.add_argument("-zr", "--zref", type=float, nargs=2, metavar=('ZREF[0]','ZREF[1]'), default=[4.,20.],\
-  help=" The starting height of the foliage and the maximum height of the reference tree whose LAI is given as input. Default=[4,20].")
-parser.add_argument("-am", "--asmask", action="store_true", default=False, \
-  help="Output a netCDF4 3D boolean array mask for visualization purposes instead of a npz file containing LAD values.")
-parser.add_argument("-t", "--threshold", type=float, default=0.0, \
-  help="Threshold LAD value to be used when generating a 3D mask. Grid points with a LAD value over the threshold will be set to 1 while the rest is set to 0. Effective only if --asmaks is set.")
+parser.add_argument("-m", "--method", type=str, default='const',
+                    choices=['prof', 'const','file'],
+                    help="Method for LAD distribution. Opt 'prof': Alfa-beta profile in "
+                    "z-direction. Opt 'const': Constant value per cell. Opt. 'file "
+                    "<LAD_profile_file>' read vertical LAD distribution from file "
+                    "<LAD_profile_file>.")
+parser.add_argument('LAD_file', nargs='?', help="File with the LAD profile, required if "
+                    "mode is 'file'")
+parser.add_argument("-a", "--alpha", type=float, default=None, 
+                    help="Method 'prof': Dimensionless coefficient required for "
+                    "constructing the leaf area density (LAD) profile, using beta "
+                    "probability density function (Markkanen et al., 2003, BLM 106, "
+                    "437-459).")
+parser.add_argument("-b", "--beta", type=float, default=None, 
+                    help="Method 'prof': Dimensionless coefficient required for "
+                    "constructing the leaf area density 2 (LAD) profile, using beta "
+                    "probability density function.")
+parser.add_argument("-l", "--lai", type=float, default=6.,
+                    help="Reference leaf area index (LAI) value. Method 'prof': Reference "
+                    "LAI is the vertical integral over the reference tree's LAD profile. "
+                    "Method 'const': Reference LAI, which will be used to evaluate constant"
+                    "<LAD>_z = LAI_ref/(zref[1]-zref[0]), where zref[0] and zref[1] refer "
+                    "to the values given also as input. Default=6.")
+parser.add_argument("-zr", "--zref", type=float, nargs=2, metavar=('ZREF[0]','ZREF[1]'),
+                    default=[4.,20.], help=" The starting height of the foliage and the "
+                    "maximum height of the reference tree whose LAI is given as input. "
+                    "Default=[4,20].")
+parser.add_argument("-am", "--asmask", action="store_true", default=False, 
+                    help="Output a netCDF4 3D boolean array mask for visualization purposes"
+                    " instead of a npz file containing LAD values.")
+parser.add_argument("-t", "--threshold", type=float, default=0.0,
+                    help="Threshold LAD value to be used when generating a 3D mask. Grid "
+                    "points with a LAD value over the threshold will be set to 1 while the "
+                    "rest is set to 0. Effective only if --asmaks is set.")
 args = parser.parse_args()
 writeLog(parser, args)
 
@@ -55,6 +77,9 @@ profileLAD  = ( method == 'prof'  )
 if( profileLAD ):
   if( (alpha is None) or (beta is None) ):
     sys.exit(' Error: alpha and/or beta is None. Exiting ...')
+
+if method == 'file' and not args.LAD_file:
+  sys.exit('With file method for LAD distribution, file with LAD profile is required.')
 
 Rdict = readNumpyZTile( filename )
 R = Rdict['R']
@@ -84,6 +109,14 @@ k1        = int( np.round(zref[0]/float(dPc[2])) )  # starting k index
 
 print(' Rry shape = {} '.format(R.shape))
 
+if method=='file':
+  ladf = np.loadtxt(args.LAD_file)
+  if ladf.shape[0] != ladf.size:
+    sys.exit('Only single column LAD profile files are currently supported. Sorry!')
+  # Scale given profile based on zref values and interpolate.
+  rz = np.linspace(zref[0],zref[1],ladf.size)
+
+
 # Calculate leaf area density profiles for each horizontal grid tile and fill array vertically
 for j in range(nPc[1]):
   for i in range(nPc[0]):
@@ -106,7 +139,11 @@ for j in range(nPc[1]):
     else:
       k2 = int(np.ceil(Zi/dPc[2]))+1
       k2 = min( k2, nPc[2] )
-      canopy[i,j,k1:k2] = lad_const
+      if profileLAD:
+        canopy[i,j,k1:k2] = lad_const
+      elif method=='file':
+        canopy[i,j,k1:k2] = np.interp(np.arange(k1,k2)*dPx3D[2], rz, ladf)
+      
 
 print(" ... done.\n")
 
@@ -126,7 +163,7 @@ if (args.asmask):
   zv = createCoordinateAxis(dso, nPc, dPc, 2, 'z', 'f4', 'm', parameter=True)
   # Due to a bug Paraview cannot read x,y,z correctly so rolling to z,y,x
   canopymask=np.rollaxis(canopymask,2)
-  canopymask=np.swapaxes(canopymask,1,2)
+#  canopymask=np.swapaxes(canopymask,1,2) # Not sure if this should be commented or not.
   masknc = createNetcdfVariable(dso, canopymask, "canopy_0", 0, 'm', 'i4', ('z', 'y', 'x'), parameter=False)
   netcdfWriteAndClose(dso)
 
