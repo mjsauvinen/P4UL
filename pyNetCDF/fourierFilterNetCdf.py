@@ -78,15 +78,15 @@ for fn in fileNos:
 
     if( parameter ):
       # Create the output independent variables right away and empty memory.
-      tv = createNetcdfVariable( dso, time,'time', time_dim,'s','f4',('time',), parameter )
+      tv = createNetcdfVariable( dso, time,'time', time_dim,'seconds','f4',('time',), parameter )
 
-      xv = createNetcdfVariable( dso, x   , 'x'   , len(x)   , 'm', 'f4', ('x',)   , parameter )
+      xv = createNetcdfVariable( dso, x   , 'x'   , len(x)   , 'meters', 'f4', ('x',)   , parameter )
       x = None
 
-      yv = createNetcdfVariable( dso, y   , 'y'   , len(y)   , 'm', 'f4', ('y',)   , parameter )
+      yv = createNetcdfVariable( dso, y   , 'y'   , len(y)   , 'meters', 'f4', ('y',)   , parameter )
       y = None
 
-      zv = createNetcdfVariable( dso, z   , 'z'   , len(z)   , 'm', 'f4', ('z',)   , parameter )
+      zv = createNetcdfVariable( dso, z   , 'z'   , len(z)   , 'meters', 'f4', ('z',)   , parameter )
       z = None
       
       parameter = False

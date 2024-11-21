@@ -81,22 +81,22 @@ sN = scalarNames[0]
 
 time, time_dims = read1DVariableFromDataset('time', sN, ds, nt, 0, 1 ) # All values.
 print(' time_dims = {} '.format(time_dims))
-tv = createNetcdfVariable( dso, time,'time', len(time),'s','f4',('time',), parameter )
+tv = createNetcdfVariable( dso, time,'time', len(time),'seconds','f4',('time',), parameter )
 time = None  
 
 if( copyOnly ): ex = 0
 else:           ex = 1
 
 x, x_dims = read1DVariableFromDataset('x', sN, ds, 0, ex, cl ) # Scalar grid's x, exclude the last value.
-xv = createNetcdfVariable( dso, x, 'x', len(x), 'm', 'f4', ('x',), parameter )
+xv = createNetcdfVariable( dso, x, 'x', len(x), 'meters', 'f4', ('x',), parameter )
 x = None
 
 y, y_dims = read1DVariableFromDataset('y', sN, ds, 0, ex, cl ) # Scalar grid's y, exclude the last value.
-yv = createNetcdfVariable( dso, y, 'y', len(y), 'm', 'f4', ('y',), parameter )
+yv = createNetcdfVariable( dso, y, 'y', len(y), 'meters', 'f4', ('y',), parameter )
 y = None
 
 z, z_dims = read1DVariableFromDataset('z', sN, ds, ex, 0, cl ) # Scalar grid's z, exclude the first value.
-zv = createNetcdfVariable( dso, z, 'z', len(z), 'm', 'f4', ('z',), parameter )
+zv = createNetcdfVariable( dso, z, 'z', len(z), 'meters', 'f4', ('z',), parameter )
 z = None
 
 # - - - - Scalar components - - - - - - - - - -

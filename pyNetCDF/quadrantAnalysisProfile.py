@@ -169,9 +169,9 @@ for kt in range(len(ka)):
 # = = output file = = = = =
 # Create a NETCDF output dataset (dso) for writing out the data.
 dso = netcdfOutputDataset( fileout )
-xv = createNetcdfVariable( dso, xa  , 'x'   , len(xa)   , 'm', 'f4', ('x',)   , parameter )
-yv = createNetcdfVariable( dso, ya  , 'y'   , len(ya)   , 'm', 'f4', ('y',)   , parameter )
-zv = createNetcdfVariable( dso, ka  , 'z'   , len(ka)   , 'm', 'f4', ('z',)   , parameter )
+xv = createNetcdfVariable( dso, xa  , 'x'   , len(xa)   , 'meters', 'f4', ('x',)   , parameter )
+yv = createNetcdfVariable( dso, ya  , 'y'   , len(ya)   , 'meters', 'f4', ('y',)   , parameter )
+zv = createNetcdfVariable( dso, ka  , 'z'   , len(ka)   , 'meters', 'f4', ('z',)   , parameter )
 Qv = createNetcdfVariable( dso, Qa, 'Q', dims[0], 'm-2', 'f4',('z','y','x',) , variable )
 
 # - - - - Done , finalize the output - - - - - - - - - -
