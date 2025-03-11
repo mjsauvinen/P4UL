@@ -4,7 +4,7 @@ import netCDF4 as nc
 import sys
 import argparse
 import numpy as np
-from utilities import partialMatchFromList
+from utilities import partialMatchFromList, popKeyFromDict
 
 debug = True
 
@@ -221,18 +221,24 @@ def read3dDataFromNetCDF( fname, varNames, cl=1, zeroNans=True ):
     vDict[vn] = var   # Store the variable under the provided name 
     
     # Rename the keys in dDict to simplify the future postprocessing
-    for dn in dDict.keys():
-      if( zeroNans ):
-        idNan = np.isnan(dDict[dn])
-        dDict[dn][idNan] = 0.
+    if( 'time' not in vDict.keys() ):
+      vDict['time'] = popKeyFromDict('time', dDict)
+      
+    if( 'x' not in vDict.keys() ):
+      vDict['x'] = popKeyFromDict('x', dDict, True) # firstLetterOnly = True
+      
+    if( 'y' not in vDict.keys() ):
+      vDict['y'] = popKeyFromDict('y', dDict, True) # firstLetterOnly = True
     
-      if( 'time' in dn   ): vDict['time'] = dDict.pop( dn )
-      elif( 'x' == dn[0] ): vDict['x']    = dDict.pop( dn )
-      elif( 'y' == dn[0] ): vDict['y']    = dDict.pop( dn )
-      elif( 'z' == dn[0] ): vDict['z']    = dDict.pop( dn )
-      else: vDict[dn] = dDict.pop( dn )
+    if( 'z' not in vDict.keys() ):
+      vDict['z'] = popKeyFromDict('z', dDict, True) # firstLetterOnly = True
 
   dDict = None
+    
+  for dn in vDict.keys():
+    if( zeroNans ):
+      idNan = np.isnan(vDict[dn])
+      vDict[dn][idNan] = 0.
 
   return vDict
 

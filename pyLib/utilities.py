@@ -73,6 +73,18 @@ def selectFromList( L ):
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def popKeyFromDict( kstr , xDict, firstLetterOnly=False ):
+  
+  if( firstLetterOnly ):
+    k = [key for key in xDict.keys() if (kstr[0] in key[0])]
+  else:
+    k = [key for key in xDict.keys() if (kstr in key )]
+  
+  return xDict.pop(k)
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
 def filesFromList( searchStr , allFiles=False):
   print(" Extracting files with search string (or path): {}".format(searchStr))
   fileList = []
