@@ -223,23 +223,15 @@ def read3dDataFromNetCDF( fname, varNames, cl=1, zeroNans=True ):
     # Rename the keys in dDict to simplify the future postprocessing
     for dn in dDict.keys():
       if( zeroNans ):
-        idNan = np.isnan(dDict[dn]); dDict[dn][idNan] = 0.
+        idNan = np.isnan(dDict[dn])
+        dDict[dn][idNan] = 0.
     
-      if( 'time' in dn and 'time' != dn ):
-        dDict['time'] = dDict.pop( dn )
-      elif( 'x' == dn[0] and 'x' != dn ):
-        dDict['x'] = dDict.pop( dn )
-      elif( 'y' == dn[0] and 'y' != dn ):
-        dDict['y'] = dDict.pop( dn )
-      elif( 'z' == dn[0] and 'z' != dn ):
-        dDict['z'] = dDict.pop( dn )
-      else: pass
+      if( 'time' in dn   ): vDict['time'] = dDict.pop( dn )
+      elif( 'x' == dn[0] ): vDict['x']    = dDict.pop( dn )
+      elif( 'y' == dn[0] ): vDict['y']    = dDict.pop( dn )
+      elif( 'z' == dn[0] ): vDict['z']    = dDict.pop( dn )
+      else: vDict[dn] = dDict.pop( dn )
 
-  # Move the coords into the final data dict.
-  vDict['time'] = dDict.pop( 'time' )
-  vDict['x']    = dDict.pop( 'x' )
-  vDict['y']    = dDict.pop( 'y' )
-  vDict['z']    = dDict.pop( 'z' )
   dDict = None
 
   return vDict
