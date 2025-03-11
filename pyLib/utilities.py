@@ -80,7 +80,7 @@ def popKeyFromDict( kstr , xDict, firstLetterOnly=False ):
   else:
     k = [key for key in xDict.keys() if (kstr in key )]
   
-  return xDict.pop(k)
+  return xDict.pop(k[0])
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
