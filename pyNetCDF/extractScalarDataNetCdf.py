@@ -31,7 +31,9 @@ parser.add_argument("-f", "--filename",type=str,\
 parser.add_argument("-fo", "--fileout",type=str, default="Scalar.nc", \
   help="Name of the output NETCDF file.")
 parser.add_argument("-s", "--scalars",type=str, nargs='+', required=True,\
-  help="Name of the NETCDF scalar in the file. e.g. e, p, pt")
+  help="Name of the NETCDF scalar in the file. Example: e p pt")
+parser.add_argument("-so", "--scalarsOut",type=str, nargs='+', default=None,\
+  help="(Optional) Name of the scalars in the OUTPUT (-fo) file. Example: e p pt")
 parser.add_argument("-d", "--decomp", action="store_true", default=False,\
   help="Decomposed into mean (V_m) and fluctuating (V^prime) components.")
 parser.add_argument("-cp", "--copyOnly", action="store_true", default=False,\
@@ -51,11 +53,19 @@ filename = args.filename
 fileout  = args.fileout
 cl       = abs(int(args.coarse))
 nt       = args.ntimeskip
-scalarNames = args.scalars
+scalarNames    = args.scalars
+scalarNamesOut = args.scalarsOut
 decompOn = args.decomp
 va       = args.replValuesAbove
 vb       = args.replValuesBelow
 copyOnly = args.copyOnly
+
+if( scalarNamesOut is None ): 
+  scalarNamesOut = scalarNames
+
+if( len(scalarNames) != len(scalarNamesOut) ):
+  sys.exit(' Number of (in/out) scalar names do not match. Exitings ...') 
+
 
 '''
 Establish two boolean variables which indicate whether the created variable is an
@@ -101,7 +111,10 @@ z = None
 
 # - - - - Scalar components - - - - - - - - - -
 sv = []
-for sname in scalarNames:
+for j in range(len(scalarNames)):
+  
+  sname = scalarNames[j]
+  snout = scalarNamesOut[j]
   
   s0, s0_dims = read3DVariableFromDataset( sname, ds,  nt, 0, 0, cl ) # All values.
   s0 = replaceValues(s0, va, vb)
@@ -109,7 +122,7 @@ for sname in scalarNames:
   print(' Orig: s0.shape = {} '.format(s0.shape) )
   
   idx = np.isnan( s0 ); s0[idx] = 0.
-  idx = ( np.abs(s0) > 10.**9 ); s0[idx] = 0.
+  idx = ( np.abs(s0) > 9999. ); s0[idx] = 0.
   
 
   if( not copyOnly ):
@@ -120,7 +133,7 @@ for sname in scalarNames:
     #s = np.zeros( st_dims )   # This is not really needed.
     s, sm = interpolatePalmVectors( s0, s0_dims, 'k' , decompOn ); #s0 = None
     sp = vectorPrimeComponent( s, sm )
-    sv.append(createNetcdfVariable( dso, sp, sname+'p', st_dims[0],'','f4',('time','z','y','x',), variable ))
+    sv.append(createNetcdfVariable( dso, sp, snout+'p', st_dims[0],'','f4',('time','z','y','x',), variable ))
   else:
     # Take the portion that matches the coords.
     if( copyOnly ): s = s0
@@ -128,6 +141,6 @@ for sname in scalarNames:
     
   s_dims = np.shape(s)
   print(' Final shape = {} '.format(s_dims) )
-  sv.append( createNetcdfVariable(dso, s, sname, s_dims[0],'[]','f4',('time','z','y','x',), variable) )
+  sv.append( createNetcdfVariable(dso, s, snout, s_dims[0],'[]','f4',('time','z','y','x',), variable) )
 
 netcdfWriteAndClose( dso )
