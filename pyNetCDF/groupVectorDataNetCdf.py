@@ -97,23 +97,23 @@ Read cell center coordinates and time.
 Create the output independent variables right away and empty memory.
 '''
 time, time_dims = read1DVariableFromDataset('time',ustr+suffix, ds, ntskip, 0, 1 ) # All values.
-tv = createNetcdfVariable( dso, time,'time', len(time),'s','f4',('time',), parameter )
+tv = createNetcdfVariable( dso, time,'time', len(time),'seconds','f4',('time',), parameter )
 time = None
 
 x, x_dims = read1DVariableFromDataset( 'x',wstr+suffix, ds, 0, 1, cl ) # Exclude the last value.
-xv = createNetcdfVariable( dso, x   , 'x'   , len(x)   , 'm', 'f4', ('x',)   , parameter )
+xv = createNetcdfVariable( dso, x   , 'x'   , len(x)   , 'meters', 'f4', ('x',)   , parameter )
 x = None
 
 y, y_dims = read1DVariableFromDataset( 'y',ustr+suffix, ds, 0, 1, cl ) # Exclude the last value.
 print(' y_dims = {} '.format(y_dims))
 y[np.isnan(y)] = 0.  # Special treatment.
-yv = createNetcdfVariable( dso, y   , 'y'   , len(y)   , 'm', 'f4', ('y',)   , parameter )
+yv = createNetcdfVariable( dso, y   , 'y'   , len(y)   , 'meters', 'f4', ('y',)   , parameter )
 y = None
 
 if( kcopy ): xk = 0
 else:        xk = 1
 z, z_dims = read1DVariableFromDataset(zn,ustr+suffix, ds, xk, 0, cl )
-zv = createNetcdfVariable( dso, z   , 'z'   , len(z)   , 'm', 'f4', ('z',)   , parameter )
+zv = createNetcdfVariable( dso, z   , 'z'   , len(z)   , 'meters', 'f4', ('z',)   , parameter )
 print(' z_dims = {} '.format(z_dims))
 z = None
 

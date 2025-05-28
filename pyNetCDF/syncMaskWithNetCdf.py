@@ -73,18 +73,18 @@ Create the output independent variables right away and empty memory.
 uStr = partialMatchFromList( 'u', varList )
 
 time, time_dims = read1DVariableFromDataset('time', uStr, ds, paramList, 0, 0, 1 ) # All values.
-tv = createNetcdfVariable( dso, time,'time', len(time),'s','f4',('time',), parameter )
+tv = createNetcdfVariable( dso, time,'time', len(time),'seconds','f4',('time',), parameter )
 time = None  
 
 x, x_dims = read1DVariableFromDataset( 'x', uStr,ds, paramList, 0, 0, cl ) # All values.
 print(' x_dims = {} '.format(x_dims))
 x[np.isnan(x)] = 0.  # Special treatment.
-xv = createNetcdfVariable( dso, x   , 'x'   , len(x)   , 'm', 'f4', ('x',)   , parameter )
+xv = createNetcdfVariable( dso, x   , 'x'   , len(x)   , 'meters', 'f4', ('x',)   , parameter )
 
 y, y_dims = read1DVariableFromDataset( 'y', uStr, ds, paramList, 0, 0, cl )
 print(' y_dims = {} '.format(y_dims))
 y[np.isnan(y)] = 0.  # Special treatment.
-yv = createNetcdfVariable( dso, y   , 'y'   , len(y)   , 'm', 'f4', ('y',)   , parameter )
+yv = createNetcdfVariable( dso, y   , 'y'   , len(y)   , 'meters', 'f4', ('y',)   , parameter )
 
 # Determine the NETCDF domain bounds and resolution.
 xb, yb, dx, dy = domainBoundsAndResolution( x, y )
@@ -92,7 +92,7 @@ x = None; y = None # Clear memory ASAP.
 
 z, z_dims = read1DVariableFromDataset( 'z', uStr, ds, paramList, 0, 0, cl )
 print(' z_dims = {} '.format(z_dims))
-zv = createNetcdfVariable( dso, z   , 'z'   , len(z)   , 'm', 'f4', ('z',)   , parameter )
+zv = createNetcdfVariable( dso, z   , 'z'   , len(z)   , 'meters', 'f4', ('z',)   , parameter )
 z = None
 
 # - - - - First, read u-component - - - - - - - - - -

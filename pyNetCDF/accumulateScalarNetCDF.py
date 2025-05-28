@@ -153,10 +153,10 @@ for fn in fileNos:
     s1 = None # Clear memory
     
     dsx = netcdfOutputDataset('ACCX_'+fileList[fn].split('/')[-1], mode="w")
-    tvx = createNetcdfVariable( dsx, tx,'time', ntimesx,'s','f4',('time',), parameter )
-    xvx = createNetcdfVariable( dsx, x, 'x', len(x), 'm', 'f4', ('x',), parameter )
-    yvx = createNetcdfVariable( dsx, y, 'y', len(y), 'm', 'f4', ('y',), parameter )
-    zvx = createNetcdfVariable( dsx, z, 'z', len(z), 'm', 'f4', ('z',), parameter )
+    tvx = createNetcdfVariable( dsx, tx,'time', ntimesx,'seconds','f4',('time',), parameter )
+    xvx = createNetcdfVariable( dsx, x, 'x', len(x), 'meters', 'f4', ('x',), parameter )
+    yvx = createNetcdfVariable( dsx, y, 'y', len(y), 'meters', 'f4', ('y',), parameter )
+    zvx = createNetcdfVariable( dsx, z, 'z', len(z), 'meters', 'f4', ('z',), parameter )
     svx = createNetcdfVariable(\
       dsx, sx, scalarName+'x', sx_dims[0], '', 'f4',('time','z','y','x',), variable)
     netcdfWriteAndClose( dsx )
@@ -175,10 +175,10 @@ for fn in fileNos:
   # = = = = = = = = = = = = = = = = = = = = = = #
   
   dso = netcdfOutputDataset(fs+fileList[fn].split('/')[-1], mode="w")
-  tv = createNetcdfVariable( dso, time,'time', ntimes,'s','f4',('time',), parameter )
-  xv = createNetcdfVariable( dso, x, 'x', len(x), 'm', 'f4', ('x',), parameter )
-  yv = createNetcdfVariable( dso, y, 'y', len(y), 'm', 'f4', ('y',), parameter )
-  zv = createNetcdfVariable( dso, z, 'z', len(z), 'm', 'f4', ('z',), parameter )
+  tv = createNetcdfVariable( dso, time,'time', ntimes,'seconds','f4',('time',), parameter )
+  xv = createNetcdfVariable( dso, x, 'x', len(x), 'meters', 'f4', ('x',), parameter )
+  yv = createNetcdfVariable( dso, y, 'y', len(y), 'meters', 'f4', ('y',), parameter )
+  zv = createNetcdfVariable( dso, z, 'z', len(z), 'meters', 'f4', ('z',), parameter )
   sv = createNetcdfVariable(\
     dso, sa, scalarName+sffx, s_dims[0], '', 'f4',('time','z','y','x',), variable)
   
