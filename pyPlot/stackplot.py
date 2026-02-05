@@ -105,6 +105,7 @@ for i in range(Nplots):
     pD['reset'] = False
 
   axs[i].grid(True)
+  axs[i].set_facecolor('black')
   if( legendsOn ):
 #    axs[i].legend(loc=1) # upper right ... for now
     axs[i].legend(loc=2) # upper right ... for now

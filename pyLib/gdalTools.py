@@ -4,6 +4,7 @@ import operator
 import scipy.ndimage as sn 
 import numpy as np
 import sys
+from pyproj import CRS, Transformer
 ''' 
 Description:
 
@@ -16,6 +17,71 @@ Author: Mikko Auvinen
 
 gdal.UseExceptions()
 
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+def latlon_to_utm(lat, lon):
+  """
+  Convert latitude/longitude to UTM coordinates.
+  
+  Parameters:
+      lat (float): Latitude in degrees
+      lon (float): Longitude in degrees
+    
+  Returns:
+    (easting, northing, zone_number, hemisphere)
+  """
+  # Determine UTM zone from longitude
+  zone_number = int((lon + 180) / 6) + 1
+  
+  # Determine hemisphere
+  northern = lat >= 0
+  hemisphere = 'north' if northern else 'south'
+  
+  # Define UTM CRS
+  utm_crs = CRS.from_proj4(f"+proj=utm +zone={zone_number} +{hemisphere} +datum=WGS84 +units=m +no_defs")
+  
+  # WGS84 geographic CRS
+  wgs84_crs = CRS.from_epsg(4326)
+  
+  # Create transformer
+  transformer = Transformer.from_crs(wgs84_crs, utm_crs, always_xy=True)
+    
+  # Transform coordinates
+  easting, northing = transformer.transform(lon, lat)
+    
+  return easting, northing, zone_number, hemisphere
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+def utm_to_latlon(northing, easting, zone_number, northern=True):
+  """
+  Convert UTM coordinates to latitude/longitude.
+  
+  Parameters:
+    easting (float): UTM easting in meters
+    northing (float): UTM northing in meters
+    zone_number (int): UTM zone number (1–60)
+      northern (bool): True if Northern Hemisphere, False if Southern
+    
+  Returns:
+    (latitude, longitude) in degrees
+  """
+  hemisphere = 'north' if northern else 'south'
+  
+  # Define UTM CRS
+  utm_crs = CRS.from_proj4(f"+proj=utm +zone={zone_number} +{hemisphere} +datum=WGS84 +units=m +no_defs")
+  
+  # WGS84 geographic CRS
+  wgs84_crs = CRS.from_epsg(4326)
+  
+  # Create transformer
+  transformer = Transformer.from_crs(utm_crs, wgs84_crs, always_xy=True)
+  
+  # Transform coordinates
+  lon, lat = transformer.transform(easting, northing)
+  return lat, lon
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 '''
 Global dict for determining steps
