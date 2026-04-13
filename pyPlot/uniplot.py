@@ -54,6 +54,8 @@ parser.add_argument("-lw", "--linewidth", type=float, default=2.6,\
   help="Line width. Default=2.6")
 parser.add_argument("-nl","--nolegend", action="store_true", default=False,\
   help="Do not draw a legend.")
+parser.add_argument("-all", "--allfiles", action="store_true", default=False,\
+  help="Select all files automatically.")
 parser.add_argument("-s", "--save", type=str, default=None, \
   help="Name of the saved figure. Default=None")
 args = parser.parse_args()
@@ -68,6 +70,7 @@ labelsOn = args.labels
 saveFig  = args.save
 fs       = args.fontsize
 legendOn = not args.nolegend
+allfiles = args.allfiles
 xyzOn    = args.xyz
 
 # Fontsizes:
@@ -81,7 +84,7 @@ strKey = inputIfNone( strKey , " Enter search string: " )
 #plt.style.use(styleStr)
 
 
-fileNos, fileList = filesFromList( strKey+"*" )
+fileNos, fileList = filesFromList( strKey+"*", allfiles )
 
 pD = dict()  
 pD['logOn']    = logOn

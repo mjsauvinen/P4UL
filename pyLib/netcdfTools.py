@@ -376,13 +376,16 @@ def vectorPrimeComponent(vc, vm):
 # NOTE below: variables after *args are interpreted as keyword arguments with default values.
 
 def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, *args,\
-  zlib=False, fill_value=-9999., verbose=True, mask_value=-9999.):
+  zlib=True, fill_value=-9999., verbose=True, mask_value=-9999.):
+  
+  shuffle=zlib
   
   if(parameter):
     dso.createDimension(vName, vLen)
   
     
-  var = dso.createVariable(vName, vType, vTuple, zlib=zlib, fill_value=fill_value)
+  var = dso.createVariable(vName, vType, vTuple, \
+    zlib=zlib, fill_value=fill_value, shuffle=shuffle, complevel=2)
   var.units = vUnits
 
   if(not np.ma.is_masked(v) and v is not None):
@@ -411,7 +414,7 @@ def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 
-def createCoordinateAxis(dso, Rdims, Rdpx, axis, varname, formatstr, unit, parameter, zlib=False, verbose=True, offset=0.0):
+def createCoordinateAxis(dso, Rdims, Rdpx, axis, varname, formatstr, unit, parameter, zlib=True, verbose=True, offset=0.0):
   arr = np.empty(Rdims[axis])
   for i in range(Rdims[axis]):
     # dpx is in [N,E], see getGeoTransform() in gdalTools.py
