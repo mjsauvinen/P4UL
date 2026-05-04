@@ -61,8 +61,8 @@ for fn in fileNos:
     umag = np.mean( umag, axis=(0,2,3) )
     pt   = np.mean( pt  , axis=(0,2,3) )
   if( len(veldict.keys()) == 2 ):
-    umag = np.mean( umag, axis=(0) )
-    pt   = np.mean( pt  , axis=(0) )
+    umag = np.mean( umag[1:], axis=(0) )
+    pt   = np.mean( pt[1:]  , axis=(0) )
 
   for dstr in veldict.keys():
     if( 'z' in dstr ): z = veldict[dstr]

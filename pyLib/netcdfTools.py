@@ -9,6 +9,22 @@ from utilities import partialMatchFromList, popKeyFromDict
 debug = True
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+def build_nc_slices(varobj, sel=None):
+    """
+    Build a slicing tuple for a netCDF variable based on dimension names.
+
+    sel: dict {dim_name: slice | int | list}
+         e.g. {"time": slice(10, 20)}
+    """
+    if sel is None:
+        return tuple(slice(None) for _ in varobj.dimensions)
+
+    slices = []
+    for d in varobj.dimensions:
+        slices.append(sel.get(d, slice(None)))
+    return tuple(slices)
+
+# =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 def asciiEncode(uList, uStr):
   n = len(uList)
@@ -79,6 +95,26 @@ def netcdfWriteAndClose(dso, verbose=True):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
+def read1DVariableFromDataset(dimStr, varStr, ds, cl=1, sel=None):
+
+  if varStr not in ds.variables:
+    sys.exit(f' Variable {varStr} not in dataset.')
+
+  vs = ds.variables[varStr]
+  dimList = vs.dimensions
+  print(' dimList = {} '.format( dimList ))
+    
+  vdim = partialMatchFromList(dimStr, dimList)
+
+  dvar = ds.variables[vdim]
+  if sel and vdim in sel:
+    var = dvar[sel[vdim]]
+  else:
+    var = dvar[::cl]
+  
+  return var, np.shape(var)
+
+'''
 def read1DVariableFromDataset( dimStr, varStr, ds, iLOff=0, iROff=0, cl=1):
   # iLOff: left offset
   # iROff: right offset
@@ -107,32 +143,38 @@ def read1DVariableFromDataset( dimStr, varStr, ds, iLOff=0, iROff=0, cl=1):
     sys.exit(1)
 
   return var, np.shape(var)
-
+'''
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
 
-def readVariableFromDataset(varStr, ds, cl=1 ):
-  if( varStr in ds.variables.keys() ):
+def readVariableFromDataset(varStr, ds, cl=1, sel=None):
+  if varStr not in ds.variables:
+    sys.exit(f' Variable {varStr} not in list {ds.variables.keys()}.')
 
-    vdims = asciiEncode(ds.variables[varStr].dimensions, ' Variable dimensions ')
-    var   = ds.variables[varStr][:]
+  varobj = ds.variables[varStr]
+  vdims  = asciiEncode(varobj.dimensions, ' Variable dimensions ')
 
-    if( cl>1 ):
-      var = coarsenVariable( var, vdims, cl )
+  # --- slice-aware read ---
+  slices = build_nc_slices(varobj, sel)
+  var = varobj[slices]
 
-    # Load the independent variables and wrap them into a dict
-    dDict = dict()
-    for dname in vdims:
-      dData = ds.variables[dname][:]
-      if( ('time' in dname) or ('t+' in dname) ): 
-        dDict[dname] = dData
+  # --- optional coarsening ---
+  if cl > 1:
+    var = coarsenVariable(var, vdims, cl)
+
+  # --- read coordinate variables ---
+  dDict = {}
+  
+  for dname in vdims:
+    dvar = ds.variables[dname]
+    if sel and dname in sel:
+      dDict[dname] = dvar[sel[dname]]
+    else:
+      if ('time' in dname) or ('t+' in dname):
+        dDict[dname] = dvar[:]
       else:
-        dDict[dname] = dData[::cl]
-      dData = None
-
-  else:
-    sys.exit(' Variable {} not in list {}.'.format(varStr, ds.variables.keys()))
-
+        dDict[dname] = dvar[::cl]
+  
   return var, dDict
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
@@ -166,39 +208,34 @@ def coarsenVariable( var, vardims, cl ):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def read3DVariableFromDataset(varStr, ds, iTOff=0, iLOff=0, iROff=0, cl=1, meanOn=False):
-  
-  # iLOff: left offset
-  # iROff: right offset
-  # cl   : coarsening level
-  varStr = partialMatchFromList( varStr , ds.variables.keys() )
-  print(' Reading variable {} ... '.format(varStr))
-  var, dDict = readVariableFromDataset(varStr, ds, cl=1 )
-  print(' ... done.')
+def read3DVariableFromDataset(varStr, ds, iTOff=0, iLOff=0, iROff=0, 
+                              cl=1, meanOn=False, sel=None):
 
+  varStr = partialMatchFromList(varStr, ds.variables.keys())
+  print(f' Reading variable {varStr} ...')
 
-  iL = 0 + int(iLOff/cl)
-  iR = int(abs(iROff/cl))
-  iT = 0 + int(iTOff)
-  if(iR == 0):
-    # Param list (time, z, y, x )
-    if(meanOn):
+  var, dDict = readVariableFromDataset(varStr, ds, cl=1, sel=sel)
+
+  iL = int(iLOff / cl)
+  iR = int(abs(iROff / cl))
+  iT = iTOff
+
+  if iR == 0:
+    if meanOn:
       vo = var[iL:, iL:, iL:]
     else:
       vo = var[iT:, iL:, iL:, iL:]
   else:
-    if(meanOn):
+    if meanOn:
       vo = var[iL:-iR, iL:-iR, iL:-iR]
     else:
       vo = var[iT:, iL:-iR, iL:-iR, iL:-iR]
-
-  var = None
 
   return vo, np.array(vo.shape)
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def read3dDataFromNetCDF( fname, varNames, cl=1, zeroNans=True ):
+def read3dDataFromNetCDF( fname, varNames, cl=1, zeroNans=True, sel=None ):
   '''
   Establish two boolean variables which indicate whether the created variable is an
   independent or dependent variable in function createNetcdfVariable().
@@ -215,7 +252,7 @@ def read3dDataFromNetCDF( fname, varNames, cl=1, zeroNans=True ):
   for vn in varNames:
     vname = partialMatchFromList( vn , varList ) # Obtain the correct name 
     print(' Extracting {} from dataset in {} ... '.format( vname, fname ))
-    var, dDict = readVariableFromDataset(vname, ds, cl )
+    var, dDict = readVariableFromDataset(vname, ds, cl, sel )
     print(' {}_dims = {}\n Done!'.format(vn, var.shape ))
     
     vDict[vn] = var   # Store the variable under the provided name 
@@ -385,7 +422,7 @@ def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, 
   
     
   var = dso.createVariable(vName, vType, vTuple, \
-    zlib=zlib, fill_value=fill_value, shuffle=shuffle, complevel=2)
+    zlib=zlib, fill_value=fill_value, shuffle=shuffle, complevel=1)
   var.units = vUnits
 
   if(not np.ma.is_masked(v) and v is not None):
