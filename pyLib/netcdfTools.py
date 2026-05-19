@@ -95,22 +95,47 @@ def netcdfWriteAndClose(dso, verbose=True):
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 
-def read1DVariableFromDataset(dimStr, varStr, ds, cl=1, sel=None):
-
-  if varStr not in ds.variables:
-    sys.exit(f' Variable {varStr} not in dataset.')
+def read1DVariableFromDataset(dimStr, varStr, ds,iLOff=0,iROff=0,cl=1,*,sel=None):
+  # --- Check variable ---
+  if( varStr not in ds.variables ):
+    sys.exit(f'Variable {varStr} not in dataset.')
 
   vs = ds.variables[varStr]
   dimList = vs.dimensions
-  print(' dimList = {} '.format( dimList ))
-    
-  vdim = partialMatchFromList(dimStr, dimList)
+  print(f'dimList = {dimList}')
 
+  vdim = partialMatchFromList(dimStr, dimList)
   dvar = ds.variables[vdim]
-  if sel and vdim in sel:
-    var = dvar[sel[vdim]]
+
+  # ==========================================================
+  # NEW API takes precedence if sel is provided
+  # ==========================================================
+  if( sel is not None ):
+    if( vdim in sel ):
+      var = dvar[sel[vdim]]
+    else:
+      var = dvar[::cl]
+
+    return var, np.shape(var)
+
+  # ==========================================================
+  # OLD API fallback (iLOff, iROff)
+  # ==========================================================
+  try:
+    var = dvar[:]
+  except Exception:
+    print(f'Cannot read variable: {vdim}')
+    sys.exit(1)
+
+  # Apply offsets (old behavior)
+  if( iROff == 0 or iROff is None ):
+    var = var[(0 + iLOff):]
   else:
-    var = dvar[::cl]
+    var = var[(0 + iLOff):-abs(iROff)]
+
+  # Apply coarsening
+  if( cl > 1 ):
+    var = var[::cl]
   
   return var, np.shape(var)
 
