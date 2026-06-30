@@ -1,10 +1,15 @@
-from osgeo import gdal
-from osgeo.gdalconst import *
 import operator
 import scipy.ndimage as sn 
 import numpy as np
 import sys
 from pyproj import CRS, Transformer
+try:
+  from osgeo import gdal
+  from osgeo.gdalconst import *
+  gdal.UseExceptions()
+except:
+  pass
+
 ''' 
 Description:
 
@@ -14,8 +19,6 @@ Author: Mikko Auvinen
         University of Helsinki &
         Finnish Meteorological Institute
 '''
-
-gdal.UseExceptions()
 
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
