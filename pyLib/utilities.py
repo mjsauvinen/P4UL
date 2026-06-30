@@ -185,11 +185,16 @@ def extractMatchingTerms( trialList , targetList , verbose=False ):
 
 def partialMatchFromList( matchStr, strList ):
   w = None
-  nw = len(matchStr)
-  for word in strList:
-    l = min( nw , len(word) )
-    if( matchStr in word[:l] ):
-      w = word; break
+
+  if( matchStr in strList ):
+    w = matchStr
+  else:
+    nw = len(matchStr)
+    for word in strList:
+      l = min( nw , len(word) )
+      if( matchStr in word[:l] ):
+        w = word; break
+
   return w
 
 # =*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
