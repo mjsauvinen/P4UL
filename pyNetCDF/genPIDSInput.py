@@ -150,95 +150,112 @@ if(not all(v is None for v in [topoConfig, surfConfig, vegConfig])):
   if (not skipStaticFile):
     if(staticAppend):
       print("Appending into existing "+ pidsStaticFN +" file.")
-      pidsStaticDS = netcdfOutputDataset(pidsStaticFN, mode="r+")
-      staticDims = pidsStaticDS.dimensions.keys()
-      staticVars = pidsStaticDS.variables.keys()
+      dso_s = netcdfOutputDataset(pidsStaticFN, mode="r+")
+      dims_s = dso_s.dimensions.keys()
+      vars_s = dso_s.variables.keys()
       # Remove dims from vars with a filter
-      staticVars = filter(lambda key: key not in staticDims, staticVars)
+      vars_s = filter(lambda key: key not in dims_s, vars_s)
 
-      if(len(staticDims)>0):
-        print("Dimensions: " + ', '.join(str(key) for key in staticDims))
-        print("Variables: " + ', '.join(str(key) for key in staticVars))
+      if(len(dims_s)>0):
+        print("Dimensions: " + ', '.join(str(key) for key in dims_s))
+        print("Variables: " + ', '.join(str(key) for key in vars_s))
         print("Warning: using old dimensions for new variables")
       else:
         print("No existing dimensions or variables found.")
     else:
-      pidsStaticDS = netcdfOutputDataset(pidsStaticFN, mode="w")
-      staticDims = []
-      staticVars = []
+      dso_s = netcdfOutputDataset(pidsStaticFN, mode="w")
+      dims_s = []
+      vars_s = []
 
 
 
-    setPIDSGlobalAtrributes(pidsStaticDS, globalAttributes)
+    setPIDSGlobalAtrributes(dso_s, globalAttributes)
 
     if (crsConfig is not None):
-      processCRS(pidsStaticDS, crsConfig)
+      processCRS(dso_s, crsConfig)
 
     '''
     Write topography with its dimensions into PIDS_STATIC
     '''
 
     if(topoConfig is not None):
-      oroFile = readConfigVariable(config, 'Topography', 'orography')
-      if(oroFile is not None and oroFile!=""):
-        oroVar = processOrography(oroFile,pidsStaticDS,staticVars,staticDims)
+      fname = readConfigVariable(config, 'Topography', 'orography')
+      if(fname is not None and fname!=""):
+        oroVar = processOrography(fname,dso_s,vars_s,dims_s)
+      fname = None  
+      
 
-      buildFile = readConfigVariable(config, 'Topography', 'buildings')
-      if(buildFile is not None and buildFile!=""):
-        buildVar = processBuildings(buildFile,pidsStaticDS,staticVars,staticDims)
+      fname = readConfigVariable(config, 'Topography', 'buildings')
+      if(fname is not None and fname!=""):
+        buildVar = processBuildings(fname,dso_s,vars_s,dims_s)
+      fname = None
 
     '''
     Write surface classification data into PIDS_STATIC
     '''
 
     if(surfConfig is not None):
-      buildIDFile = readConfigVariable(config, 'Surface', 'building_id')
-      if(buildIDFile is not None and buildIDFile!=""):
-        buildIDVar = processBuildingIDs(buildIDFile,pidsStaticDS,staticVars,staticDims)
+      fname = readConfigVariable(config, 'Surface', 'building_id')
+      if(fname is not None and fname!=""):
+        buildIDVar = processBuildingIDs(fname,dso_s,vars_s,dims_s)
+      fname = None
 
-      buildingTypeFile = readConfigVariable(config, 'Surface', 'building_type')
-      if (buildingTypeFile is not None and buildingTypeFile != ""):
-        buildingTypeVar = processBuildingType(buildingTypeFile, pidsStaticDS, staticVars, staticDims)
+      fname = readConfigVariable(config, 'Surface', 'building_type')
+      if (fname is not None and fname != ""):
+        buildingTypeVar = processBuildingType(fname, dso_s, vars_s, dims_s)
+      fname = None
 
-      pavementTypeFile = readConfigVariable(config, 'Surface', 'pavement_type')
-      if(pavementTypeFile is not None and pavementTypeFile!=""):
-        pavementTypeVar = processPavementType(pavementTypeFile,pidsStaticDS,staticVars,staticDims)
+      fname = readConfigVariable(config, 'Surface', 'pavement_type')
+      if(fname is not None and fname!=""):
+        pavementTypeVar = processPavementType(fname,dso_s,vars_s,dims_s)
+      fname = None
 
-      waterTypeFile = readConfigVariable(config, 'Surface', 'water_type')
-      if(waterTypeFile is not None and waterTypeFile!=""):
-        waterTypeVar = processWaterType(waterTypeFile,pidsStaticDS,staticVars,staticDims)
+      fname = readConfigVariable(config, 'Surface', 'water_type')
+      if(fname is not None and fname!=""):
+        waterTypeVar = processWaterType(fname,dso_s,vars_s,dims_s)
+      fname = None
 
-      soilTypeFile = readConfigVariable(config, 'Surface', 'soil_type')
-      if(soilTypeFile is not None and soilTypeFile!=""):
-        soilTypeVar = processSoilType(soilTypeFile,pidsStaticDS,staticVars,staticDims)
-
-      streetTypeFile = readConfigVariable(config, 'Surface', 'street_type')
-      if(streetTypeFile is not None and streetTypeFile!=""):
-        streetTypeVar = processStreetType(streetTypeFile,pidsStaticDS,staticVars,staticDims)
-
-      surfaceFractionFile = readConfigVariable(config, 'Surface', 'surface_fraction')
-      if (surfaceFractionFile is not None and surfaceFractionFile != ""):
-        surfaceFractionVar = processSurfaceFraction(surfaceFractionFile, pidsStaticDS, staticVars,
-                                                    staticDims)
+      fname = readConfigVariable(config, 'Surface', 'soil_type')
+      if(fname is not None and fname!=""):
+        soilTypeVar = processSoilType(fname,dso_s,vars_s,dims_s)
+      fname = None
       
-      surfTempTypeFile = readConfigVariable(config, 'Surface', 'surface_temperature')
-      if(surfTempTypeFile is not None and surfTempTypeFile !=""):
-        surfTempTypeVar = processSurfaceTemperature(surfTempTypeFile,pidsStaticDS,staticVars,staticDims)
+      fname = readConfigVariable(config, 'Surface', 'street_type')
+      if(fname is not None and fname!=""):
+        streetTypeVar = processStreetType(fname,dso_s,vars_s,dims_s)
+      fname = None
 
+      fname = readConfigVariable(config, 'Surface', 'surface_fraction')
+      if (fname is not None and fname != ""):
+        surfaceFractionVar = processSurfaceFraction(fname, dso_s, vars_s,dims_s)
+      fname = None
+      
+      fname = readConfigVariable(config, 'Surface', 'surface_temperature')
+      if(fname is not None and fname !=""):
+        surfTempTypeVar = processSurfaceTemperature(fname,dso_s,vars_s,dims_s)
+      fname = None
+      
+      fname = readConfigVariable(config, 'Surface', 'ssws')
+      if(fname is not None and fname !=""):
+        sswsVar = processSurfaceScalarFlux(fname,dso_s,vars_s,dims_s)
+      fname = None    
+      
 
     if(vegConfig is not None):
-      ladFile = readConfigVariable(config, 'Vegetation', 'lad')
-      if(ladFile is not None and ladFile!=""):
-        ladVar = processLAD(ladFile,pidsStaticDS,staticVars,staticDims)
+      fname = readConfigVariable(config, 'Vegetation', 'lad')
+      if(fname is not None and fname!=""):
+        ladVar = processLAD(fname,dso_s,vars_s,dims_s)
+      fname = None
 
-      vegetationTypeFile = readConfigVariable(config, 'Vegetation', 'vegetation_type')
-      if(vegetationTypeFile is not None and vegetationTypeFile!=""):
-        vegetationTypeVar = processVegetationType(vegetationTypeFile,pidsStaticDS,staticVars,staticDims)
+      fname = readConfigVariable(config, 'Vegetation', 'vegetation_type')
+      if(fname is not None and fname!=""):
+        vegetationTypeVar = processVegetationType(fname,dso_s,vars_s,dims_s)
+      fname = None
 
     '''
     Close PIDS_STATIC
     '''
-    netcdfWriteAndClose(pidsStaticDS, verbose=False)
+    netcdfWriteAndClose(dso_s, verbose=False)
     print("Static output file "+ pidsStaticFN +" closed.")
 
 '''
@@ -275,24 +292,24 @@ if(chemConfig is not None):
   if (not skipChemFile):
     if(chemAppend):
       print("Appending into existing "+ pidsChemFN +" file.")
-      pidsChemDS = netcdfOutputDataset(pidsChemFN, mode="r+")
-      chemDims = pidsChemDS.dimensions.keys()
-      chemVars = pidsChemDS.variables.keys()
+      dso_c = netcdfOutputDataset(pidsChemFN, mode="r+")
+      dims_c = dso_c.dimensions.keys()
+      vars_c = dso_c.variables.keys()
       # Remove dims from vars with a filter
-      chemVars = filter(lambda key: key not in chemDims, chemVars)
+      vars_c = filter(lambda key: key not in dims_c, vars_c)
 
-      if(len(chemDims)>0):
-        print("Dimensions: " + ', '.join(str(key) for key in chemDims))
-        print("Variables: " + ', '.join(str(key) for key in chemVars))
+      if(len(dims_c)>0):
+        print("Dimensions: " + ', '.join(str(key) for key in dims_c))
+        print("Variables: " + ', '.join(str(key) for key in vars_c))
         print("Warning: using old dimensions for new variables")
       else:
         print("No existing dimensions or variables found.")
     else:
-      pidsChemDS = netcdfOutputDataset(pidsChemFN, mode="w")
-      chemDims = []
-      chemVars = []
+      dso_c = netcdfOutputDataset(pidsChemFN, mode="w")
+      dims_c = []
+      vars_c = []
 
-    setPIDSGlobalAtrributes(pidsChemDS, globalAttributes)
+    setPIDSGlobalAtrributes(dso_c, globalAttributes)
 
     # Level-of-detail (LOD) of the emissions
     emissionLod = readConfigVariable(config, 'Chemistry', 'emission_values_lod')
@@ -300,22 +317,22 @@ if(chemConfig is not None):
     # Emission category index
     emiCatInds = readConfigVariable(config, 'Chemistry', 'emission_category_index')
     if(emiCatInds is not None and emiCatInds!=""):
-      emiCatIndsVar = processEmissionCategoryIndices(emiCatInds, pidsChemDS, chemVars, chemDims)
+      emiCatIndsVar = processEmissionCategoryIndices(emiCatInds, dso_c, vars_c, dims_c)
 
    # Names of the emission categories
     emiCatName = readConfigVariable(config, 'Chemistry', 'emission_category_name')
     if(emiCatName is not None and emiCatName!=""):
-      emiCatName = processEmissionCategoryNames(emiCatName, pidsChemDS, chemVars, chemDims)
+      emiCatName = processEmissionCategoryNames(emiCatName, dso_c, vars_c, dims_c)
 
     # Emission index per emitted chemical species
     emiInds = readConfigVariable(config, 'Chemistry', 'emission_index')
     if(emiInds is not None and emiInds!=""):
-      emiInds = processEmissionIndices(emiInds, pidsChemDS, chemVars, chemDims)
+      emiInds = processEmissionIndices(emiInds, dso_c, vars_c, dims_c)
 
     # Names of the chemical species
     emiName = readConfigVariable(config, 'Chemistry', 'emission_name')
     if (emiName is not None and emiName!=""):
-      emiName = processEmissionNames(emiName, pidsChemDS, chemVars, chemDims)
+      emiName = processEmissionNames(emiName, dso_c, vars_c, dims_c)
 
     # If emission_values_lod=1, emission_values are rescaled using emission time factors
     if (emissionLod == '1'):
@@ -325,18 +342,18 @@ if(chemConfig is not None):
         if(emiTimeFactorsLod==""):
           emiTimeFactorsLod = None
         emiTimeFactors = processEmissionTimeFactors(emiTimeFactorsFile, emiTimeFactorsLod,
-                                                    pidsChemDS, chemVars, chemDims)
+                                                    dso_c, vars_c, dims_c)
 
     # If emission_values_lod=2, emissions can vary with time
     elif (emissionLod == '2'):
       emiTimes = readConfigVariable(config, 'Chemistry', 'emission_time')
       if (emiTimes is not None and emiTimes != ""):
-        time_dim = createTimeDim(pidsChemDS, emiTimes, chemDims)
+        time_dim = createTimeDim(dso_c, emiTimes, dims_c)
       emiTimestamp = readConfigVariable(config, 'Chemistry', 'emission_timestamp')
       if ('True' in emiTimestamp):
         print('create timestamp')
         originTimeStr = readConfigVariable(config, 'Global', 'origin_time')
-        timestamp = processEmissionTimestamp(pidsChemDS, originTimeStr, chemVars, chemDims)
+        timestamp = processEmissionTimestamp(dso_c, originTimeStr, vars_c, dims_c)
 
     # Emission value map
     emiStr = readConfigVariable(config, 'Chemistry', 'emission_values')
@@ -345,10 +362,10 @@ if(chemConfig is not None):
       if (sourceArea is not None and sourceArea != ""):
         emissionUnit = readConfigVariable(config, 'Chemistry', 'emission_unit')
         aeroEminVar = processEmissionValues(emiStr, sourceArea, emissionUnit, emissionLod,
-                                            pidsChemDS, chemVars, chemDims)
+                                            dso_c, vars_c, dims_c)
 
 
-    netcdfWriteAndClose(pidsChemDS, verbose=False)
+    netcdfWriteAndClose(dso_c, verbose=False)
     print("Chemistry output file "+ pidsChemFN +" closed.")
 
 '''
