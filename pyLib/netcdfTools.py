@@ -438,7 +438,7 @@ def vectorPrimeComponent(vc, vm):
 # NOTE below: variables after *args are interpreted as keyword arguments with default values.
 
 def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, *args,\
-  zlib=False, fill_value=-9999., verbose=True, mask_value=-9999.)
+  zlib=False, fill_value=-9999., verbose=True, mask_value=-9999.):
   
   if(parameter):
     dso.createDimension(vName, vLen)
