@@ -20,7 +20,7 @@ Author: Mikko Auvinen
 plt.rcParams["legend.labelspacing"] = 1.2
 plt.rcParams["legend.framealpha"]   = 1.
 plt.rcParams["legend.edgecolor"]    = 'k'
-plt.rcParams["legend.fontsize"] = 18
+plt.rcParams["legend.fontsize"] = 24
 plt.rcParams["legend.handleheight"]   = 1.0  # default: 0.7
 plt.rcParams["legend.handlelength"]   = 2.2  # default: 2.0
 
@@ -52,8 +52,12 @@ parser.add_argument("-xl", "--xlims", type=float, nargs=2, default=[None,None],\
   help="Bounds (limits) for the x axes")
 parser.add_argument("-lm", "--linemode", type=int, choices=[1,2], default=1,\
   help="Mode for displaying the color and type of lines. See the source code. Default=1")
+parser.add_argument("-cl", "--facecolor", type=str, choices=['white','black'], default='white',\
+  help="Facecolor of the plot. Margins remain white. Default=white")
 parser.add_argument("-lw", "--linewidth", type=float, default=2.6,\
   help="Line width. Default=2.6")
+parser.add_argument("-sc", "--sizescale", nargs=2, type=float, default=[1.0,1.0],\
+  help="Scaling factor [ax(1),ax(n)] for the figure size. Default=[1.0,1.0]")
 parser.add_argument("-s", "--save", type=str, default=None, \
   help="Name of the saved figure. Default=None")
 args = parser.parse_args()
@@ -71,9 +75,11 @@ legendsOn  = not args.nolegend
 allfiles   = args.allfiles
 saveFig    = args.save
 Nplots     = len( fsearch )
+sizescale  = args.sizescale
+facecolor  = args.facecolor
 
 #fsize = (11., Nplots*7.0)
-fsize = (11., Nplots*10.0)
+fsize = ( (sizescale[0]*11.), Nplots*(sizescale[1]*10.0) )
 
 if( not horizontal ):
   pfig, axs = plt.subplots(Nplots, 1, sharex=True, sharey=True, figsize=fsize)
@@ -105,10 +111,10 @@ for i in range(Nplots):
     pD['reset'] = False
 
   axs[i].grid(True)
-  axs[i].set_facecolor('black')
+  axs[i].set_facecolor( facecolor )
   if( legendsOn ):
-#    axs[i].legend(loc=1) # upper right ... for now
-    axs[i].legend(loc=2) # upper right ... for now
+    axs[i].legend(loc=1)
+    #axs[i].legend(loc=2) # upper right ... for now
 
 if( labelsOn ):
   print(' userLabels ')
