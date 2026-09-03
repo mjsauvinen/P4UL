@@ -448,7 +448,7 @@ def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, 
   #  zlib=zlib, fill_value=fill_value, compression='blosc_lz4', shuffle=True, complevel=4)
   
   var = dso.createVariable(vName, vType, vTuple, \
-    zlib=zlib, complevel=1, shuffle=True, fill_value=fill_value, least_significant_digit=5 )
+    zlib=zlib, complevel=1, shuffle=True, fill_value=fill_value, least_significant_digit=7 )
   
   var.units = vUnits
 
