@@ -252,7 +252,7 @@ def addNests(fig, clr):
 def addImagePlot( fig, R, titleStr, gridOn=False, limsOn=False):
   global cmaps
   ax = addFigAxes( fig )
-  im = ax.imshow(np.real(R), aspect='auto')
+  im = ax.imshow(np.real(R), aspect='equal')
   ax.set_title(titleStr)
   ax.grid(gridOn)
   
@@ -291,7 +291,7 @@ def addImagePlotDict(fig, RDict ):
   orig = dataFromDict('origin', RDict, allowNone=True)
   
   ax = addFigAxes( fig )
-  im = ax.imshow(np.real(R), origin=orig, extent=ex, aspect='auto', cmap=cm)
+  im = ax.imshow(np.real(R), origin=orig, extent=ex, aspect='equal', cmap=cm)
   
   ax.set_title(ttl); ax.set_xlabel(xlbl); ax.set_ylabel(ylbl)
   ax.grid(gOn)
