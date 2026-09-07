@@ -2,11 +2,11 @@
 import sys
 import argparse
 import numpy as np
+import matplotlib.pyplot as plt
 from mapTools import readNumpyZTile, initRdict
 from footprintTools import readNumpyZFootprint
 from utilities import filesFromList
-from plotTools import addImagePlot, userLabels, addNests
-import matplotlib.pyplot as plt
+from plotTools import addImagePlotDict, userLabels, addNests
 ''' 
 Description:
 
@@ -36,6 +36,18 @@ parser.add_argument("--abs", action="store_true", default=False,\
 parser.add_argument("--lims", action="store_true", default=False,\
   help="User specified limits.")
 parser.add_argument("--grid", help="Turn on grid.", action="store_true", default=False)
+parser.add_argument("--cmap", type=str, default=None, \
+  help="Matplotlib colormap. Default: Matplotlib default.")
+parser.add_argument("--origin", choices=["upper", "lower"], default="upper",\
+  help="Location of the left origin ('upper' or 'lower'). Default: upper")
+parser.add_argument("--title", type=str, default=None, \
+  help="Plot title. By default, the raster filename is used.")
+parser.add_argument("--xlabel", type=str, default=None, \
+  help="Label for the horizontal axis.")
+parser.add_argument("--ylabel", type=str, default=None, \
+  help="Label for the vertical axis.")
+parser.add_argument("-c", "--coords", choices=["local", "geo"], default=None,\
+  help="Use raster origin and resolution to show either local or geo coordinates")
 parser.add_argument("--labels", action="store_true", default=False,\
   help="User specified labels.")
 parser.add_argument("--footprint", action="store_true", default=False,\
@@ -52,6 +64,7 @@ parser.add_argument("--dpi", metavar="DPI" ,type=int, default=100,\
 args = parser.parse_args() 
 #writeLog( parser, args )
 #==========================================================#
+
 # Renaming ... that's all.
 rasterfile  = args.filename
 size        = args.size
@@ -60,6 +73,12 @@ jb          = args.jbounds
 absOn       = args.abs
 limsOn      = args.lims
 gridOn      = args.grid
+cmapOn      = args.cmap
+origin      = args.origin
+title       = args.title
+xlabel      = args.xlabel
+ylabel      = args.ylabel
+coords      = args.coords
 infoOnly    = args.infoOnly
 labels      = args.labels
 drawNests   = args.drawNests
@@ -103,29 +122,80 @@ info = ''' Info (Orig):
 
 print(info)
 
-imod = False; jmod = False
-if( np.count_nonzero( jb ) > 0 ):
-  jb[0] = max(         0 , jb[0] )
-  jb[1] = min( Rdims[0]-1, jb[1] )
-  jmod = True
+nrows, ncols = R.shape
 
-if( np.count_nonzero( ib ) > 0 ):
-  ib[0] = max( 0         , ib[0] )
-  ib[1] = min( Rdims[1]-1, ib[1] )
-  imod = True
+i0, i1 = 0, ncols
+j0, j1 = 0, nrows
+if( ib[0] is not None ): i0 = max(0, ib[0])
+if( ib[1] is not None ): i1 = min(ncols, ib[1])
 
-if( imod or jmod ):
-  R = R[jb[0]:jb[1],ib[0]:ib[1]]
-  Rdims = np.array( R.shape )
+if( jb[0] is not None ): j0 = max(0, jb[0])
+if( jb[1] is not None ): j1 = min(nrows, jb[1])
+
+if( i0 >= i1 ):
+  raise ValueError("Invalid x-index bounds: [{}, {}]".format(i0, i1))
+
+if( j0 >= j1 ):
+  raise ValueError("Invalid y-index bounds: [{}, {}]".format(j0, j1))
+
+if( i0 != 0 or i1 != ncols or j0 != 0 or j1 != nrows):
+  R = R[j0:j1, i0:i1]
+  Rdims = np.array(R.shape)
   print('\n Plot dimensions [rows, cols] = {}'.format(Rdims))
 
+extent = None
 
+if( coords is not None ):
+  if( footprintOn) :
+    raise ValueError("--coords is currently supported only for raster tile files.")
+
+  # ROrig is [northing, easting] at the top-left raster corner.
+  # dPx is [dN, dE].
+  if( coords == 'geo' ):
+    top    = ROrig[0] - j0 * dPx[0]
+    bottom = ROrig[0] - j1 * dPx[0]
+    left   = ROrig[1] + i0 * dPx[1]
+    right  = ROrig[1] + i1 * dPx[1]
+  else: # coords == 'local'
+    top    = j1 * dPx[0]
+    bottom = j0 * dPx[0]
+    left   = i0 * dPx[1]
+    right  = i1 * dPx[1]
+
+  # Matplotlib extent order:
+  # [left, right, bottom, top]
+  extent = [left, right, bottom, top]
+
+  if( xlabel is None ):
+    if(coords == 'geo'): xlabel = "Easting"
+    else:                xlabel = "x-coord (m)"
+  
+  if( ylabel is None ):
+    if( coords == 'geo'): ylabel = "Northing"
+    else:                 ylabel = "y-coord (m)"
+
+if( title is None ): title = rasterfile
+
+plotDict = {
+    'R': R,
+    'extent': extent,
+    'title' : title,
+    'xlabel': xlabel,
+    'ylabel': ylabel,
+    'gridOn': gridOn,
+    'limsOn': limsOn,
+    'cmap'  : cmapOn,
+    'origin': origin
+}
 
 if( not infoOnly ):
+  
   figDims = size*(Rdims[::-1].astype(float)/np.max(Rdims))
   fig = plt.figure(num=1, figsize=figDims)
   if( drawNests): fig = addNests(fig, nlcolor)
-  fig = addImagePlot( fig, R , rasterfile, gridOn, limsOn)
+  
+  fig = addImagePlotDict(fig, plotDict)
+  
   R = None
 
   if(labels):
