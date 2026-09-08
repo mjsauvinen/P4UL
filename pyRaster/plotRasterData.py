@@ -46,8 +46,8 @@ parser.add_argument("--xlabel", type=str, default=None, \
   help="Label for the horizontal axis.")
 parser.add_argument("--ylabel", type=str, default=None, \
   help="Label for the vertical axis.")
-parser.add_argument("-c", "--coords", choices=["local", "geo"], default=None,\
-  help="Use raster origin and resolution to show either local or geo coordinates")
+parser.add_argument("-c", "--coords", choices=["local", "geo", "pixel"], default=None,\
+  help="Use raster origin (and resolution) to show either local, geo or pixel coordinates")
 parser.add_argument("--labels", action="store_true", default=False,\
   help="User specified labels.")
 parser.add_argument("--footprint", action="store_true", default=False,\
@@ -156,23 +156,30 @@ if( coords is not None ):
     bottom = ROrig[0] - j1 * dPx[0]
     left   = ROrig[1] + i0 * dPx[1]
     right  = ROrig[1] + i1 * dPx[1]
-  else: # coords == 'local'
+  elif( coords == 'local'):
     top    = j1 * dPx[0]
     bottom = j0 * dPx[0]
     left   = i0 * dPx[1]
     right  = i1 * dPx[1]
+  else:
+    top    = j1
+    bottom = j0
+    left   = i0
+    right  = i1
 
   # Matplotlib extent order:
   # [left, right, bottom, top]
   extent = [left, right, bottom, top]
 
   if( xlabel is None ):
-    if(coords == 'geo'): xlabel = "Easting"
-    else:                xlabel = "x-coord (m)"
+    if(   coords == 'geo'):   xlabel = "Easting"
+    elif( coords == 'local'): xlabel = "x-coord. (m)"
+    else:                     xlabel = "i coord."
   
   if( ylabel is None ):
-    if( coords == 'geo'): ylabel = "Northing"
-    else:                 ylabel = "y-coord (m)"
+    if(   coords == 'geo'):   ylabel = "Northing"
+    elif( coords == 'local'): ylabel = "y-coord. (m)"
+    else:                     ylabel = "j coord."
 
 if( title is None ): title = rasterfile
 
