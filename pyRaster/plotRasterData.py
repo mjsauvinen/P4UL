@@ -87,9 +87,12 @@ footprintOn = args.footprint
 save        = args.save
 origin      = None
 
-plt.rc('xtick', labelsize=14); #plt.rc('ytick.major', size=10)
-plt.rc('ytick', labelsize=14); #plt.rc('ytick.minor', size=6)
-plt.rc('axes', titlesize=18)
+font = {'family' : 'serif', 'weight' : 'normal', 'size' : 20}
+plt.rc('font', **font)  # pass in the font dict as kwargs
+plt.rc('xtick', labelsize=18); #plt.rc('ytick.major', size=10)
+plt.rc('ytick', labelsize=18); #plt.rc('ytick.minor', size=6)
+plt.rc('axes', titlesize=22)
+
 
 if( not footprintOn ):
   Rdict = readNumpyZTile(rasterfile)
@@ -174,12 +177,12 @@ if( coords is not None ):
 
   if( xlabel is None ):
     if(   coords == 'geo'):   xlabel = "Easting"
-    elif( coords == 'local'): xlabel = "x-coord. (m)"
+    elif( coords == 'local'): xlabel = "x (m)"
     else:                     xlabel = "i coord."
   
   if( ylabel is None ):
     if(   coords == 'geo'):   ylabel = "Northing"
-    elif( coords == 'local'): ylabel = "y-coord. (m)"
+    elif( coords == 'local'): ylabel = "y (m)"
     else:                     ylabel = "j coord."
 
 if( title is None ): title = rasterfile

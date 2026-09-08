@@ -125,7 +125,7 @@ def userColormapSettings( fig, im, Rmax=None, Rmin=None ):
     if(Rmax<1.e-3): 
       eformat='%.2e'
   
-  cb = fig.colorbar(im, ticks=uticks, format=eformat)
+  cb = fig.colorbar(im, ticks=uticks, format=eformat, shrink=0.84 )
   
   return cb
 
@@ -299,7 +299,7 @@ def addImagePlotDict(fig, RDict ):
   if(lOn):
     cbar = userColormapSettings( fig, im, np.nanmax(R), np.nanmin(R) )
   else:
-    cbar = fig.colorbar(im)
+    cbar = fig.colorbar(im, ax=ax, shrink=0.84 )
   
   return fig
 
