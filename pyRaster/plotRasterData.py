@@ -38,8 +38,6 @@ parser.add_argument("--lims", action="store_true", default=False,\
 parser.add_argument("--grid", help="Turn on grid.", action="store_true", default=False)
 parser.add_argument("--cmap", type=str, default=None, \
   help="Matplotlib colormap. Default: Matplotlib default.")
-parser.add_argument("--origin", choices=["upper", "lower"], default="upper",\
-  help="Location of the left origin ('upper' or 'lower'). Default: upper")
 parser.add_argument("--title", type=str, default=None, \
   help="Plot title. By default, the raster filename is used.")
 parser.add_argument("--xlabel", type=str, default=None, \
@@ -62,6 +60,9 @@ parser.add_argument("--save", metavar="FORMAT" ,type=str, default='', \
 parser.add_argument("--dpi", metavar="DPI" ,type=int, default=100,\
   help="Desired resolution in DPI for the output image. Default: 100")
 args = parser.parse_args() 
+
+#parser.add_argument("--origin", choices=["upper", "lower"], default="upper",\
+#  help="Location of the left origin ('upper' or 'lower'). Default: upper")
 #writeLog( parser, args )
 #==========================================================#
 
@@ -74,7 +75,6 @@ absOn       = args.abs
 limsOn      = args.lims
 gridOn      = args.grid
 cmapOn      = args.cmap
-origin      = args.origin
 title       = args.title
 xlabel      = args.xlabel
 ylabel      = args.ylabel
@@ -85,6 +85,7 @@ drawNests   = args.drawNests
 nlcolor     = args.nestlinecolor
 footprintOn = args.footprint
 save        = args.save
+origin      = None
 
 plt.rc('xtick', labelsize=14); #plt.rc('ytick.major', size=10)
 plt.rc('ytick', labelsize=14); #plt.rc('ytick.minor', size=6)
