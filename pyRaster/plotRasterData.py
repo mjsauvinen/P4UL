@@ -130,16 +130,32 @@ nrows, ncols = R.shape
 
 i0, i1 = 0, ncols
 j0, j1 = 0, nrows
-if( ib[0] is not None ): i0 = max(0, ib[0])
-if( ib[1] is not None ): i1 = min(ncols, ib[1])
+if( ib[0] is not None ): 
+  ib[0] = max(0, ib[0]); i0 = ib[0]
+else: 
+  ib[0] = i0
+  
+if( ib[1] is not None ): 
+  ib[1] = min(ncols, ib[1]); i1 = ib[1]
+else:
+  ib[1] = i1
 
-if( coords == 'local' or coords == 'geo' ):
-  jb0 = (nrows - jb[1])
-  jb1 = (nrows - jb[0])
-  jb[0] = jb0; jb[1] = jb1
+if( jb[0] is not None ): 
+  jb[0] = max(0, jb[0]); j0 = jb[0]
+else:
+  jb[0] = j0
+  
+if( jb[1] is not None ): 
+  jb[1] = min(nrows, jb[1]); j1 = jb[1]
+else:
+  jb[1] = j1
 
-if( jb[0] is not None ): j0 = max(0, jb[0])
-if( jb[1] is not None ): j1 = min(nrows, jb[1])
+# If bottom right coord system is adopted, the j0/j1 indices must be mirrored
+if( coords is not None ):
+  jb0 = (nrows - j1)
+  jb1 = (nrows - j0)
+  j0  = jb0; j1 = jb1
+
 
 if( i0 >= i1 ):
   raise ValueError("Invalid x-index bounds: [{}, {}]".format(i0, i1))
@@ -161,20 +177,20 @@ if( coords is not None ):
   # ROrig is [northing, easting] at the top-left raster corner.
   # dPx is [dN, dE].
   if( coords == 'geo' ):
-    top    = ROrig[0] - j0 * dPx[0]
-    bottom = ROrig[0] - j1 * dPx[0]
-    left   = ROrig[1] + i0 * dPx[1]
-    right  = ROrig[1] + i1 * dPx[1]
+    top    = ROrig[0] - jb[0] * dPx[0]
+    bottom = ROrig[0] - jb[1] * dPx[0]
+    left   = ROrig[1] + ib[0] * dPx[1]
+    right  = ROrig[1] + ib[1] * dPx[1]
   elif( coords == 'local'):
-    top    = j1 * dPx[0]
-    bottom = j0 * dPx[0]
-    left   = i0 * dPx[1]
-    right  = i1 * dPx[1]
+    top    = jb[1] * dPx[0]
+    bottom = jb[0] * dPx[0]
+    left   = ib[0] * dPx[1]
+    right  = ib[1] * dPx[1]
   else:
-    top    = j1
-    bottom = j0
-    left   = i0
-    right  = i1
+    top    = jb[1]
+    bottom = jb[0]
+    left   = ib[0]
+    right  = ib[1]
 
   # Matplotlib extent order:
   # [left, right, bottom, top]
