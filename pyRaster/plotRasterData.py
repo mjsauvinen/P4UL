@@ -133,6 +133,11 @@ j0, j1 = 0, nrows
 if( ib[0] is not None ): i0 = max(0, ib[0])
 if( ib[1] is not None ): i1 = min(ncols, ib[1])
 
+if( coords == 'local' or coords == 'geo' ):
+  jb0 = (nrows - jb[1])
+  jb1 = (nrows - jb[0])
+  jb[0] = jb0; jb[1] = jb1
+
 if( jb[0] is not None ): j0 = max(0, jb[0])
 if( jb[1] is not None ): j1 = min(nrows, jb[1])
 

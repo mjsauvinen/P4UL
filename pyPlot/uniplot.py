@@ -114,7 +114,7 @@ if( legendOn ):
   plt.legend(loc=0)
 
 if( saveFig is not None ):
-  pfig.savefig( saveFig, format='png', dpi=300)
+  pfig.savefig( saveFig, bbox_inches='tight', pad_inches=0, format='png', dpi=300)
 else:
   plt.show()
 
