@@ -44,6 +44,8 @@ parser.add_argument("-vb", "--replValuesBelow", nargs=2, type=float, default=[-1
   help="Entry <Min> <val> := replace values below given threshold <Min> by <val>. Default= -1.e9 0.0")
 parser.add_argument("-nt", "--ntimeskip", type=int, default=0,\
   help="Skip <nt> number of time steps.")
+parser.add_argument("-z", "--zlib", action="store_true", default=False,\
+  help="Apply compression when writing the output file.")
 parser.add_argument("-c", "--coarse", type=int, help="Coarsening level. Int > 1.", default=1) 
 args = parser.parse_args() 
 #==========================================================#
@@ -59,6 +61,7 @@ decompOn = args.decomp
 va       = args.replValuesAbove
 vb       = args.replValuesBelow
 copyOnly = args.copyOnly
+zlibOn   = args.zlib
 
 if( scalarNamesOut is None ): 
   scalarNamesOut = scalarNames
@@ -91,22 +94,22 @@ sN = scalarNames[0]
 
 time, time_dims = read1DVariableFromDataset('time', sN, ds, nt, 0, 1 ) # All values.
 print(' time_dims = {} '.format(time_dims))
-tv = createNetcdfVariable( dso, time,'time', len(time),'s','f4',('time',), parameter )
+tv = createNetcdfVariable( dso, time,'time', len(time),'s','f4',('time',), parameter, zlib=zlibOn )
 time = None  
 
 if( copyOnly ): ex = 0
 else:           ex = 1
 
 x, x_dims = read1DVariableFromDataset('x', sN, ds, 0, ex, cl ) # Scalar grid's x, exclude the last value.
-xv = createNetcdfVariable( dso, x, 'x', len(x), 'm', 'f4', ('x',), parameter )
+xv = createNetcdfVariable( dso, x, 'x', len(x), 'm', 'f4', ('x',), parameter, zlib=zlibOn )
 x = None
 
 y, y_dims = read1DVariableFromDataset('y', sN, ds, 0, ex, cl ) # Scalar grid's y, exclude the last value.
-yv = createNetcdfVariable( dso, y, 'y', len(y), 'm', 'f4', ('y',), parameter )
+yv = createNetcdfVariable( dso, y, 'y', len(y), 'm', 'f4', ('y',), parameter, zlib=zlibOn )
 y = None
 
 z, z_dims = read1DVariableFromDataset('z', sN, ds, ex, 0, cl ) # Scalar grid's z, exclude the first value.
-zv = createNetcdfVariable( dso, z, 'z', len(z), 'm', 'f4', ('z',), parameter )
+zv = createNetcdfVariable( dso, z, 'z', len(z), 'm', 'f4', ('z',), parameter, zlib=zlibOn )
 z = None
 
 # - - - - Scalar components - - - - - - - - - -
@@ -133,7 +136,8 @@ for j in range(len(scalarNames)):
     #s = np.zeros( st_dims )   # This is not really needed.
     s, sm = interpolatePalmVectors( s0, s0_dims, 'k' , decompOn ); #s0 = None
     sp = vectorPrimeComponent( s, sm )
-    sv.append(createNetcdfVariable( dso, sp, snout+'p', st_dims[0],'','f4',('time','z','y','x',), variable ))
+    sv.append(createNetcdfVariable(\
+      dso, sp, snout+'p', st_dims[0],'','f4',('time','z','y','x',), variable, zlib=zlibOn))
   else:
     # Take the portion that matches the coords.
     if( copyOnly ): s = s0
@@ -141,6 +145,7 @@ for j in range(len(scalarNames)):
     
   s_dims = np.shape(s)
   print(' Final shape = {} '.format(s_dims) )
-  sv.append( createNetcdfVariable(dso, s, snout, s_dims[0],'[]','f4',('time','z','y','x',), variable) )
+  sv.append( createNetcdfVariable(\
+    dso, s, snout, s_dims[0],'[]','f4',('time','z','y','x',), variable, zlib=zlibOn))
 
 netcdfWriteAndClose( dso )

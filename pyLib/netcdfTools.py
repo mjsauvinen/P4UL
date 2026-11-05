@@ -438,17 +438,26 @@ def vectorPrimeComponent(vc, vm):
 # NOTE below: variables after *args are interpreted as keyword arguments with default values.
 
 def createNetcdfVariable(dso, v, vName, vLen, vUnits, vType, vTuple, parameter, *args,\
-  zlib=True, fill_value=-9999., verbose=True, mask_value=-9999.):
+  zlib=False, fill_value=-9999., verbose=True, mask_value=-9999.):
   
   if(parameter):
+    v = np.round( v , decimals=5 )
     dso.createDimension(vName, vLen)
   
   
   #var = dso.createVariable(vName, vType, vTuple, \
   #  zlib=zlib, fill_value=fill_value, compression='blosc_lz4', shuffle=True, complevel=4)
   
-  var = dso.createVariable(vName, vType, vTuple, \
-    zlib=zlib, complevel=1, shuffle=True, fill_value=fill_value, least_significant_digit=7 )
+  if( zlib and not parameter ):
+  
+    ch_size = None
+    if( len(v.shape) > 2 ): ch_size = (1,) + v.shape[1:]
+    
+    var = dso.createVariable(vName, vType, vTuple, \
+      zlib=zlib, complevel=1, shuffle=True, chunksizes=ch_size, \
+        fill_value=fill_value, least_significant_digit=7 )
+  else:
+    var = dso.createVariable(vName, vType, vTuple, fill_value=fill_value, contiguous=True)
   
   var.units = vUnits
 
