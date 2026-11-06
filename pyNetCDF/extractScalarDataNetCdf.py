@@ -44,8 +44,8 @@ parser.add_argument("-vb", "--replValuesBelow", nargs=2, type=float, default=[-1
   help="Entry <Min> <val> := replace values below given threshold <Min> by <val>. Default= -1.e9 0.0")
 parser.add_argument("-nt", "--ntimeskip", type=int, default=0,\
   help="Skip <nt> number of time steps.")
-parser.add_argument("-z", "--zlib", action="store_true", default=False,\
-  help="Apply compression when writing the output file.")
+parser.add_argument("-nz", "--nozlib", action="store_true", default=False,\
+  help="Do NOT apply compression when writing the output file.")
 parser.add_argument("-c", "--coarse", type=int, help="Coarsening level. Int > 1.", default=1) 
 args = parser.parse_args() 
 #==========================================================#
@@ -61,7 +61,9 @@ decompOn = args.decomp
 va       = args.replValuesAbove
 vb       = args.replValuesBelow
 copyOnly = args.copyOnly
-zlibOn   = args.zlib
+nozlib   = args.nozlib
+
+zlibOn   = ~nozlib   # True by default
 
 if( scalarNamesOut is None ): 
   scalarNamesOut = scalarNames
